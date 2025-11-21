@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Harem Ham Fiyatları</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    h1 { text-align: center; }
+    .card {
+      max-width: 600px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      font-size: 18px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Harem Ham Fiyatları</h1>
+<div class="card" id="harem"></div>
+
+<script>
+  async function load() {
+    const r = await fetch("https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr");
+    const j = await r.json();
+    const d = j.data;
+
+    document.getElementById("harem").innerHTML = `
+      <b>Çeyrek Alış:</b> ${d.CEYREK_ESKI.alis}<br>
+      <b>Çeyrek Satış:</b> ${d.CEYREK_ESKI.satis}<br><br>
+      <b>Ata Alış:</b> ${d.ATA_ESKI.alis}<br>
+      <b>Ata Satış:</b> ${d.ATA_ESKI.satis}<br><br>
+      <b>22 Ayar Satış:</b> ${d.AYAR22.satis}<br>
+      <b>Has Altın Alış:</b> ${d.ALTIN.alis}<br>
+      <b>Has Altın Satış:</b> ${d.ALTIN.satis}<br>
+    `;
+  }
+  load();
+</script>
+
+</body>
+</html>
