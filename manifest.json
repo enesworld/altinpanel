@@ -1,0 +1,20 @@
+{
+  "name": "Bakırköy Kuyumcusu",
+  "short_name": "Bakırköy Altın",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e6e3d8",
+  "theme_color": "#e6e3d8",
+  "icons": [
+    {
+      "src": "bk.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "bk.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

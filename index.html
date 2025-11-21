@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bakırköy Kuyumcusu - Fiyat Paneli (Premium)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: white;
+      padding: 20px 22px;
+      border-radius: 12px;
+      width: 330px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.25);
+      font-size: 14px;
+    }
+    .modal h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+    .modal input {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 4px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+    }
+    .modal-buttons {
+      text-align: right;
+      margin-top: 8px;
+    }
+    .btn {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #bbb;
+      font-size: 13px;
+      cursor: pointer;
+      background: #f5f5f5;
+      margin-left: 4px;
+    }
+    .btn-primary {
+      background: #e09a2b;
+      border-color: #d68c18;
+      color: #fff;
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .policy-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .policy-row label {
+      flex: 1;
+      margin-right: 8px;
+    }
+    .policy-row input {
+      width: 90px;
+      text-align: right;
+    }
+
+    /* Soft premium animasyon (C seçeneği) */
+    .flash-up {
+      color: #16a34a !important;
+      transform: scale(1.04);
+      transition: all 0.18s ease-out;
+    }
+    .flash-down {
+      color: #dc2626 !important;
+      transform: scale(1.04);
+      transition: all 0.18s ease-out;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const API = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
+    const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
+    const SUPA_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
+    const PASS = "347856916585";
+
+    const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    function formatPrice(v) {
+      if (v == null || isNaN(v)) return "-";
+      return v.toLocaleString("tr-TR");
+    }
+
+    function formatTime(t) {
+      if (!t) return "-";
+      return t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    // ANİMASYONLU FİYAT
+    const AnimatedValue = ({ value, prev }) => {
+      if (value == null || isNaN(value)) return <span>-</span>;
+
+      let cls = "";
+      if (prev != null && !isNaN(prev)) {
+        if (value > prev) cls = "flash-up";
+        else if (value < prev) cls = "flash-down";
+      }
+
+      return <span className={cls}>{formatPrice(value)} ₺</span>;
+    };
+
+    // COMPONENTS
+    const MainRow = ({ title, buy, prevBuy, sell, prevSell, isLast }) => (
+      <div className={`py-4 flex justify-between items-center ${!isLast ? "border-b border-gray-200" : ""}`}>
+        <div className="text-lg font-semibold text-gray-800">{title}</div>
+        <div className="flex gap-8">
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-gray-400">Alış</span>
+            <AnimatedValue value={buy} prev={prevBuy} />
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-xs" style={{ color: "#D4AF37" }}>Satış</span>
+            <AnimatedValue value={sell} prev={prevSell} />
+          </div>
+        </div>
+      </div>
+    );
+
+    const DualBox = ({ title, price, prev }) => (
+      <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+        <div className="text-sm text-gray-500 mb-1">{title}</div>
+        <AnimatedValue value={price} prev={prev} />
+      </div>
+    );
+
+    const SmallBox = ({ label, price, prev }) => (
+      <div className="bg-gray-50 rounded-lg p-2 text-center border border-gray-200">
+        <div className="text-xs text-gray-400 mb-1">{label}</div>
+        <AnimatedValue value={price} prev={prev} />
+      </div>
+    );
+
+    function HaremBox({ h }) {
+      return (
+        <div className="bg-white p-4 rounded-2xl shadow-md border w-full max-w-md text-sm mt-4">
+          <div className="font-semibold text-gray-800 mb-2">Harem Ham Fiyatları</div>
+          <div className="grid grid-cols-2 gap-y-1">
+            <div>Çeyrek Alış: {formatPrice(h.c_alis)} ₺</div>
+            <div>Çeyrek Satış: {formatPrice(h.c_satis)} ₺</div>
+            <div>Ata Alış: {formatPrice(h.a_alis)} ₺</div>
+            <div>Ata Satış: {formatPrice(h.a_satis)} ₺</div>
+            <div>22 Ayar Satış: {formatPrice(h.g22_satis)} ₺</div>
+            <div>Has Alış: {formatPrice(h.has_alis)} ₺</div>
+            <div>Has Satış: {formatPrice(h.has_satis)} ₺</div>
+          </div>
+        </div>
+      );
+    }
+
+    function LoginModal({ onClose, onOk }) {
+      const [pwd, setPwd] = useState("");
+
+      function handleOk() {
+        onOk(pwd);
+      }
+
+      return (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h3>Yönetici Girişi</h3>
+            <div>Şifre:</div>
+            <input
+              type="password"
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleOk()}
+            />
+            <div className="modal-buttons">
+              <button className="btn" onClick={onClose}>Kapat</button>
+              <button className="btn btn-primary" onClick={handleOk}>Giriş</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function AdminModal({ draft, setDraft, onClose, onSave, saving }) {
+      const fields = [
+        ["ceyrek_alis", "Çeyrek Alış Farkı"],
+        ["ceyrek_satis", "Çeyrek Satış Farkı"],
+        ["ata_alis", "Ata Alış Farkı"],
+        ["ata_satis", "Ata Satış Farkı"],
+        ["gram22", "Gram 22 Farkı"],
+        ["gram24", "Gram 24 Farkı"],
+        ["g025", "0.25 g Çarpan"],
+        ["g05_22", "0.5 g 22 Çarpan"],
+        ["g05_24", "0.5 g 24 Çarpan"],
+      ];
+
+      function updateField(key, v) {
+        setDraft({ ...draft, [key]: Number(v) });
+      }
+
+      return (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h3>Fiyat Politikası</h3>
+            {fields.map(([key, label]) => (
+              <div className="policy-row" key={key}>
+                <label>{label}</label>
+                <input
+                  type="number"
+                  value={draft?.[key] ?? ""}
+                  onChange={(e) => updateField(key, e.target.value)}
+                />
+              </div>
+            ))}
+            <div className="modal-buttons">
+              <button className="btn" onClick={onClose}>Kapat</button>
+              <button
+                className="btn btn-primary"
+                onClick={onSave}
+                disabled={saving}
+              >
+                {saving ? "Kaydediliyor..." : "Kaydet"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [policy, setPolicy] = useState(null);
+      const [policyDraft, setPolicyDraft] = useState(null);
+
+      const [prices, setPrices] = useState({});
+      const [prevPrices, setPrevPrices] = useState({});
+      const [harem, setHarem] = useState({});
+      const [lastUpdate, setLastUpdate] = useState(null);
+      const [countdown, setCountdown] = useState(10);
+
+      const [loginOpen, setLoginOpen] = useState(false);
+      const [adminOpen, setAdminOpen] = useState(false);
+      const [savingPolicy, setSavingPolicy] = useState(false);
+      const [loadingPolicy, setLoadingPolicy] = useState(true);
+
+      // Politikayı çek
+      useEffect(() => {
+        async function loadPolicy() {
+          try {
+            setLoadingPolicy(true);
+            const { data, error } = await supa
+              .from("altin_politika")
+              .select("*")
+              .eq("id", 1)
+              .single();
+            if (error) {
+              console.error("Policy error:", error);
+            } else {
+              setPolicy(data);
+              setPolicyDraft(data);
+            }
+          } catch (e) {
+            console.error(e);
+          } finally {
+            setLoadingPolicy(false);
+          }
+        }
+        loadPolicy();
+      }, []);
+
+      // Fiyat çek + sayaç
+      useEffect(() => {
+        if (!policy) return;
+
+        async function tick() {
+          try {
+            const res = await fetch(API);
+            const json = await res.json();
+            const d = json.data;
+
+            // Harem ham fiyatları – ÖNEMLİ: bu satır eski dosyada kaybolmuştu
+            const hData = {
+              c_alis: d.CEYREK_ESKI.alis,
+              c_satis: d.CEYREK_ESKI.satis,
+              a_alis: d.ATA_ESKI.alis,
+              a_satis: d.ATA_ESKI.satis,
+              g22_satis: d.AYAR22.satis,
+              has_alis: d.ALTIN.alis,
+              has_satis: d.ALTIN.satis,
+            };
+            setHarem(hData);
+
+            const p = policy;
+
+            const ca = Math.round(d.CEYREK_ESKI.alis + p.ceyrek_alis);
+            const cs = Math.round(d.CEYREK_ESKI.satis + p.ceyrek_satis);
+            const aa = Math.round(d.ATA_ESKI.alis + p.ata_alis);
+            const as_ = Math.round(d.ATA_ESKI.satis + p.ata_satis);
+            const g22 = Math.round(d.AYAR22.satis + p.gram22);
+            const g24 = Math.round(d.ALTIN.satis + p.gram24);
+            const g025 = Math.round(g24 * p.g025);
+            const g05_22 = Math.round(g22 * p.g05_22);
+            const g05_24 = Math.round(g24 * p.g05_24);
+
+            const newP = {
+              quarterBuy: ca,
+              quarterSell: cs,
+              ataBuy: aa,
+              ataSell: as_,
+              gram22: g22,
+              gram24: g24,
+              small025: g025,
+              small05_22: g05_22,
+              small05_24: g05_24,
+            };
+
+            setPrices(prev => {
+  setPrevPrices(prev);
+  return newP;
+});
+setLastUpdate(new Date());
+
+          } catch (e) {
+            console.error("tick error:", e);
+          }
+        }
+
+        tick();
+        setCountdown(3);
+
+        const int1 = setInterval(
+          () => setCountdown((c) => (c <= 1 ? 3 : c - 1)),
+          1000
+        );
+        const int2 = setInterval(tick, 3000);
+
+        return () => {
+          clearInterval(int1);
+          clearInterval(int2);
+        };
+      }, [policy]);
+
+      async function savePolicy() {
+        try {
+          setSavingPolicy(true);
+          const payload = {
+            ceyrek_alis: Number(policyDraft.ceyrek_alis),
+            ceyrek_satis: Number(policyDraft.ceyrek_satis),
+            ata_alis: Number(policyDraft.ata_alis),
+            ata_satis: Number(policyDraft.ata_satis),
+            gram22: Number(policyDraft.gram22),
+            gram24: Number(policyDraft.gram24),
+            g025: Number(policyDraft.g025),
+            g05_22: Number(policyDraft.g05_22),
+            g05_24: Number(policyDraft.g05_24),
+          };
+          const { error } = await supa
+            .from("altin_politika")
+            .update(payload)
+            .eq("id", 1);
+          if (error) {
+            alert("Kaydedilemedi: " + error.message);
+          } else {
+            setPolicy({ ...policy, ...payload });
+            alert("Politika kaydedildi.");
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Kaydetme hatası.");
+        } finally {
+          setSavingPolicy(false);
+        }
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center pt-16 px-4">
+          {/* Admin butonu */}
+          <button
+            className="fixed top-4 right-4 text-gray-500 hover:text-gray-800 hover:scale-110 transition-transform"
+            onClick={() => setLoginOpen(true)}
+            title="Ayarlar"
+          >
+            ⚙
+          </button>
+
+          {/* Header */}
+          <header className="text-center mb-10 space-y-2">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
+              Altın Fiyatları
+            </h1>
+            <div className="inline-flex flex-wrap items-center justify-center gap-2 text-sm text-gray-400 font-light">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: "#D4AF37" }}
+              ></span>
+              <span>Canlı Piyasa</span>
+              <span>•</span>
+              <span>Son güncelleme: {formatTime(lastUpdate)}</span>
+              <span>•</span>
+              <span>
+                {policy
+                  ? `Sonraki güncelleme: ${countdown} sn`
+                  : loadingPolicy
+                  ? "Politika yükleniyor..."
+                  : "Politika yok"}
+              </span>
+            </div>
+          </header>
+
+          {/* Logo + Kart */}
+          <div className="relative w-full max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mb-6">
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10">
+
+              <img
+                src="bk.jpeg"
+                className="h-20 md:h-24 lg:h-28 w-auto rounded-xl shadow-lg object-contain"
+                alt="Bakırköy Kuyumcusu"
+              />
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl border pt-10 p-6">
+              <MainRow
+                title="Çeyrek Altın"
+                buy={prices.quarterBuy}
+                prevBuy={prevPrices.quarterBuy}
+                sell={prices.quarterSell}
+                prevSell={prevPrices.quarterSell}
+              />
+
+              <MainRow
+                title="Ata Altın"
+                buy={prices.ataBuy}
+                prevBuy={prevPrices.ataBuy}
+                sell={prices.ataSell}
+                prevSell={prevPrices.ataSell}
+                isLast
+              />
+
+              <div className="h-px bg-gray-200 my-4"></div>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <DualBox
+                  title="22 Ayar Gram"
+                  price={prices.gram22}
+                  prev={prevPrices.gram22}
+                />
+                <DualBox
+                  title="24 Ayar Gram"
+                  price={prices.gram24}
+                  prev={prevPrices.gram24}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <SmallBox
+                  label="0.25g (24K)"
+                  price={prices.small025}
+                  prev={prevPrices.small025}
+                />
+                <SmallBox
+                  label="0.50g (22K)"
+                  price={prices.small05_22}
+                  prev={prevPrices.small05_22}
+                />
+                <SmallBox
+                  label="0.50g (24K)"
+                  price={prices.small05_24}
+                  prev={prevPrices.small05_24}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Alt not */}
+          <div className="text-xs text-gray-400 text-center mb-2">
+            Fiyatlar anlık değişebilir. Kesin fiyat kasada belirlenir.
+          </div>
+
+          {/* Harem kutusu */}
+          <HaremBox h={harem} />
+
+          {/* Login modal */}
+          {loginOpen && (
+            <LoginModal
+              onClose={() => setLoginOpen(false)}
+              onOk={(pwd) => {
+                if (pwd === PASS) {
+                  setLoginOpen(false);
+                  setAdminOpen(true);
+                } else {
+                  alert("Hatalı şifre");
+                }
+              }}
+            />
+          )}
+
+          {/* Admin modal */}
+          {adminOpen && policyDraft && (
+            <AdminModal
+              draft={policyDraft}
+              setDraft={setPolicyDraft}
+              onClose={() => setAdminOpen(false)}
+              onSave={savePolicy}
+              saving={savingPolicy}
+            />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
