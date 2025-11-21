@@ -412,6 +412,14 @@ setLastUpdate(new Date());
           >
             ⚙
           </button>
+          <button
+  className="fixed top-4 right-14 text-gray-500 hover:text-gray-800 hover:scale-110 transition-transform"
+  onClick={() => window.open('harem.html', '_blank')}
+  title="Ham Fiyatlar"
+>
+  📜
+</button>
+
 
           {/* Header */}
           <header className="text-center mb-10 space-y-2">
@@ -507,7 +515,7 @@ setLastUpdate(new Date());
           </div>
 
           {/* Harem kutusu */}
-          <HaremBox h={harem} />
+          
 
           {/* Login modal */}
           {loginOpen && (
