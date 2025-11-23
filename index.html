@@ -548,23 +548,21 @@ React.useEffect(() => {
       };
 
       setPrices((prev) => {
-  // İlk çalışmada prev boş olabilir
   const previous = prev || {};
 
-  // Fiyat değişti mi?
   const changed = JSON.stringify(previous) !== JSON.stringify(newPrices);
 
-  // Eğer değiştiyse stabilite sıfırla
   if (changed) {
     setStabilitySeconds(0);
     setIsStable(false);
   }
 
-  // Yeni previous değerini kaydet
-  setPrevPrices(newPrices);
+  // prevPrices = eski değerler
+  setPrevPrices(previous);
 
   return newPrices;
 });
+
 
 
       setLastUpdate(new Date());
