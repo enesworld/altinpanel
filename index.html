@@ -374,22 +374,27 @@ function AdminModal({
   {/* MAKASI AZALT */}
   <button
   className="px-3 py-2 bg-gray-600 text-white rounded"
-  onClick={async () => {
+  onClick={() => {
 
-    // Supabase’den orijinal değerleri tekrar çek
-    const { data } = await supa
-      .from("altin_politika")
-      .select("*")
-      .eq("id", 1)
-      .single();
+    // Sabit default makas değerleri
+    const defaultPolicy = {
+      ceyrek_alis: -100,
+      ceyrek_satis: 150,
+      ata_alis: -250,
+      ata_satis: 800,
+      gram22: 100,
+      gram24: 110,
+      g025: 0.33,
+      g05_22: 0.539,
+      g05_24: 0.52
+    };
 
-    if (data) {
-      setDraft({ ...data });
-    }
+    setDraft(defaultPolicy);
   }}
 >
   Makası Azalt
 </button>
+
 
 
   {/* KAPAT & KAYDET */}
