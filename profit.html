@@ -139,7 +139,23 @@ function App() {
             type="number"
             className="w-full p-2 border rounded mb-4"
             value={gram}
-            onChange={(e) => setGram(Number(e.target.value))}
+            onChange={(e) => {
+  let v = e.target.value;
+
+  // Baştaki 0'ları temizle (010 → 10)
+  if (v.startsWith("0") && v.length > 1) {
+    v = v.replace(/^0+/, "");
+  }
+
+  // Boş bırakılırsa 0 sayma → "" olarak bırak
+  if (v === "") {
+    setGram("");
+    return;
+  }
+
+  setGram(Number(v));
+}}
+
           />
 
           <label className="block mb-2 font-medium">Bu Ürünü Kaça Aldın?</label>
