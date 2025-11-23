@@ -300,7 +300,16 @@ function LoginModal({ onClose, onLoginSuccess }) {
 // 8. Component: Admin Panel
 // =========================================================
 
-function AdminModal({ open, draft, setDraft, onClose, onSave }) {
+function AdminModal({
+  open,
+  draft,
+  setDraft,
+  backupPolicy,
+  setBackupPolicy,
+  onClose,
+  onSave
+}) {
+
   if (!open || !draft) return null;
 
   const fields = [
@@ -336,17 +345,69 @@ function AdminModal({ open, draft, setDraft, onClose, onSave }) {
           </div>
         ))}
 
-        <div className="text-right mt-4">
-          <button className="px-3 py-2 mr-2 border rounded" onClick={onClose}>
-            Kapat
-          </button>
-          <button
-            className="px-3 py-2 rounded bg-yellow-600 text-white"
-            onClick={onSave}
-          >
-            Kaydet
-          </button>
-        </div>
+        <div className="text-right mt-4 flex justify-between items-center">
+
+  {/* MAKASI AÇ */}
+  <button
+    className="px-3 py-2 bg-yellow-700 text-white rounded"
+    onClick={() => {
+      // Önceki değerleri yedekle
+      if (!backupPolicy) setBackupPolicy({ ...draft });
+
+      // Yeni makas değerlerini uygula
+      const updated = {
+        ...draft,
+        ceyrek_alis: -150,
+        ceyrek_satis: 200,
+        ata_alis: -800,
+        ata_satis: 1000,
+        gram22: 170,
+        gram24: 170,
+      };
+
+      setDraft(updated);
+    }}
+  >
+    Makası Aç
+  </button>
+
+  {/* MAKASI AZALT */}
+  <button
+  className="px-3 py-2 bg-gray-600 text-white rounded"
+  onClick={async () => {
+
+    // Supabase’den orijinal değerleri tekrar çek
+    const { data } = await supa
+      .from("altin_politika")
+      .select("*")
+      .eq("id", 1)
+      .single();
+
+    if (data) {
+      setDraft({ ...data });
+    }
+  }}
+>
+  Makası Azalt
+</button>
+
+
+  {/* KAPAT & KAYDET */}
+  <div>
+    <button className="px-3 py-2 mr-2 border rounded" onClick={onClose}>
+      Kapat
+    </button>
+
+    <button
+      className="px-3 py-2 rounded bg-yellow-600 text-white"
+      onClick={onSave}
+    >
+      Kaydet
+    </button>
+  </div>
+
+</div>
+
       </div>
     </div>
   );
@@ -369,6 +430,8 @@ function App() {
   const [policy, setPolicy] = React.useState(null);
   const [draft, setDraft] = React.useState(null);
   const [adminOpen, setAdminOpen] = React.useState(false);
+
+  const [backupPolicy, setBackupPolicy] = React.useState(null);
 
   // 📌 STABILITE STATE'LERI BURAYA
   const [stabilitySeconds, setStabilitySeconds] = React.useState(0);
@@ -627,18 +690,22 @@ React.useEffect(() => {
 
       {/* Admin Panel */}
       {adminOpen && draft && (
-        <AdminModal
-          open={adminOpen}
-          draft={draft}
-          setDraft={setDraft}
-          onClose={() => setAdminOpen(false)}
-          onSave={async () => {
-            await supa.from("altin_politika").update(draft).eq("id", 1);
-            setPolicy({ ...draft });
-            setAdminOpen(false);
-          }}
-        />
-      )}
+  <AdminModal
+    open={adminOpen}
+    draft={draft}
+    setDraft={setDraft}
+    backupPolicy={backupPolicy}
+    setBackupPolicy={setBackupPolicy}
+    onClose={() => setAdminOpen(false)}
+    onSave={async () => {
+      await supa.from("altin_politika").update(draft).eq("id", 1);
+      setPolicy({ ...draft });
+      setAdminOpen(false);
+      setBackupPolicy(null); // makası azaltınca eski kayıt silinsin
+    }}
+  />
+)}
+
     </div>
   );
 }
