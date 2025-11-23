@@ -63,6 +63,43 @@
 
 <script type="text/babel">
 
+  // ======================================================
+// SAFE FETCH – Timeout + Retry + Güvenli JSON
+// ======================================================
+async function safeFetch(url, timeout = 3500, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(id);
+
+      if (!res.ok) throw new Error("HTTP Error: " + res.status);
+
+      const text = await res.text();
+      if (!text || text.trim() === "") throw new Error("Boş yanıt");
+
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error("JSON Parse Error");
+      }
+
+      if (!json.data) throw new Error("Geçersiz veri formatı");
+
+      return json;
+
+    } catch (err) {
+      console.warn(`safeFetch attempt ${i + 1} failed => ${err.message}`);
+      if (i === retries) return null;
+      await new Promise(r => setTimeout(r, 500)); // retry cooldown
+    }
+  }
+}
+
+
 // =========================================================
 // 1. Sabitler
 // =========================================================
@@ -100,29 +137,39 @@ function diff(c, p) {
 // 3. Component: AnimatedValue
 // =========================================================
 
-const AnimatedValue = ({ value, prev, showDiff = true }) => {
+const AnimatedValue = React.memo(({ value, prev, showDiff = true }) => {
   if (value == null || isNaN(value)) return <span>-</span>;
 
+  // ANİMASYON SINIFI
   let cls = "text-xl font-bold transition-all duration-300 text-center";
 
-  if (prev != null) {
-    if (value > prev) cls += " flash-up";
-    else if (value < prev) cls += " flash-down";
+  // SADECE FİYAT DEĞİŞİNCE ANİMASYON
+  if (prev !== null && prev !== undefined && value !== prev) {
+    if (value > prev) cls = "flash-up";
+    else cls = "flash-down";
   }
 
   return (
     <div className="flex flex-col items-center leading-tight">
-      <span className={cls}>
-        {fp(value)} <span className="text-xs text-yellow-700">₺</span>
+
+      {/* GPU HIZLANDIRMALI FİYAT */}
+      <span
+        className={cls}
+        style={{ willChange: "transform, color" }}
+      >
+        {fp(Math.round(value))}{" "}
+        <span className="text-xs text-yellow-700">₺</span>
       </span>
-      {showDiff && prev != null && (
+
+      {/* FARK GÖSTERGESİ */}
+      {showDiff && prev != null && prev !== undefined && (
         <span className="text-[11px] text-gray-500 mt-0.5">
           {diff(value, prev)}
         </span>
       )}
     </div>
   );
-};
+});
 
 
 // =========================================================
@@ -323,14 +370,20 @@ function App() {
   const [draft, setDraft] = React.useState(null);
   const [adminOpen, setAdminOpen] = React.useState(false);
 
+  // 📌 STABILITE STATE'LERI BURAYA
+  const [stabilitySeconds, setStabilitySeconds] = React.useState(0);
+  const [isStable, setIsStable] = React.useState(false);
+
   // Sayaç
   React.useEffect(() => {
-    const t = setInterval(
-      () => setCountdown((c) => (c <= 1 ? 3 : c - 1)),
-      1000
-    );
-    return () => clearInterval(t);
-  }, []);
+  setCountdown(10); // başlangıç — 10 saniye
+
+  const t = setInterval(() => {
+    setCountdown((c) => (c <= 1 ? 10 : c - 1));
+  }, 1000);
+
+  return () => clearInterval(t);
+}, []);
 
   // Politikayı getir
   React.useEffect(() => {
@@ -346,19 +399,43 @@ function App() {
     load();
   }, []);
 
-  // FİYATLARI ÇEKEN EFEKT
+  // Stabilite sayacı → her saniye 1 artar
+React.useEffect(() => {
+  const t = setInterval(() => {
+    setStabilitySeconds((s) => s + 1);
+  }, 1000);
+
+  return () => clearInterval(t);
+}, []);
+
+// 30 saniye boyunca fiyat değişmezse sabitlik modu aktif
+React.useEffect(() => {
+  if (stabilitySeconds >= 30) {
+    setIsStable(true);
+  }
+}, [stabilitySeconds]);
+
+
+
+// FİYATLARI ÇEKEN EFEKT
 React.useEffect(() => {
   if (!policy) return;
 
   // Her seferinde güvenli sayı çeviricisi
   const num = (v) => Number(v) || 0;
 
+  // ANA LOAD FONKSİYONU
   async function load() {
     try {
-      const r = await fetch(API);
-      const j = await r.json();
-      const d = j.data;
+      // SAFE FETCH → API verisini çek
+      const j = await safeFetch(API);
 
+      if (!j) {
+        console.warn("API erişilemedi. En son fiyatlar korunuyor.");
+        return; // panel donmaz, boş fiyat yazmaz
+      }
+
+      const d = j.data;
       const P = policy;
 
       // Ham fiyatları güvenli sayıya çevir
@@ -366,10 +443,10 @@ React.useEffect(() => {
       const rawQuarterSell = num(d.CEYREK_ESKI.satis);
       const rawAtaBuy      = num(d.ATA_ESKI.alis);
       const rawAtaSell     = num(d.ATA_ESKI.satis);
-      const rawG22Sell     = num(d.AYAR22.satis); // 22 ayar gram satış
-      const rawG24Sell     = num(d.ALTIN.satis);  // 24 ayar gram satış
+      const rawG22Sell     = num(d.AYAR22.satis);
+      const rawG24Sell     = num(d.ALTIN.satis);
 
-      // Politika makaslarını da SAYIYA çevir
+      // Politika makasları
       const mkCeyrekAlis   = num(P.ceyrek_alis);
       const mkCeyrekSatis  = num(P.ceyrek_satis);
       const mkAtaAlis      = num(P.ata_alis);
@@ -377,46 +454,69 @@ React.useEffect(() => {
       const mkG22          = num(P.gram22);
       const mkG24          = num(P.gram24);
 
-      const carp025        = num(P.g025);   // 0.25 çarpan
-      const carp05_22      = num(P.g05_22); // 0.50 22 çarpan
-      const carp05_24      = num(P.g05_24); // 0.50 24 çarpan
+      const carp025        = num(P.g025);
+      const carp05_22      = num(P.g05_22);
+      const carp05_24      = num(P.g05_24);
 
-      // Makas eklenmiş KESİN TAM SAYI fiyatlar
+      // Makas eklenmiş tam sayılar
       const qBuy  = Math.round(rawQuarterBuy  + mkCeyrekAlis);
       const qSell = Math.round(rawQuarterSell + mkCeyrekSatis);
       const aBuy  = Math.round(rawAtaBuy      + mkAtaAlis);
       const aSell = Math.round(rawAtaSell     + mkAtaSatis);
 
-      const g22  = Math.round(rawG22Sell + mkG22);
-      const g24  = Math.round(rawG24Sell + mkG24);
+      const g22 = Math.round(rawG22Sell + mkG22);
+      const g24 = Math.round(rawG24Sell + mkG24);
 
-      // Küçük gramlar: makaslı gram üzerinden hesapla
+      // Küçük gramlar (makaslı gram üzerinden)
       const s025  = Math.round(g24 * carp025);
       const s0522 = Math.round(g22 * carp05_22);
       const s0524 = Math.round(g24 * carp05_24);
 
       const newPrices = {
-        qBuy,  qSell,
-        aBuy,  aSell,
-        g22,   g24,
-        s025,  s0522, s0524
+        qBuy, qSell,
+        aBuy, aSell,
+        g22, g24,
+        s025, s0522, s0524
       };
 
       setPrices((prev) => {
-        setPrevPrices(prev || {});
-        return newPrices;
-      });
+  // İlk çalışmada prev boş olabilir
+  const previous = prev || {};
+
+  // Fiyat değişti mi?
+  const changed = JSON.stringify(previous) !== JSON.stringify(newPrices);
+
+  // Eğer değiştiyse stabilite sıfırla
+  if (changed) {
+    setStabilitySeconds(0);
+    setIsStable(false);
+  }
+
+  // Yeni previous değerini kaydet
+  setPrevPrices(newPrices);
+
+  return newPrices;
+});
+
 
       setLastUpdate(new Date());
     } catch (e) {
-      console.error("Fiyat çekme hatası:", e);
+      console.error("load() hata:", e);
     }
   }
 
-  load();
-  const t = setInterval(load, 3000);
-  return () => clearInterval(t);
+  // ======================================================
+  // NON-BLOCKING FETCH LOOP → UI donmaz, çakışma yok
+  // ======================================================
+  async function tickLoop() {
+    await load();
+    setTimeout(tickLoop, 10000);
+  }
+
+  tickLoop(); // döngüyü başlat
+
 }, [policy]);
+
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 pt-12 pb-10">
@@ -498,7 +598,12 @@ React.useEffect(() => {
           <SmallBox title="0.50g (24K)" value={prices.s0524} prev={prevPrices.s0524} />
         </div>
       </div>
-
+{/* ← BURAYA SABİTLİK MESAJINI EKLİYORSUN */}
+{isStable && (
+  <div className="mt-4 text-center text-xs text-gray-500">
+    Veri akışı sabit seyrediyor
+  </div>
+)}
       {/* Login */}
       {loginOpen && (
         <LoginModal
