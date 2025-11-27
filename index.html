@@ -13,7 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script src="https://cdn.tailwindcss.com"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body {
       background: #fafafa;
@@ -436,6 +436,18 @@ function App() {
 
   const [backupPolicy, setBackupPolicy] = React.useState(null);
 
+  // 📸 EKRAN GÖRÜNTÜSÜ ALMA FONKSİYONU
+  const downloadImage = async () => {
+    const element = document.getElementById("capture-area");
+    if (!element) return;
+    const canvas = await html2canvas(element, { scale: 3, backgroundColor: "#fafafa", useCORS: true });
+    const image = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = image;
+    link.download = `Bakirkoy_Fiyatlar_${new Date().toLocaleDateString()}.png`;
+    link.click();
+  };
+
   // 📌 STABILITE STATE'LERI BURAYA
   const [stabilitySeconds, setStabilitySeconds] = React.useState(0);
   const [isStable, setIsStable] = React.useState(false);
@@ -584,36 +596,48 @@ React.useEffect(() => {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 pt-12 pb-10">
-    <button
-  className="fixed top-4 right-16 text-2xl text-gray-600 hover:text-black"
-  onClick={() => window.open('ham.html', '_blank')}
-  title="Ham Fiyatlar"
->
-  📜
-</button>
-
-
-      {/* Ayar ikonu */}
+      
+      {/* --- BUTONLAR (SAYFANIN EN ÜSTÜNDE SABİT) --- */}
+      
+      {/* Ham Fiyatlar */}
       <button
-        className="fixed top-4 right-4 text-2xl text-gray-600 hover:text-black"
+        className="fixed top-4 right-16 text-2xl text-gray-600 hover:text-black z-50"
+        onClick={() => window.open('ham.html', '_blank')}
+        title="Ham Fiyatlar"
+      >
+        📜
+      </button>
+
+      {/* Ayarlar */}
+      <button
+        className="fixed top-4 right-4 text-2xl text-gray-600 hover:text-black z-50"
         onClick={() => (user ? setAdminOpen(true) : setLoginOpen(true))}
       >
         ⚙
       </button>
 
+      {/* Kâr/Zarar */}
       <button
-  className="fixed top-4 right-28 text-2xl text-gray-600 hover:text-black"
-  onClick={() => window.open('profit.html', '_blank')}
-  title="Kâr / Zarar Hesaplama"
->
-  📟
-</button>
+        className="fixed top-4 right-28 text-2xl text-gray-600 hover:text-black z-50"
+        onClick={() => window.open('profit.html', '_blank')}
+        title="Kâr / Zarar Hesaplama"
+      >
+        📟
+      </button>
 
+      {/* 📸 FOTOĞRAF ÇEKME BUTONU */}
+      <button 
+        className="fixed top-4 right-40 text-2xl hover:scale-110 transition-transform z-50" 
+        onClick={downloadImage}
+        title="Instagram Hikayesi İndir"
+      >
+        📸
+      </button>
 
-      {/* Çıkış */}
+      {/* Çıkış Yap */}
       {user && (
         <button
-          className="fixed top-4 left-4 text-sm text-red-600"
+          className="fixed top-4 left-4 text-sm text-red-600 z-50"
           onClick={async () => {
             await supa.auth.signOut();
             setUser(null);
@@ -623,68 +647,84 @@ React.useEffect(() => {
         </button>
       )}
 
-      {/* Logo */}
-      <div className="flex justify-center mb-6">
-  <a
-    href="https://www.instagram.com/bakirkoykuyumcusu/"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <img
-      src="bk.jpeg"
-      className="h-28 w-28 rounded-xl shadow-lg cursor-pointer"
-      alt="logo"
-    />
-  </a>
-</div>
 
+      {/* --- 📸 FOTOĞRAFI ÇEKİLECEK ALAN BAŞLANGICI --- */}
+      {/* Arka planı renkli gradient yaptık ve süsledik */}
+      <div 
+        id="capture-area" 
+        className="relative p-8 bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-xl overflow-hidden shadow-2xl"
+        style={{ minHeight: '620px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+      >
+        {/* Dekoratif Altın Çizgiler (Süsleme) */}
+        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-600 to-yellow-200 opacity-80"></div>
+        <div className="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-600 to-yellow-200 opacity-80"></div>
 
-      {/* Başlık */}
-      <h1 className="text-4xl font-serif font-bold text-center text-yellow-700 mb-1">
-        Bakırköy Kuyumcusu
-      </h1>
-
-      <div className="text-center text-sm text-gray-500 mb-6">
-        Güncelleme: {ft(lastUpdate)} • {countdown}s
-      </div>
-
-      {/* Ana Kart */}
-      <div className="bg-white p-6 rounded-2xl shadow-xl border">
-
-        <Row
-          title="Çeyrek Altın"
-          buy={prices.qBuy}
-          sell={prices.qSell}
-          prevBuy={prevPrices.qBuy}
-          prevSell={prevPrices.qSell}
-        />
-
-        <Row
-          title="Ata Altın"
-          buy={prices.aBuy}
-          sell={prices.aSell}
-          prevBuy={prevPrices.aBuy}
-          prevSell={prevPrices.aSell}
-        />
-
-        <div className="grid grid-cols-2 gap-4 mt-6">
-          <Box title="22 Ayar Gram" value={prices.g22} prev={prevPrices.g22} />
-          <Box title="24 Ayar Gram" value={prices.g24} prev={prevPrices.g24} />
+        {/* Logo Alanı */}
+        <div className="flex flex-col items-center justify-center mb-4 z-10">
+          <a
+            href="https://www.instagram.com/bakirkoykuyumcusu/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wgARCAH0AfQDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAMEBQIB/8QAGAEBAQEBAQAAAAAAAAAAAAAAAAECAwT/2gAMAwEAAhADEAAAAvBx9YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7Th3wAoAAAAAAAAAAAAAADvidJ+Lne+OK65x3Wa+tcZkejnKmhvlSe9QuKoz1s19TNuOLFfTIq1mxc5J7nrZ41It8c6L3zHVfraGsc5tmymX74z1tQXp9cs+vNDnoCgAAAAAAAAAAAJ4O00+qfO+UMZjravZ0WsbGNNHLxfoTLoVq01zVe+Z6aubLBceaeZOujUqy3Nf3xnptcUY9ceOZYs9ZdLIsXMk8NSzkZ6d6eVPcVxNgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAde2LNxn8aeWrvjRM/vrRTIe+TcnFmxcUeNTKVJHrpkSR65kCbkj2su4452skiLk1B5ow6xQGekkevk3HcevkCTjbMiK5TlSR69mRJHrmQJsAAAAAAAAAC3oZfuuUlPQozXOhnyLJoRw650vDHZs41686sfvk21smxcw6vNS5qjPXY6p874aGRNBNx6Od3NTQaXNzmjPTXy57euXuTPBNe26uiS4+hno18iysGrzTuawz1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkkr2bmDmVLEscESzGkXcslU0qWLrmwcRWqyeTQ9rJBN1ZXSSS1/ZOyOO7zc1vJuZqJY5IViMj7l9srCaAAAAAAAAAAAAAAWa3qWIefC5FxzZN1WFjqDknK6eWqvU1a4i5s5749ll7rknno92Twx9rcgg8SfqDle7dTg9u0fYt+V+bORNgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACAAMAAAAh888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888889988888888888888886b0mc418S5f4RVlzsr28888888888888q89Nyp00HsYsHdqw8+888888888888888888888888888888888888888888888m0960qk998+2+08516f5988888888888XR8Jc715y8XQ8Q8idG/7j888888888888888888888888888888888888888888888p66/4y+b642m1C+68888888888888888uekt0t6Apvtot48D7888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888/9oADAMBAAIAAwAAABDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzznXzzzzzzzzzzzzzzzymnS3Xl/zWsTjj+Ayyjzzzzzzzzzzzzzynt+gajLxyr6y96jHwHzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzwGTiHx2bvvzr7hXzN/wB//wC/PPPPPPPPPPHF/aHL/wDr3wFr1by343axjzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzwxnD/X31/1XTjsjDHnzzzzzzzzzzzzzzz2xDyJfkDlfvV+WybTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz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"
+              className="h-28 w-28 rounded-full shadow-lg border-4 border-white object-cover hover:scale-105 transition-transform"
+              alt="logo"
+              crossOrigin="anonymous"
+            />
+          </a>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          <SmallBox title="0.25g (24K)" value={prices.s025} prev={prevPrices.s025} />
-          <SmallBox title="0.50g (22K)" value={prices.s0522} prev={prevPrices.s0522} />
-          <SmallBox title="0.50g (24K)" value={prices.s0524} prev={prevPrices.s0524} />
+        {/* Başlık ve Tarih */}
+        <h1 className="text-4xl font-serif font-bold text-center text-yellow-800 mb-4 z-10 drop-shadow-sm">
+          Bakırköy Kuyumcusu
+        </h1>
+        <div className="text-center text-xs text-yellow-700 font-bold tracking-widest uppercase mb-6 opacity-80 z-10">
+          {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} • Canlı Piyasa
         </div>
-      </div>
-{/* ← BURAYA SABİTLİK MESAJINI EKLİYORSUN */}
-{isStable && (
-  <div className="mt-4 text-center text-xs text-gray-500">
-    Veri akışı sabit seyrediyor
-  </div>
-)}
-      {/* Login */}
+
+        {/* Fiyat Kartı (Cam Efekti) */}
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-yellow-100 z-10">
+          
+          <Row title="Çeyrek Altın" buy={prices.qBuy} sell={prices.qSell} prevBuy={prevPrices.qBuy} prevSell={prevPrices.qSell} />
+          
+          <Row title="Ata Altın" buy={prices.aBuy} sell={prices.aSell} prevBuy={prevPrices.aBuy} prevSell={prevPrices.aSell} />
+          
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <Box title="22 Ayar Gram" value={prices.g22} prev={prevPrices.g22} />
+            <Box title="24 Ayar Gram" value={prices.g24} prev={prevPrices.g24} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            <SmallBox title="0.25g (24K)" value={prices.s025} prev={prevPrices.s025} />
+            <SmallBox title="0.50g (22K)" value={prices.s0522} prev={prevPrices.s0522} />
+            <SmallBox title="0.50g (24K)" value={prices.s0524} prev={prevPrices.s0524} />
+          </div>
+
+          {/* Kartın Altındaki Bilgi */}
+          <div className="mt-5 pt-3 border-t border-gray-200 flex justify-between items-center text-[10px] text-gray-500 font-mono uppercase">
+             <span>Saat: {ft(lastUpdate)}</span>
+             <span className="font-bold tracking-wider">@bakirkoykuyumcusu</span>
+          </div>
+        </div>
+        
+        {/* Slogan */}
+        <div className="mt-6 text-center text-yellow-800/60 font-serif italic text-sm z-10">
+          "Güvenin ve Kalitenin Adresi"
+        </div>
+
+      </div> 
+      {/* --- 📸 FOTOĞRAF ALANI BİTİŞ --- */}
+
+
+      {/* Sabitlik Uyarısı (Fotoğrafta çıkmasın diye dışarı aldım) */}
+      {isStable && (
+        <div className="mt-4 text-center text-xs text-gray-500 animate-pulse">
+          ⚠️ Veri akışı şu an sabit (Piyasa kapalı olabilir)
+        </div>
+      )}
+
+      {/* --- MODALLAR --- */}
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
@@ -696,23 +736,22 @@ React.useEffect(() => {
         />
       )}
 
-      {/* Admin Panel */}
       {adminOpen && draft && (
-  <AdminModal
-    open={adminOpen}
-    draft={draft}
-    setDraft={setDraft}
-    backupPolicy={backupPolicy}
-    setBackupPolicy={setBackupPolicy}
-    onClose={() => setAdminOpen(false)}
-    onSave={async () => {
-      await supa.from("altin_politika").update(draft).eq("id", 1);
-      setPolicy({ ...draft });
-      setAdminOpen(false);
-      setBackupPolicy(null); // makası azaltınca eski kayıt silinsin
-    }}
-  />
-)}
+        <AdminModal
+          open={adminOpen}
+          draft={draft}
+          setDraft={setDraft}
+          backupPolicy={backupPolicy}
+          setBackupPolicy={setBackupPolicy}
+          onClose={() => setAdminOpen(false)}
+          onSave={async () => {
+            await supa.from("altin_politika").update(draft).eq("id", 1);
+            setPolicy({ ...draft });
+            setAdminOpen(false);
+            setBackupPolicy(null);
+          }}
+        />
+      )}
 
     </div>
   );
