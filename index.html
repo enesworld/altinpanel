@@ -23,6 +23,19 @@
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
     .modal { background: white; padding: 20px; width: 90%; max-width: 350px; border-radius: 16px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* Kayan Yazı Animasyonu */
+    .animate-scroll {
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: scroll 20s linear infinite;
+    }
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
   </style>
 </head>
 
@@ -237,7 +250,18 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
                 </div>
             </div>
         </div>
-
+{/* --- DUYURU (KAYAN YAZI) --- */}
+        <div className="mb-4 pt-4 border-t border-dashed">
+            <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">Kayan Yazı (Duyuru)</h4>
+            <input 
+                type="text" 
+                placeholder="Örn: PAZAR GÜNLERİ AÇIĞIZ..." 
+                value={draft.duyuru || ""} 
+                onChange={e=>setDraft({...draft, duyuru: e.target.value})} 
+                className="w-full p-2 border rounded text-xs focus:border-yellow-500 outline-none" 
+            />
+            <div className="text-[9px] text-gray-400 mt-1">*Yazıyı silerseniz şerit kaybolur.</div>
+        </div>
         {/* KAYDET VE YENİLE */}
         <div className="flex flex-col gap-3 border-t pt-3">
             {/* Bu buton yeni eklendi: Sadece buna basınca diğer ekranlar yenilenir */}
@@ -455,6 +479,14 @@ function App() {
             onClose={()=>setAdminOpen(false)} 
             onSave={handleSave} 
           />
+      )}
+      {/* KAYAN YAZI BAR (En Altta Sabit) */}
+      {policy && policy.duyuru && (
+        <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl">
+            <div className="animate-scroll text-sm font-bold tracking-[0.2em] uppercase">
+                {policy.duyuru}
+            </div>
+        </div>
       )}
     </div>
   );
