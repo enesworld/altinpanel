@@ -9,685 +9,279 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
-    body {
-      background: #fafafa;
-    }
+    body { background: #fafafa; }
+    
+    /* Animasyonlar geri geldi */
+    .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
+    .flash-down { color: #dc2626 !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
 
-    .flash-up {
-      color: #16a34a !important;
-      transform: scale(1.12);
-      font-weight: 700;
-      transition: all .22s ease-out;
-    }
-    .flash-down {
-      color: #dc2626 !important;
-      transform: scale(1.12);
-      font-weight: 700;
-      transition: all .22s ease-out;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-    .modal {
-      background: white;
-      padding: 22px;
-      width: 330px;
-      border-radius: 14px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.25);
-      animation: pop .3s ease;
-    }
-    @keyframes pop {
-      from { transform: scale(0.85); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
-    }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
+    .modal { background: white; padding: 20px; width: 90%; max-width: 350px; border-radius: 16px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+    @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   </style>
 </head>
 
-<body class="text-gray-800 antialiased">
+<body class="text-gray-800 antialiased font-sans">
   <div id="root"></div>
 
 <script type="text/babel">
 
-// ======================================================
-// SAFE FETCH – Timeout + Retry + Güvenli JSON
-// ======================================================
+// --- GÜVENLİ FETCH ---
 async function safeFetch(url, timeout = 3500, retries = 2) {
   for (let i = 0; i <= retries; i++) {
     try {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), timeout);
-
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(id);
-
-      if (!res.ok) throw new Error("HTTP Error: " + res.status);
-
-      const text = await res.text();
-      if (!text || text.trim() === "") throw new Error("Boş yanıt");
-
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        throw new Error("JSON Parse Error");
-      }
-
-      if (!json.data) throw new Error("Geçersiz veri formatı");
-
+      if (!res.ok) throw new Error(res.status);
+      const json = await res.json();
+      if (!json.data) throw new Error("Format hatası");
       return json;
-
     } catch (err) {
-      console.warn(`safeFetch attempt ${i + 1} failed => ${err.message}`);
       if (i === retries) return null;
-      await new Promise(r => setTimeout(r, 500)); // retry cooldown
+      await new Promise(r => setTimeout(r, 500));
     }
   }
 }
 
-
-// =========================================================
-// 1. Sabitler
-// =========================================================
-
+// --- AYARLAR ---
 const API = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
-
-// KENDİ DEĞERLERİNİ BURAYA YAZACAKSIN
 const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
-
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
+// --- YARDIMCILAR ---
+const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
+const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
 
-// =========================================================
-// 2. Yardımcı Fonksiyonlar
-// =========================================================
+// --- BİLEŞENLER ---
 
-function fp(v) {
-  return v?.toLocaleString("tr-TR") ?? "-";
-}
-function ft(t) {
-  return t
-    ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
-    : "-";
-}
-function diff(c, p) {
-  const d = c - p;
-  const pct = (d / p) * 100;
-  const s = d > 0 ? "+" : "";
-  return `${s}${d.toFixed(2)} ₺ / ${s}${pct.toFixed(2)}%`;
-}
-
-
-// =========================================================
-// 3. Component: AnimatedValue
-// =========================================================
-
-const AnimatedValue = React.memo(({ value, prev, showDiff = true }) => {
-  if (value == null || isNaN(value)) return <span>-</span>;
-
-  // ANİMASYON SINIFI
-  let cls = "text-xl font-bold transition-all duration-300 text-center";
-
-  // SADECE FİYAT DEĞİŞİNCE ANİMASYON
-  if (prev !== null && prev !== undefined && value !== prev) {
-    if (value > prev) cls = "flash-up";
-    else cls = "flash-down";
-  }
-
+const AnimatedValue = React.memo(({ value, prev }) => {
+  let cls = "text-xl font-bold tracking-tight transition-all duration-500";
+  if (prev && value !== prev) cls = value > prev ? "flash-up" : "flash-down";
+  
   return (
-    <div className="flex flex-col items-center leading-tight">
-
-      {/* GPU HIZLANDIRMALI FİYAT */}
-      <span
-        className={cls}
-        style={{ willChange: "transform, color" }}
-      >
-        {fp(Math.round(value))}{" "}
-        <span className="text-xs text-yellow-700">₺</span>
-      </span>
-
-      {/* FARK GÖSTERGESİ */}
-      {showDiff && prev != null && prev !== undefined && (
-        <span className="text-[11px] text-gray-500 mt-0.5">
-          {diff(value, prev)}
-        </span>
-      )}
+    <div className={cls}>
+      {fp(Math.round(value))} <span className="text-sm font-normal text-gray-400">₺</span>
     </div>
   );
 });
 
-
-// =========================================================
-// 4. Component: Fiyat Satırı
-// =========================================================
-
 const Row = ({ title, buy, sell, prevBuy, prevSell }) => (
-  <div className="py-4 flex justify-between items-center border-b border-gray-200">
-    <div className="text-lg font-semibold">{title}</div>
-
-    <div className="flex gap-8">
-      <div>
-        <div className="text-xs text-gray-400">Alış</div>
+  <div className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0">
+    {/* İsimler kırılmasın diye whitespace-nowrap eklendi */}
+    <div className="font-bold text-gray-700 text-lg whitespace-nowrap pr-2">{title}</div>
+    <div className="flex gap-4 text-right">
+      <div className="flex flex-col">
+        <span className="text-[10px] text-gray-400 uppercase tracking-wider">Alış</span>
         <AnimatedValue value={buy} prev={prevBuy} />
       </div>
-      <div>
-        <div className="text-xs text-yellow-700">Satış</div>
+      <div className="flex flex-col">
+        <span className="text-[10px] text-yellow-600 uppercase tracking-wider">Satış</span>
         <AnimatedValue value={sell} prev={prevSell} />
       </div>
     </div>
   </div>
 );
 
-
-// =========================================================
-// 5. Component: Büyük Kutular (22 / 24)
-// =========================================================
-
 const Box = ({ title, value, prev }) => (
-  <div
-    className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200"
-    style={{
-      minHeight: "90px",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-    }}
-  >
-    <div className="text-sm text-gray-500 mb-1">{title}</div>
+  <div className="bg-orange-50/50 p-3 rounded-xl text-center border border-orange-100 flex flex-col justify-center min-h-[90px]">
+    <div className="text-xs text-gray-500 mb-1 font-medium">{title}</div>
     <AnimatedValue value={value} prev={prev} />
   </div>
 );
 
-
-// =========================================================
-// 6. Component: Küçük Kutular (0.25 / 0.5)
-// =========================================================
-
 const SmallBox = ({ title, value, prev }) => (
-  <div className="bg-gray-50 rounded-lg p-2 text-center border border-gray-200">
-    <div className="text-xs text-gray-400 mb-1">{title}</div>
-    <AnimatedValue value={value} prev={prev} showDiff={false} />
+  <div className="bg-gray-50 p-2 rounded-lg text-center border border-gray-100">
+    <div className="text-[10px] text-gray-400 mb-1">{title}</div>
+    <div className="font-bold text-gray-800">
+      {fp(Math.round(value))} <span className="text-[9px] text-gray-400">₺</span>
+    </div>
   </div>
 );
 
-
-// =========================================================
-// 7. Component: Login Modal
-// =========================================================
-
+// --- MODALLAR ---
 function LoginModal({ onClose, onLoginSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
 
   async function login() {
-    const { data, error } = await supa.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    onLoginSuccess(data.user);
+    const { data, error } = await supa.auth.signInWithPassword({ email, password });
+    if (error) setError("Hatalı giriş!");
+    else onLoginSuccess(data.user);
   }
 
   return (
     <div className="modal-backdrop">
       <div className="modal">
-        <h3 className="text-lg font-semibold mb-4 text-yellow-700">
-          Yönetici Girişi
-        </h3>
-
-        <input
-          type="email"
-          placeholder="E-posta"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 mb-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none"
-        />
-
-        <input
-          type="password"
-          placeholder="Şifre"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-3 py-2 mb-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none"
-        />
-
-        {error && (
-          <div className="text-red-600 text-xs mb-3">{error}</div>
-        )}
-
-        <div className="text-right">
-          <button
-            className="px-3 py-2 mr-2 border rounded"
-            onClick={onClose}
-          >
-            Kapat
-          </button>
-          <button
-            className="px-3 py-2 rounded bg-yellow-600 text-white"
-            onClick={login}
-          >
-            Giriş Yap
-          </button>
+        <h3 className="text-lg font-bold text-yellow-700 mb-4">Yönetici Paneli</h3>
+        <input className="w-full p-3 mb-3 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 ring-yellow-200 outline-none" type="email" placeholder="E-posta" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input className="w-full p-3 mb-4 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 ring-yellow-200 outline-none" type="password" placeholder="Şifre" value={password} onChange={e=>setPassword(e.target.value)} />
+        {error && <div className="text-red-500 text-xs mb-3">{error}</div>}
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 rounded text-gray-500 hover:bg-gray-100">İptal</button>
+          <button onClick={login} className="px-4 py-2 rounded bg-yellow-600 text-white font-bold shadow-lg shadow-yellow-200">Giriş</button>
         </div>
       </div>
     </div>
   );
 }
 
-
-// =========================================================
-// 8. Component: Admin Panel
-// =========================================================
-
-function AdminModal({
-  open,
-  draft,
-  setDraft,
-  backupPolicy,
-  setBackupPolicy,
-  onClose,
-  onSave
-}) {
-
+function AdminModal({ open, draft, setDraft, onClose, onSave }) {
   if (!open || !draft) return null;
-
   const fields = [
-    ["ceyrek_alis", "Çeyrek Alış Farkı"],
-    ["ceyrek_satis", "Çeyrek Satış Farkı"],
-    ["ata_alis", "Ata Alış Farkı"],
-    ["ata_satis", "Ata Satış Farkı"],
-    ["gram22", "22 Ayar Farkı"],
-    ["gram24", "24 Ayar Farkı"],
-    ["g025", "0.25g Çarpan"],
-    ["g05_22", "0.50g (22K) Çarpan"],
-    ["g05_24", "0.50g (24K) Çarpan"],
+    ["ceyrek_alis", "Çeyrek Alış"], ["ceyrek_satis", "Çeyrek Satış"],
+    ["ata_alis", "Ata Alış"], ["ata_satis", "Ata Satış"],
+    ["gram22", "22K Fark"], ["gram24", "24K Fark"]
   ];
 
   return (
     <div className="modal-backdrop">
-      <div className="modal">
-        <h3 className="text-lg font-semibold mb-4 text-yellow-700">
-          Fiyat Politikası
-        </h3>
-
-        {fields.map(([key, label]) => (
-          <div key={key} className="flex justify-between items-center mb-2">
-            <span className="text-sm">{label}</span>
-            <input
-              type="number"
-              value={draft[key]}
-              onChange={(e) =>
-                setDraft({ ...draft, [key]: Number(e.target.value) })
-              }
-              className="w-24 p-1 border rounded text-right"
-            />
+      <div className="modal max-w-sm">
+        <h3 className="text-lg font-bold text-yellow-700 mb-4">Fiyat Makas Ayarı</h3>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
+          {fields.map(([k, l]) => (
+            <div key={k} className="flex flex-col">
+              <label className="text-[10px] text-gray-500">{l}</label>
+              <input type="number" value={draft[k]} onChange={e=>setDraft({...draft, [k]: Number(e.target.value)})} className="p-2 border rounded text-right font-mono" />
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between items-center pt-2 border-t">
+          <button onClick={()=>{ setDraft({ ...draft, ceyrek_alis:-150, ceyrek_satis:200, ata_alis:-800, ata_satis:1000, gram22:170, gram24:170 }); }} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Makas Aç</button>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-3 py-2 rounded text-gray-500">Kapat</button>
+            <button onClick={onSave} className="px-3 py-2 rounded bg-green-600 text-white shadow-lg">Kaydet</button>
           </div>
-        ))}
-
-        <div className="text-right mt-4 flex justify-between items-center">
-
-  {/* MAKASI AÇ */}
-  <button
-    className="px-3 py-2 bg-yellow-700 text-white rounded"
-    onClick={() => {
-      // Önceki değerleri yedekle
-      if (!backupPolicy) setBackupPolicy({ ...draft });
-
-      // Yeni makas değerlerini uygula
-      const updated = {
-        ...draft,
-        ceyrek_alis: -150,
-        ceyrek_satis: 200,
-        ata_alis: -800,
-        ata_satis: 1000,
-        gram22: 170,
-        gram24: 170,
-      };
-
-      setDraft(updated);
-    }}
-  >
-    Makası Aç
-  </button>
-
-  {/* MAKASI AZALT */}
-  <button
-  className="px-3 py-2 bg-gray-600 text-white rounded"
-  onClick={() => {
-
-    // Sabit default makas değerleri
-    const defaultPolicy = {
-      ceyrek_alis: -100,
-      ceyrek_satis: 150,
-      ata_alis: -250,
-      ata_satis: 800,
-      gram22: 100,
-      gram24: 110,
-      g025: 0.33,
-      g05_22: 0.539,
-      g05_24: 0.52
-    };
-
-    setDraft(defaultPolicy);
-  }}
->
-  Makası Azalt
-</button>
-
-
-
-  {/* KAPAT & KAYDET */}
-  <div>
-    <button className="px-3 py-2 mr-2 border rounded" onClick={onClose}>
-      Kapat
-    </button>
-
-    <button
-      className="px-3 py-2 rounded bg-yellow-600 text-white"
-      onClick={onSave}
-    >
-      Kaydet
-    </button>
-  </div>
-
-</div>
-
+        </div>
       </div>
     </div>
   );
 }
 
-
-// =========================================================
-// 9. ANA UYGULAMA (APP)
-// =========================================================
-
+// --- ANA UYGULAMA ---
 function App() {
   const [prices, setPrices] = React.useState({});
   const [prevPrices, setPrevPrices] = React.useState({});
   const [lastUpdate, setLastUpdate] = React.useState(null);
-  const [countdown, setCountdown] = React.useState(3);
-
   const [user, setUser] = React.useState(null);
-  const [loginOpen, setLoginOpen] = React.useState(false);
-
   const [policy, setPolicy] = React.useState(null);
   const [draft, setDraft] = React.useState(null);
+  
+  const [loginOpen, setLoginOpen] = React.useState(false);
   const [adminOpen, setAdminOpen] = React.useState(false);
+  const [stability, setStability] = React.useState(0);
 
-  const [backupPolicy, setBackupPolicy] = React.useState(null);
-
-  // 📸 EKRAN GÖRÜNTÜSÜ ALMA FONKSİYONU
-  const downloadImage = async () => {
-    const element = document.getElementById("capture-area");
-    if (!element) return;
-    const canvas = await html2canvas(element, { scale: 3, backgroundColor: "#fafafa", useCORS: true });
-    const image = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = `Bakirkoy_Fiyatlar_${new Date().toLocaleDateString()}.png`;
-    link.click();
-  };
-
-  // 📌 STABILITE STATE'LERI BURAYA
-  const [stabilitySeconds, setStabilitySeconds] = React.useState(0);
-  const [isStable, setIsStable] = React.useState(false);
-
-  // Sayaç
+  // Veri Çekme
   React.useEffect(() => {
-  setCountdown(10); // başlangıç — 10 saniye
-
-  const t = setInterval(() => {
-    setCountdown((c) => (c <= 1 ? 10 : c - 1));
-  }, 1000);
-
-  return () => clearInterval(t);
-}, []);
-
-  // Politikayı getir
-  React.useEffect(() => {
-    async function load() {
-      const { data } = await supa
-        .from("altin_politika")
-        .select("*")
-        .eq("id", 1)
-        .single();
-      setPolicy(data);
-      setDraft(data);
+    async function init() {
+      const { data } = await supa.from("altin_politika").select("*").eq("id", 1).single();
+      setPolicy(data); setDraft(data);
     }
-    load();
+    init();
   }, []);
 
-  // Stabilite sayacı → her saniye 1 artar
-React.useEffect(() => {
-  const t = setInterval(() => {
-    setStabilitySeconds((s) => s + 1);
-  }, 1000);
-
-  return () => clearInterval(t);
-}, []);
-
-// 30 saniye boyunca fiyat değişmezse sabitlik modu aktif
-React.useEffect(() => {
-  if (stabilitySeconds >= 30) {
-    setIsStable(true);
-  }
-}, [stabilitySeconds]);
-
-
-
-// FİYATLARI ÇEKEN EFEKT
-React.useEffect(() => {
-  if (!policy) return;
-
-  // Her seferinde güvenli sayı çeviricisi
-  const num = (v) => Number(v) || 0;
-
-  // ANA LOAD FONKSİYONU
-  async function load() {
-    try {
-      // SAFE FETCH → API verisini çek
+  React.useEffect(() => {
+    if(!policy) return;
+    const num = (v) => Number(v) || 0;
+    
+    async function load() {
       const j = await safeFetch(API);
-
-      if (!j) {
-        console.warn("API erişilemedi. En son fiyatlar korunuyor.");
-        return; // panel donmaz, boş fiyat yazmaz
-      }
-
+      if (!j) return;
       const d = j.data;
       const P = policy;
 
-      // Ham fiyatları güvenli sayıya çevir
-      const rawQuarterBuy  = num(d.CEYREK_ESKI.alis);
-      const rawQuarterSell = num(d.CEYREK_ESKI.satis);
-      const rawAtaBuy      = num(d.ATA_ESKI.alis);
-      const rawAtaSell     = num(d.ATA_ESKI.satis);
-      const rawG22Sell     = num(d.AYAR22.satis);
-      const rawG24Sell     = num(d.ALTIN.satis);
-
-      // Politika makasları
-      const mkCeyrekAlis   = num(P.ceyrek_alis);
-      const mkCeyrekSatis  = num(P.ceyrek_satis);
-      const mkAtaAlis      = num(P.ata_alis);
-      const mkAtaSatis     = num(P.ata_satis);
-      const mkG22          = num(P.gram22);
-      const mkG24          = num(P.gram24);
-
-      const carp025        = num(P.g025);
-      const carp05_22      = num(P.g05_22);
-      const carp05_24      = num(P.g05_24);
-
-      // Makas eklenmiş tam sayılar
-      const qBuy  = Math.round(rawQuarterBuy  + mkCeyrekAlis);
-      const qSell = Math.round(rawQuarterSell + mkCeyrekSatis);
-      const aBuy  = Math.round(rawAtaBuy      + mkAtaAlis);
-      const aSell = Math.round(rawAtaSell     + mkAtaSatis);
-
-      const g22 = Math.round(rawG22Sell + mkG22);
-      const g24 = Math.round(rawG24Sell + mkG24);
-
-      // Küçük gramlar (makaslı gram üzerinden)
-      const s025  = Math.round(g24 * carp025);
-      const s0522 = Math.round(g22 * carp05_22);
-      const s0524 = Math.round(g24 * carp05_24);
-
-      const newPrices = {
-        qBuy, qSell,
-        aBuy, aSell,
-        g22, g24,
-        s025, s0522, s0524
+      const newP = {
+        qBuy: Math.round(num(d.CEYREK_ESKI.alis) + num(P.ceyrek_alis)),
+        qSell: Math.round(num(d.CEYREK_ESKI.satis) + num(P.ceyrek_satis)),
+        aBuy: Math.round(num(d.ATA_ESKI.alis) + num(P.ata_alis)),
+        aSell: Math.round(num(d.ATA_ESKI.satis) + num(P.ata_satis)),
+        g22: Math.round(num(d.AYAR22.satis) + num(P.gram22)),
+        g24: Math.round(num(d.ALTIN.satis) + num(P.gram24)),
       };
+      // Küçük gram hesapları
+      newP.s025 = Math.round(newP.g24 * num(P.g025));
+      newP.s0522 = Math.round(newP.g22 * num(P.g05_22));
+      newP.s0524 = Math.round(newP.g24 * num(P.g05_24));
 
-      setPrices((prev) => {
-  const previous = prev || {};
-
-  const changed = JSON.stringify(previous) !== JSON.stringify(newPrices);
-
-  if (changed) {
-    setStabilitySeconds(0);
-    setIsStable(false);
-  }
-
-  // prevPrices = eski değerler
-  setPrevPrices(previous);
-
-  return newPrices;
-});
-
-
-
+      setPrices(prev => {
+        if(JSON.stringify(prev) !== JSON.stringify(newP)) setStability(0);
+        setPrevPrices(prev);
+        return newP;
+      });
       setLastUpdate(new Date());
-    } catch (e) {
-      console.error("load() hata:", e);
     }
+    
+    load();
+    const t = setInterval(load, 10000); 
+    const s = setInterval(() => setStability(c => c+1), 1000);
+    return () => { clearInterval(t); clearInterval(s); }
+  }, [policy]);
+
+  const downloadImage = async () => {
+    const el = document.getElementById("capture-area");
+    if(!el) return;
+    const canvas = await html2canvas(el, { scale: 3, backgroundColor: null, useCORS: true });
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `Fiyatlar_${new Date().toLocaleDateString()}.png`;
+    link.click();
   }
-
-  // ======================================================
-  // NON-BLOCKING FETCH LOOP → UI donmaz, çakışma yok
-  // ======================================================
-  async function tickLoop() {
-    await load();
-    setTimeout(tickLoop, 10000);
-  }
-
-  tickLoop(); // döngüyü başlat
-
-}, [policy]);
-
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 pt-12 pb-10">
+    <div className="min-h-screen pb-10 flex flex-col items-center bg-gray-50">
       
-      {/* --- BUTONLAR (SAYFANIN EN ÜSTÜNDE SABİT) --- */}
-      
-      {/* Ham Fiyatlar */}
-      <button
-        className="fixed top-4 right-16 text-2xl text-gray-600 hover:text-black z-50"
-        onClick={() => window.open('ham.html', '_blank')}
-        title="Ham Fiyatlar"
-      >
-        📜
-      </button>
+      {/* İKONLAR (Header) */}
+      <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold">Çıkış</button>}
+        </div>
+        <div className="flex gap-3 pointer-events-auto">
+          <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📜</button>
+          <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📟</button>
+          <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📸</button>
+          <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">⚙️</button>
+        </div>
+      </div>
 
-      {/* Ayarlar */}
-      <button
-        className="fixed top-4 right-4 text-2xl text-gray-600 hover:text-black z-50"
-        onClick={() => (user ? setAdminOpen(true) : setLoginOpen(true))}
-      >
-        ⚙
-      </button>
-
-      {/* Kâr/Zarar */}
-      <button
-        className="fixed top-4 right-28 text-2xl text-gray-600 hover:text-black z-50"
-        onClick={() => window.open('profit.html', '_blank')}
-        title="Kâr / Zarar Hesaplama"
-      >
-        📟
-      </button>
-
-      {/* 📸 FOTOĞRAF ÇEKME BUTONU */}
-      <button 
-        className="fixed top-4 right-40 text-2xl hover:scale-110 transition-transform z-50" 
-        onClick={downloadImage}
-        title="Instagram Hikayesi İndir"
-      >
-        📸
-      </button>
-
-      {/* Çıkış Yap */}
-      {user && (
-        <button
-          className="fixed top-4 left-4 text-sm text-red-600 z-50"
-          onClick={async () => {
-            await supa.auth.signOut();
-            setUser(null);
-          }}
-        >
-          Çıkış Yap
-        </button>
-      )}
-
-
-      {/* --- 📸 FOTOĞRAFI ÇEKİLECEK ALAN BAŞLANGICI --- */}
-      {/* Arka planı renkli gradient yaptık ve süsledik */}
+      {/* --- FOTOĞRAF ALANI (Kartı Genişlettik: max-w-xl) --- */}
       <div 
         id="capture-area" 
-        className="relative p-8 bg-gradient-to-br from-orange-50 via-white to-amber-50 rounded-xl overflow-hidden shadow-2xl"
-        style={{ minHeight: '620px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+        className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100"
       >
-        {/* Dekoratif Altın Çizgiler (Süsleme) */}
-        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-600 to-yellow-200 opacity-80"></div>
-        <div className="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-600 to-yellow-200 opacity-80"></div>
-
-        {/* Logo Alanı */}
-        <div className="flex flex-col items-center justify-center mb-4 z-10">
-          <a
-            href="https://www.instagram.com/bakirkoykuyumcusu/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wgARCAH0AfQDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAMEBQIB/8QAGAEBAQEBAQAAAAAAAAAAAAAAAAECAwT/2gAMAwEAAhADEAAAAvBx9YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7Th3wAoAAAAAAAAAAAAAADvidJ+Lne+OK65x3Wa+tcZkejnKmhvlSe9QuKoz1s19TNuOLFfTIq1mxc5J7nrZ41It8c6L3zHVfraGsc5tmymX74z1tQXp9cs+vNDnoCgAAAAAAAAAAAJ4O00+qfO+UMZjravZ0WsbGNNHLxfoTLoVq01zVe+Z6aubLBceaeZOujUqy3Nf3xnptcUY9ceOZYs9ZdLIsXMk8NSzkZ6d6eVPcVxNgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAde2LNxn8aeWrvjRM/vrRTIe+TcnFmxcUeNTKVJHrpkSR65kCbkj2su4452skiLk1B5ow6xQGekkevk3HcevkCTjbMiK5TlSR69mRJHrmQJsAAAAAAAAAC3oZfuuUlPQozXOhnyLJoRw650vDHZs41686sfvk21smxcw6vNS5qjPXY6p874aGRNBNx6Od3NTQaXNzmjPTXy57euXuTPBNe26uiS4+hno18iysGrzTuawz1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkkr2bmDmVLEscESzGkXcslU0qWLrmwcRWqyeTQ9rJBN1ZXSSS1/ZOyOO7zc1vJuZqJY5IViMj7l9srCaAAAAAAAAAAAAAAWa3qWIefC5FxzZN1WFjqDknK6eWqvU1a4i5s5749ll7rknno92Twx9rcgg8SfqDle7dTg9u0fYt+V+bORNgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACAAMAAAAh888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888889988888888888888886b0mc418S5f4RVlzsr28888888888888q89Nyp00HsYsHdqw8+888888888888888888888888888888888888888888888m0960qk998+2+08516f5988888888888XR8Jc715y8XQ8Q8idG/7j888888888888888888888888888888888888888888888p66/4y+b642m1C+68888888888888888uekt0t6Apvtot48D7888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888/9oADAMBAAIAAwAAABDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzznXzzzzzzzzzzzzzzzymnS3Xl/zWsTjj+Ayyjzzzzzzzzzzzzzynt+gajLxyr6y96jHwHzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzwGTiHx2bvvzr7hXzN/wB//wC/PPPPPPPPPPHF/aHL/wDr3wFr1by343axjzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzwxnD/X31/1XTjsjDHnzzzzzzzzzzzzzzz2xDyJfkDlfvV+WybTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz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"
-              className="h-28 w-28 rounded-full shadow-lg border-4 border-white object-cover hover:scale-105 transition-transform"
-              alt="logo"
-              crossOrigin="anonymous"
-            />
-          </a>
+        {/* Dekoratif Çizgi */}
+        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-500 to-yellow-200 opacity-60"></div>
+        
+        {/* LOGO - Lütfen src kısmına Base64 kodunu yapıştır */}
+        <div className="flex justify-center -mt-16 mb-4 relative z-10">
+           <a href="https://www.instagram.com/bakirkoykuyumcusu/" target="_blank">
+             <img 
+               src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wgARCAH0AfQDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAMEBQIB/8QAGAEBAQEBAQAAAAAAAAAAAAAAAAECAwT/2gAMAwEAAhADEAAAAvBx9YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7Th3wAoAAAAAAAAAAAAAADvidJ+Lne+OK65x3Wa+tcZkejnKmhvlSe9QuKoz1s19TNuOLFfTIq1mxc5J7nrZ41It8c6L3zHVfraGsc5tmymX74z1tQXp9cs+vNDnoCgAAAAAAAAAAAJ4O00+qfO+UMZjravZ0WsbGNNHLxfoTLoVq01zVe+Z6aubLBceaeZOujUqy3Nf3xnptcUY9ceOZYs9ZdLIsXMk8NSzkZ6d6eVPcVxNgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAde2LNxn8aeWrvjRM/vrRTIe+TcnFmxcUeNTKVJHrpkSR65kCbkj2su4452skiLk1B5ow6xQGekkevk3HcevkCTjbMiK5TlSR69mRJHrmQJsAAAAAAAAAC3oZfuuUlPQozXOhnyLJoRw650vDHZs41686sfvk21smxcw6vNS5qjPXY6p874aGRNBNx6Od3NTQaXNzmjPTXy57euXuTPBNe26uiS4+hno18iysGrzTuawz1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkkr2bmDmVLEscESzGkXcslU0qWLrmwcRWqyeTQ9rJBN1ZXSSS1/ZOyOO7zc1vJuZqJY5IViMj7l9srCaAAAAAAAAAAAAAAWa3qWIefC5FxzZN1WFjqDknK6eWqvU1a4i5s5749ll7rknno92Twx9rcgg8SfqDle7dTg9u0fYt+V+bORNgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACAAMAAAAh888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888889988888888888888886b0mc418S5f4RVlzsr28888888888888q89Nyp00HsYsHdqw8+888888888888888888888888888888888888888888888m0960qk998+2+08516f5988888888888XR8Jc715y8XQ8Q8idG/7j888888888888888888888888888888888888888888888p66/4y+b642m1C+68888888888888888uekt0t6Apvtot48D7888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888/9oADAMBAAIAAwAAABDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzznXzzzzzzzzzzzzzzzymnS3Xl/zWsTjj+Ayyjzzzzzzzzzzzzzynt+gajLxyr6y96jHwHzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzwGTiHx2bvvzr7hXzN/wB//wC/PPPPPPPPPPHF/aHL/wDr3wFr1by343axjzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzwxnD/X31/1XTjsjDHnzzzzzzzzzzzzzzz2xDyJfkDlfvV+WybTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz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" 
+               className="h-28 w-28 rounded-full border-[6px] border-white shadow-xl object-cover bg-white" 
+               alt="logo" 
+               crossOrigin="anonymous" 
+             />
+           </a>
         </div>
 
-        {/* Başlık ve Tarih */}
-        <h1 className="text-4xl font-serif font-bold text-center text-yellow-800 mb-4 z-10 drop-shadow-sm">
-          Bakırköy Kuyumcusu
-        </h1>
-        <div className="text-center text-xs text-yellow-700 font-bold tracking-widest uppercase mb-6 opacity-80 z-10">
-          {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} • Canlı Piyasa
+        {/* Başlıklar */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-serif font-bold text-yellow-800 tracking-tight drop-shadow-sm">Bakırköy Kuyumcusu</h1>
+          <div className="text-xs font-bold tracking-[0.3em] text-yellow-600 mt-2 uppercase opacity-80">
+            {new Date().toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'})}
+          </div>
         </div>
 
-        {/* Fiyat Kartı (Cam Efekti) */}
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-yellow-100 z-10">
-          
+        {/* Fiyat Listesi */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-inner border border-white/60">
           <Row title="Çeyrek Altın" buy={prices.qBuy} sell={prices.qSell} prevBuy={prevPrices.qBuy} prevSell={prevPrices.qSell} />
-          
           <Row title="Ata Altın" buy={prices.aBuy} sell={prices.aSell} prevBuy={prevPrices.aBuy} prevSell={prevPrices.aSell} />
           
           <div className="grid grid-cols-2 gap-4 mt-6">
@@ -696,67 +290,30 @@ React.useEffect(() => {
           </div>
 
           <div className="grid grid-cols-3 gap-3 mt-4">
-            <SmallBox title="0.25g (24K)" value={prices.s025} prev={prevPrices.s025} />
-            <SmallBox title="0.50g (22K)" value={prices.s0522} prev={prevPrices.s0522} />
-            <SmallBox title="0.50g (24K)" value={prices.s0524} prev={prevPrices.s0524} />
+            <SmallBox title="0.25g (24K)" value={prices.s025} />
+            <SmallBox title="0.50g (22K)" value={prices.s0522} />
+            <SmallBox title="0.50g (24K)" value={prices.s0524} />
           </div>
 
-          {/* Kartın Altındaki Bilgi */}
-          <div className="mt-5 pt-3 border-t border-gray-200 flex justify-between items-center text-[10px] text-gray-500 font-mono uppercase">
-             <span>Saat: {ft(lastUpdate)}</span>
-             <span className="font-bold tracking-wider">@bakirkoykuyumcusu</span>
+          <div className="mt-6 pt-4 border-t border-dashed border-gray-200 flex justify-between items-center text-[10px] text-gray-400 font-mono">
+            <span>Saat: {ft(lastUpdate)}</span>
+            <span className="tracking-widest font-bold text-gray-300">BAKIRKOYKUYUMCUSU</span>
           </div>
         </div>
-        
-        {/* Slogan */}
-        <div className="mt-6 text-center text-yellow-800/60 font-serif italic text-sm z-10">
+
+        <div className="mt-8 text-center text-yellow-800/40 font-serif italic text-sm">
           "Güvenin ve Kalitenin Adresi"
         </div>
+      </div>
+      
+      {stability > 30 && <div className="mt-4 text-xs text-gray-400 animate-pulse">● Piyasa durağan</div>}
 
-      </div> 
-      {/* --- 📸 FOTOĞRAF ALANI BİTİŞ --- */}
-
-
-      {/* Sabitlik Uyarısı (Fotoğrafta çıkmasın diye dışarı aldım) */}
-      {isStable && (
-        <div className="mt-4 text-center text-xs text-gray-500 animate-pulse">
-          ⚠️ Veri akışı şu an sabit (Piyasa kapalı olabilir)
-        </div>
-      )}
-
-      {/* --- MODALLAR --- */}
-      {loginOpen && (
-        <LoginModal
-          onClose={() => setLoginOpen(false)}
-          onLoginSuccess={(u) => {
-            setUser(u);
-            setLoginOpen(false);
-            setAdminOpen(true);
-          }}
-        />
-      )}
-
-      {adminOpen && draft && (
-        <AdminModal
-          open={adminOpen}
-          draft={draft}
-          setDraft={setDraft}
-          backupPolicy={backupPolicy}
-          setBackupPolicy={setBackupPolicy}
-          onClose={() => setAdminOpen(false)}
-          onSave={async () => {
-            await supa.from("altin_politika").update(draft).eq("id", 1);
-            setPolicy({ ...draft });
-            setAdminOpen(false);
-            setBackupPolicy(null);
-          }}
-        />
-      )}
-
+      {/* Modallar */}
+      {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
+      {adminOpen && <AdminModal open={adminOpen} draft={draft} setDraft={setDraft} onClose={()=>setAdminOpen(false)} onSave={async()=>{ await supa.from("altin_politika").update(draft).eq("id", 1); setPolicy(draft); setAdminOpen(false); }} />}
     </div>
   );
 }
-
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
 </script>
