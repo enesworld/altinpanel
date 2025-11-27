@@ -5,15 +5,12 @@
   <title>Bakırköy Kuyumcusu - Premium Altın Paneli</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- React -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -63,7 +60,7 @@
 
 <script type="text/babel">
 
-  // ======================================================
+// ======================================================
 // SAFE FETCH – Timeout + Retry + Güvenli JSON
 // ======================================================
 async function safeFetch(url, timeout = 3500, retries = 2) {
@@ -586,7 +583,7 @@ React.useEffect(() => {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 pt-12 pb-10">
-	<button
+    <button
   className="fixed top-4 right-16 text-2xl text-gray-600 hover:text-black"
   onClick={() => window.open('ham.html', '_blank')}
   title="Ham Fiyatlar"
@@ -604,7 +601,7 @@ React.useEffect(() => {
       </button>
 
       <button
-  class="fixed top-4 right-28 text-2xl text-gray-600 hover:text-black"
+  className="fixed top-4 right-28 text-2xl text-gray-600 hover:text-black"
   onClick={() => window.open('profit.html', '_blank')}
   title="Kâr / Zarar Hesaplama"
 >
