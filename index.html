@@ -348,42 +348,63 @@ function App() {
       return () => clearInterval(timer);
   }, [currentVersion]);
 
-  // FİYAT GÜNCELLEME DÖNGÜSÜ
+  // FİYAT GÜNCELLEME DÖNGÜSÜ (DÜZELTİLMİŞ HALİ)
   React.useEffect(() => {
     if(!policy) return;
-    const num = (v) => Number(v) || 0;
+    
+    // YENİ SAYI ÇEVİRİCİ (Hata Önleyici)
+    const num = (v) => {
+        if (!v) return 0;
+        if (typeof v === 'number') return v;
+        // Noktaları sil, virgülü noktaya çevir (Örn: "2.500,50" -> 2500.50)
+        let clean = v.toString().replace(/\./g, '').replace(',', '.');
+        return parseFloat(clean) || 0;
+    };
     
     async function load() {
-      const j = await safeFetch(API);
-      if (!j) return;
-      const d = j.data;
-      const P = policy;
+      try {
+        const j = await safeFetch(API);
+        if (!j) return;
+        const d = j.data;
+        const P = policy;
 
-      const newP = {
-        qBuy: Math.round(num(d.CEYREK_ESKI.alis) + num(P.ceyrek_alis)),
-        qSell: Math.round(num(d.CEYREK_ESKI.satis) + num(P.ceyrek_satis)),
-        aBuy: Math.round(num(d.ATA_ESKI.alis) + num(P.ata_alis)),
-        aSell: Math.round(num(d.ATA_ESKI.satis) + num(P.ata_satis)),
-        g22: Math.round(num(d.AYAR22.satis) + num(P.gram22)),
-        g24: Math.round(num(d.ALTIN.satis) + num(P.gram24)),
-      };
-      newP.s025 = Math.round(newP.g24 * num(P.g025));
-      newP.s0522 = Math.round(newP.g22 * num(P.g05_22));
-      newP.s0524 = Math.round(newP.g24 * num(P.g05_24));
+        // Veri yapısı kontrolü (Eğer anahtar isimleri değiştiyse burası yakalar)
+        if (!d.CEYREK_ESKI || !d.ATA_ESKI) {
+            console.warn("API anahtarları değişmiş olabilir, veri okunamadı.");
+            return;
+        }
 
-      setPrices(prev => {
-        if(JSON.stringify(prev) !== JSON.stringify(newP)) setStability(0);
-        setPrevPrices(prev);
-        return newP;
-      });
-      setLastUpdate(new Date());
+        const newP = {
+          qBuy: Math.round(num(d.CEYREK_ESKI.alis) + num(P.ceyrek_alis)),
+          qSell: Math.round(num(d.CEYREK_ESKI.satis) + num(P.ceyrek_satis)),
+          aBuy: Math.round(num(d.ATA_ESKI.alis) + num(P.ata_alis)),
+          aSell: Math.round(num(d.ATA_ESKI.satis) + num(P.ata_satis)),
+          g22: Math.round(num(d.AYAR22.satis) + num(P.gram22)),
+          g24: Math.round(num(d.ALTIN.satis) + num(P.gram24)),
+        };
+        newP.s025 = Math.round(newP.g24 * num(P.g025));
+        newP.s0522 = Math.round(newP.g22 * num(P.g05_22));
+        newP.s0524 = Math.round(newP.g24 * num(P.g05_24));
+
+        setPrices(prev => {
+          // Gereksiz render'ı önlemek için karşılaştırma
+          if(JSON.stringify(prev) !== JSON.stringify(newP)) setStability(0);
+          setPrevPrices(prev);
+          return newP;
+        });
+        setLastUpdate(new Date());
+        
+      } catch (err) {
+          console.error("Fiyat çekme hatası:", err);
+      }
     }
+    
     load();
     const t = setInterval(load, 10000); 
     const s = setInterval(() => setStability(c => c+1), 1000);
     return () => { clearInterval(t); clearInterval(s); }
   }, [policy]);
-
+  
   const downloadImage = async () => {
     const el = document.getElementById("capture-area");
     if(!el) return;
