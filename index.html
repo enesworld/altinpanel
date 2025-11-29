@@ -27,6 +27,26 @@
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .fade-in { animation: fadeIn 0.8s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* KAR TANESİ STİLİ */
+    .snowflake {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+      top: -10px; /* Ekranın üstünden başla */
+      box-shadow: 0 0 5px rgba(255,255,255,0.8); /* Hafif parlama */
+      animation: fall linear infinite;
+    }
+
+    /* DÜŞME ANİMASYONU */
+    @keyframes fall {
+      0% {
+        transform: translateY(-10vh) translateX(0px);
+      }
+      100% {
+        transform: translateY(110vh) translateX(20px); /* Aşağı düş ve biraz sağa kay */
+      }
+    }
   </style>
 </head>
 
@@ -89,30 +109,104 @@ const SmallBox = ({ title, value, prev }) => (
 );
 
 // --- GİRİŞ EKRANI ---
+// --- YILBAŞI SÜSLÜ GİRİŞ EKRANI ---
+// --- YILBAŞI SÜSLÜ (BOYDAN BOYA) GİRİŞ EKRANI ---
+// --- GİRİŞ EKRANI (Yeni Yılbaşı Teması) ---
+// --- YILBAŞI SÜSLÜ GİRİŞ EKRANI (BOYDAN BOYA) ---
+// --- YILBAŞI SÜSLÜ (ZARİF & YAZIYI KAPATMAYAN) GİRİŞ EKRANI ---
+// --- YILBAŞI SÜSLÜ (KÖŞELERDEN SARKAN) GİRİŞ EKRANI ---
+// --- YILBAŞI GİRİŞ EKRANI (KAR YAĞIŞLI & ZENGİN SÜSLÜ) ---
 function WelcomeScreen({ onSelect }) {
+  
+  // ❄️ Kar Taneleri Oluşturucu
+  // Rastgele hızda, rastgele boyutta ve rastgele konumda 50 tane kar tanesi
+  const snowflakes = Array.from({ length: 50 }).map((_, i) => {
+    const style = {
+      left: `${Math.random() * 100}%`, // Ekranın rastgele bir yerinde başla
+      width: `${Math.random() * 4 + 2}px`, // Rastgele büyüklük (2px - 6px)
+      height: `${Math.random() * 4 + 2}px`,
+      animationDuration: `${Math.random() * 5 + 5}s`, // 5 ile 10 saniye arası düşüş hızı
+      animationDelay: `${Math.random() * 5}s`, // Hepsi aynı anda başlamasın
+      opacity: Math.random() * 0.5 + 0.3, // Bazıları silik, bazıları net
+    };
+    return <div key={i} className="snowflake" style={style} />;
+  });
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center text-white">
-      <h1 className="text-5xl font-serif font-bold mb-2 tracking-tight drop-shadow-lg text-white">Bakırköy Kuyumcusu</h1>
-      <p className="text-yellow-100 text-sm mb-16 uppercase tracking-[0.3em] opacity-80">Hoşgeldiniz</p>
-      <div className="flex flex-row gap-6 w-full max-w-lg justify-center">
-        <button onClick={() => onSelect('market')} className="flex-1 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-4 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '180px' }}>
-          <span className="text-5xl drop-shadow-lg">📊</span>
-          <span className="font-bold text-xl leading-tight tracking-wide drop-shadow-md">Canlı<br/>Piyasalar</span>
-        </button>
-        <button onClick={() => onSelect('showcase')} className="flex-1 bg-white text-yellow-900 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-4 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '180px' }}>
-          <span className="text-5xl">✨</span>
-          <span className="font-bold text-xl leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
-        </button>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
+      
+      {/* ❄️ KAR YAĞIŞI KATMANI */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+          {snowflakes}
       </div>
-      <div className="mt-24 text-xs text-yellow-100/50 font-serif italic">"Güvenin ve Kalitenin Adresi"</div>
+
+      {/* 🎄 SÜS 1: Sol Üst Köşe (Çam Dalı) */}
+      <div className="absolute top-0 left-0 z-20 pointer-events-none w-48">
+          <img 
+            src="https://pngimg.com/uploads/christmas_garland/christmas_garland_PNG36.png" 
+            alt="Süs Sol" 
+            className="w-full object-contain drop-shadow-2xl opacity-90"
+            style={{ transform: 'rotate(-5deg) translateX(-20px) translateY(-10px)' }}
+          />
+      </div>
+
+      {/* 🎄 SÜS 2: Sağ Üst Köşe (Sarkan Toplar) */}
+      <div className="absolute top-0 right-0 z-20 pointer-events-none w-40">
+          <img 
+            src="https://pngimg.com/uploads/christmas_ball/christmas_ball_PNG7751.png" 
+            alt="Süs Sağ" 
+            className="w-full object-contain drop-shadow-2xl opacity-90"
+            // Sallanma efekti (CSS'te tanımlı değilse bile sabit güzel durur)
+            style={{ transform: 'scale(0.9) translateY(-20px)' }}
+          />
+      </div>
+
+      {/* 🎄 SÜS 3: Sağ Alt Köşe (Hediye Paketi / Altın Detay) */}
+      <div className="absolute bottom-0 right-0 z-20 pointer-events-none w-32 opacity-60">
+           <img 
+            src="https://pngimg.com/uploads/gift/gift_PNG100238.png" 
+            alt="Hediye" 
+            className="w-full object-contain"
+            style={{ transform: 'rotate(-10deg) translateX(20px) translateY(10px)' }}
+          />
+      </div>
+
+      {/* İÇERİK (Yazılar ve Butonlar) */}
+      <div className="relative z-30 w-full max-w-lg flex flex-col items-center mt-8">
+        
+        <h1 className="text-5xl font-serif font-bold mb-2 tracking-tight drop-shadow-lg text-white">
+          Bakırköy Kuyumcusu
+        </h1>
+        <p className="text-yellow-100 text-sm mb-16 uppercase tracking-[0.3em] opacity-90">Hoşgeldiniz</p>
+
+        {/* BUTONLAR */}
+        <div className="flex flex-row gap-6 w-full justify-center">
+          
+          <button 
+            onClick={() => onSelect('market')}
+            className="flex-1 bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-4 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white"
+            style={{ minHeight: '180px' }}
+          >
+            <span className="text-5xl drop-shadow-lg">📊</span>
+            <span className="font-bold text-xl leading-tight tracking-wide drop-shadow-md">Canlı<br/>Piyasalar</span>
+          </button>
+
+          <button 
+            onClick={() => onSelect('showcase')}
+            className="flex-1 bg-white text-yellow-900 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-4 hover:bg-yellow-50 border-b-8 border-yellow-900/10"
+            style={{ minHeight: '180px' }}
+          >
+            <span className="text-5xl">✨</span>
+            <span className="font-bold text-xl leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
+          </button>
+
+        </div>
+        
+        <div className="mt-20 text-xs text-yellow-100/50 font-serif italic">"Güvenin ve Kalitenin Adresi"</div>
+      </div>
     </div>
   );
-}
-
-
-
-
-// --- VİTRİN SAYFASI (ULTRA PREMIUM / GALERİ MODU) ---
+}// --- VİTRİN SAYFASI (ULTRA PREMIUM / GALERİ MODU) ---
 // --- VİTRİN SAYFASI (MÜCEVHER KUTUSU MODU - KÜÇÜK RESİM) ---
 function VitrinPage({ onBack, items }) {
   return (
