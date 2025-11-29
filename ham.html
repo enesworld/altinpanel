@@ -20,7 +20,7 @@
     
     <div class="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 text-center border-b border-yellow-100">
       <h1 class="text-2xl font-serif font-bold text-yellow-800">Ham Piyasa Verileri</h1>
-      <p class="text-xs text-yellow-600 mt-1 uppercase tracking-widest">Kapalıçarşı Altın Kaynaklı</p>
+      <p class="text-xs text-yellow-600 mt-1 uppercase tracking-widest">Harem Altın (Direkt)</p>
     </div>
 
     <div id="harem" class="p-2">
@@ -43,17 +43,25 @@
       const j = await r.json();
       const d = j.data;
 
-      // HTML Şablonu
+      // GÜVENLİ VERİ ALMA FONKSİYONU (Hata Önleyici)
+      // Eğer veri yoksa "-" döndürür, siteyi çökertmez.
+      const get = (key) => {
+          return d[key] ? d[key] : { alis: '-', satis: '-' };
+      };
+
+      // İSİMLERİ VERİ DEDEKTİFİNDEN BAKARAK DÜZELTTİM:
+      // USDOZ -> USDTRY
+      // EURO -> EURTRY
       let html = `
         <div class="space-y-1">
-          ${createRow("Çeyrek Altın", d.CEYREK_ESKI.alis, d.CEYREK_ESKI.satis)}
-          ${createRow("Ata Altın", d.ATA_ESKI.alis, d.ATA_ESKI.satis)}
-          ${createRow("22 Ayar Gram", d.AYAR22.alis, d.AYAR22.satis)}
-          ${createRow("Has Altın (24K)", d.ALTIN.alis, d.ALTIN.satis)}
+          ${createRow("Çeyrek Altın", get("CEYREK_ESKI").alis, get("CEYREK_ESKI").satis)}
+          ${createRow("Ata Altın",    get("ATA_ESKI").alis,    get("ATA_ESKI").satis)}
+          ${createRow("22 Ayar Gram", get("AYAR22").alis,      get("AYAR22").satis)}
+          ${createRow("Has Altın (24K)", get("ALTIN").alis,    get("ALTIN").satis)}
           
           <div class="mt-4 pt-4 border-t border-dashed border-gray-200">
-             ${createRow("Dolar/TL", d.USDOZ.alis, d.USDOZ.satis, true)}
-             ${createRow("Euro/TL", d.EURO.alis, d.EURO.satis, true)}
+             ${createRow("Dolar/TL",  get("USDTRY").alis,      get("USDTRY").satis, true)}
+             ${createRow("Euro/TL",   get("EURTRY").alis,      get("EURTRY").satis, true)}
           </div>
         </div>
       `;
@@ -64,11 +72,10 @@
       document.getElementById("last-update").innerText = "Son Kontrol: " + now.toLocaleTimeString();
 
     } catch (e) {
-      document.getElementById("harem").innerHTML = `<div class="text-center text-red-500 py-4 font-bold">Veri Çekilemedi!<br><span class="text-xs text-gray-400">${e.message}</span></div>`;
+      document.getElementById("harem").innerHTML = `<div class="text-center text-red-500 py-4 font-bold">Veri Hatası!<br><span class="text-xs text-gray-400">${e.message}</span></div>`;
     }
   }
 
-  // Satır Oluşturucu Yardımcı Fonksiyon
   function createRow(title, buy, sell, isCurrency = false) {
     return `
       <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg transition">
@@ -92,4 +99,3 @@
 
 </body>
 </html>
-
