@@ -2,48 +2,100 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title> Ham Fiyatlar </title>
+  <title>Ham Fiyatlar - Debug</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-    h1 { text-align: center; }
-    .card {
-      max-width: 600px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      font-size: 18px;
-      line-height: 1.6;
-    }
-  </style>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 p-10 font-mono text-sm">
+  <div id="root"></div>
 
-<h1> Ham Fiyatlar </h1>
-<div class="card" id="harem"></div>
+<script type="text/babel">
 
-<script>
-  async function load() {
-    const r = await fetch("https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr");
-    const j = await r.json();
-    const d = j.data;
+const API = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
 
-    document.getElementById("harem").innerHTML = `
-      <b>Çeyrek Alış:</b> ${d.CEYREK_ESKI.alis}<br>
-      <b>Çeyrek Satış:</b> ${d.CEYREK_ESKI.satis}<br><br>
-      <b>Ata Alış:</b> ${d.ATA_ESKI.alis}<br>
-      <b>Ata Satış:</b> ${d.ATA_ESKI.satis}<br><br>
-      <b>22 Ayar Satış:</b> ${d.AYAR22.satis}<br>
-      <b>Has Altın Alış:</b> ${d.ALTIN.alis}<br>
-      <b>Has Altın Satış:</b> ${d.ALTIN.satis}<br>
-    `;
+async function safeFetch(url) {
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+    if (!res.ok) throw new Error(res.status);
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
   }
-  load();
-</script>
+}
 
+function HamPage() {
+  const [data, setData] = React.useState(null);
+  const [error, setError] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function load() {
+      try {
+        // PROXY İLE ÇEKİYORUZ (DÜZELTME BURADA)
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(API);
+        const json = await safeFetch(proxyUrl);
+
+        if (json && json.data) {
+          setData(json.data);
+        } else {
+          setError("Veri çekilemedi (Boş Yanıt)");
+        }
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) return <div>Yükleniyor...</div>;
+  if (error) return <div className="text-red-600 font-bold">Hata: {error}</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+      <h1 className="text-2xl font-bold mb-4 border-b pb-2">Ham API Verisi</h1>
+      
+      {/* ÖNEMLİ VERİLERİ GÖSTEREN TABLO */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="border p-4 rounded">
+            <h2 className="font-bold text-blue-600 mb-2">ÇEYREK (ESKİ)</h2>
+            <pre>{JSON.stringify(data.CEYREK_ESKI, null, 2)}</pre>
+        </div>
+        <div className="border p-4 rounded">
+            <h2 className="font-bold text-blue-600 mb-2">ATA (ESKİ)</h2>
+            <pre>{JSON.stringify(data.ATA_ESKI, null, 2)}</pre>
+        </div>
+        <div className="border p-4 rounded">
+            <h2 className="font-bold text-blue-600 mb-2">22 AYAR</h2>
+            <pre>{JSON.stringify(data.AYAR22, null, 2)}</pre>
+        </div>
+        <div className="border p-4 rounded">
+            <h2 className="font-bold text-blue-600 mb-2">HAS ALTIN (24K)</h2>
+            <pre>{JSON.stringify(data.ALTIN, null, 2)}</pre>
+        </div>
+      </div>
+
+      {/* TÜM VERİYİ GÖSTEREN KUTU */}
+      <details>
+        <summary className="cursor-pointer font-bold bg-gray-200 p-2 rounded">Tüm JSON Çıktısını Gör</summary>
+        <pre className="bg-gray-800 text-green-400 p-4 mt-2 rounded overflow-auto text-xs" style={{maxHeight: '500px'}}>
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </details>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<HamPage />);
+
+</script>
 </body>
 </html>
-
-
