@@ -2,47 +2,93 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title> Ham Fiyatlar </title>
+  <title>Ham Piyasa Verileri</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="bk.jpeg" type="image/jpeg" />
   <style>
-    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-    h1 { text-align: center; }
-    .card {
-      max-width: 600px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      font-size: 18px;
-      line-height: 1.6;
+    body { background-color: #f9fafb; }
+    .glass {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
     }
   </style>
 </head>
-<body>
+<body class="flex items-center justify-center min-h-screen p-4">
 
-<h1> Ham Fiyatlar </h1>
-<div class="card" id="harem"></div>
+  <div class="w-full max-w-md glass rounded-2xl shadow-2xl border border-yellow-100 overflow-hidden">
+    
+    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 text-center border-b border-yellow-100">
+      <h1 class="text-2xl font-serif font-bold text-yellow-800">Ham Piyasa Verileri</h1>
+      <p class="text-xs text-yellow-600 mt-1 uppercase tracking-widest">Harem Altın Kaynaklı</p>
+    </div>
+
+    <div id="harem" class="p-2">
+      <div class="text-center text-gray-400 py-10 animate-pulse">Veriler Çekiliyor...</div>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
+      <button onclick="window.location.reload()" class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-100 active:scale-95 transition">
+        Sayfayı Yenile ↻
+      </button>
+      <div class="text-[10px] text-gray-400 mt-3 font-mono" id="last-update"></div>
+    </div>
+
+  </div>
 
 <script>
   async function load() {
-    const r = await fetch("https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr");
-    const j = await r.json();
-    const d = j.data;
+    try {
+      const r = await fetch("https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr");
+      const j = await r.json();
+      const d = j.data;
 
-    document.getElementById("harem").innerHTML = `
-      <b>Çeyrek Alış:</b> ${d.CEYREK_ESKI.alis}<br>
-      <b>Çeyrek Satış:</b> ${d.CEYREK_ESKI.satis}<br><br>
-      <b>Ata Alış:</b> ${d.ATA_ESKI.alis}<br>
-      <b>Ata Satış:</b> ${d.ATA_ESKI.satis}<br><br>
-      <b>22 Ayar Satış:</b> ${d.AYAR22.satis}<br>
-      <b>Has Altın Alış:</b> ${d.ALTIN.alis}<br>
-      <b>Has Altın Satış:</b> ${d.ALTIN.satis}<br>
+      // HTML Şablonu
+      let html = `
+        <div class="space-y-1">
+          ${createRow("Çeyrek Altın", d.CEYREK_ESKI.alis, d.CEYREK_ESKI.satis)}
+          ${createRow("Ata Altın", d.ATA_ESKI.alis, d.ATA_ESKI.satis)}
+          ${createRow("22 Ayar Gram", d.AYAR22.alis, d.AYAR22.satis)}
+          ${createRow("Has Altın (24K)", d.ALTIN.alis, d.ALTIN.satis)}
+          
+          <div class="mt-4 pt-4 border-t border-dashed border-gray-200">
+             ${createRow("Dolar/TL", d.USDOZ.alis, d.USDOZ.satis, true)}
+             ${createRow("Euro/TL", d.EURO.alis, d.EURO.satis, true)}
+          </div>
+        </div>
+      `;
+
+      document.getElementById("harem").innerHTML = html;
+      
+      const now = new Date();
+      document.getElementById("last-update").innerText = "Son Kontrol: " + now.toLocaleTimeString();
+
+    } catch (e) {
+      document.getElementById("harem").innerHTML = `<div class="text-center text-red-500 py-4 font-bold">Veri Çekilemedi!<br><span class="text-xs text-gray-400">${e.message}</span></div>`;
+    }
+  }
+
+  // Satır Oluşturucu Yardımcı Fonksiyon
+  function createRow(title, buy, sell, isCurrency = false) {
+    return `
+      <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg transition">
+        <div class="font-bold text-gray-700 ${isCurrency ? 'text-sm' : 'text-base'}">${title}</div>
+        <div class="text-right flex gap-4">
+          <div class="flex flex-col">
+            <span class="text-[9px] text-gray-400 uppercase">Alış</span>
+            <span class="font-mono font-bold text-gray-600">${buy}</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[9px] text-yellow-600 uppercase">Satış</span>
+            <span class="font-mono font-bold text-yellow-700">${sell}</span>
+          </div>
+        </div>
+      </div>
     `;
   }
+
   load();
 </script>
 
 </body>
 </html>
-
