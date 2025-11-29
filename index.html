@@ -28,21 +28,18 @@
     .modal { background: white; padding: 20px; width: 90%; max-width: 350px; border-radius: 16px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    /* KAYAN YAZI (DÜZELTİLMİŞ VERSİYON) */
+    /* KAYAN YAZI */
     .marquee-container {
       display: flex;
       overflow: hidden;
       white-space: nowrap;
       width: 100%;
     }
-    
     .marquee-content {
       display: flex;
-      width: max-content; /* İçerik kadar genişle */
-      animation: scroll 25s linear infinite; /* Hız ayarı */
+      width: max-content;
+      animation: scroll 25s linear infinite;
     }
-    
-    /* Sonsuz Döngü Mantığı: İçerik yarıya gelince başa sarar */
     @keyframes scroll {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
@@ -55,27 +52,8 @@
 
 <script type="text/babel">
 
-// --- GÜVENLİ FETCH ---
-async function safeFetch(url, timeout = 3500, retries = 2) {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeout);
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(id);
-      if (!res.ok) throw new Error(res.status);
-      const json = await res.json();
-      if (!json.data) throw new Error("Format hatası");
-      return json;
-    } catch (err) {
-      if (i === retries) return null;
-      await new Promise(r => setTimeout(r, 500));
-    }
-  }
-}
-
 // --- AYARLAR ---
-const API = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
+const API_URL = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
 const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -83,6 +61,37 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 // --- YARDIMCILAR ---
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
+
+// --- AKILLI VERİ ÇEKİCİ (SMART FETCH) ---
+// Biri çalışmazsa diğerini dener, asla yarı yolda bırakmaz.
+async function smartFetch() {
+  const proxies = [
+    'https://corsproxy.io/?' + encodeURIComponent(API_URL), // 1. Tercih (Hızlı)
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(API_URL) // 2. Tercih (Yedek)
+  ];
+
+  for (let url of proxies) {
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 15000); // 15 Saniye bekle
+      
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(id);
+
+      if (!res.ok) continue; // Hata varsa diğerine geç
+      
+      const json = await res.json();
+      
+      // Veri dolu mu kontrol et (Harem Altın bazen data içinde bazen direkt döner)
+      if (json && (json.data || json.ALTIN)) {
+        return json.data ? json.data : json;
+      }
+    } catch (err) {
+      console.warn("Proxy başarısız, diğerine geçiliyor...", err);
+    }
+  }
+  return null; // Hiçbiri çalışmazsa
+}
 
 // --- BİLEŞENLER ---
 
@@ -166,7 +175,6 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
   const [uploading, setUploading] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // Vitrin verisi boşsa hata vermesin diye varsayılan değer
   const safeShowcase = showcaseDraft || { aktif: false, baslik: "", aciklama: "", fiyat: "", resim: "" };
 
   const updateVitrin = (key, value) => {
@@ -180,17 +188,12 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
       const file = event.target.files[0];
       if (!file) return;
       setUploading(true);
-      
       const fileName = `vitrin_${Date.now()}`;
       // NOT: Bucket adının 'resimler' olduğundan emin olun (Küçük harf)
-      // Eğer Supabase'de büyükse 'RESIMLER' yazın.
       const { data, error } = await supa.storage.from('resimler').upload(fileName, file);
-      
       if (error) throw error;
-      
       const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
       updateVitrin('resim', publicUrl);
-      
     } catch (error) {
       alert('Yükleme Hatası: ' + error.message);
     } finally {
@@ -240,16 +243,10 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
             </div>
         </div>
 
-        {/* 2. KAYAN YAZI (DUYURU) */}
+        {/* 2. KAYAN YAZI */}
         <div className="mb-4 pt-4 border-t border-dashed">
             <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">Kayan Yazı (Duyuru)</h4>
-            <input 
-                type="text" 
-                placeholder="Örn: PAZAR GÜNLERİ AÇIĞIZ..." 
-                value={draft.duyuru || ""} 
-                onChange={e=>setDraft({...draft, duyuru: e.target.value})} 
-                className="w-full p-2 border rounded text-xs focus:border-yellow-500 outline-none" 
-            />
+            <input type="text" placeholder="Örn: PAZAR GÜNLERİ AÇIĞIZ..." value={draft.duyuru || ""} onChange={e=>setDraft({...draft, duyuru: e.target.value})} className="w-full p-2 border rounded text-xs focus:border-yellow-500 outline-none" />
             <div className="text-[9px] text-gray-400 mt-1">*Boş bırakırsanız şerit kaybolur.</div>
         </div>
 
@@ -267,7 +264,6 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
                 <input type="text" placeholder="Açıklama" value={safeShowcase.aciklama || ""} onChange={e=>updateVitrin('aciklama', e.target.value)} className="w-full p-2 border rounded text-xs focus:border-yellow-500 outline-none" />
                 <input type="text" placeholder="Fiyat" value={safeShowcase.fiyat || ""} onChange={e=>updateVitrin('fiyat', e.target.value)} className="w-full p-2 border rounded text-xs focus:border-yellow-500 outline-none" />
                 
-                {/* Resim Yükleme */}
                 <div className="border p-2 rounded bg-gray-50">
                   <div className="flex justify-between items-center mb-1">
                     <label className="text-[9px] text-gray-500 uppercase">Ürün Görseli</label>
@@ -311,21 +307,18 @@ function App() {
   const [loginOpen, setLoginOpen] = React.useState(false);
   const [adminOpen, setAdminOpen] = React.useState(false);
   const [stability, setStability] = React.useState(0);
-  
   const [currentVersion, setCurrentVersion] = React.useState(null);
 
   // BAŞLANGIÇ YÜKLEMESİ
   React.useEffect(() => {
     async function init() {
-      // Politikayı Çek
       const { data: pData } = await supa.from("altin_politika").select("*").eq("id", 1).single();
-      if(pData) {
+      if (pData) {
           setPolicy(pData); 
           setDraft(pData);
           if(pData.versiyon) setCurrentVersion(pData.versiyon);
       }
 
-      // Vitrini Çek
       const { data: vData } = await supa.from("vitrin").select("*").eq("id", 1).single();
       if(vData) {
           setShowcase(vData);
@@ -335,7 +328,7 @@ function App() {
     init();
   }, []);
 
-  // OTOMATİK YENİLEME KONTROLÜ
+  // OTOMATİK YENİLEME
   React.useEffect(() => {
       const checkVersion = async () => {
           const { data } = await supa.from('altin_politika').select('versiyon').eq('id', 1).single();
@@ -347,68 +340,46 @@ function App() {
       return () => clearInterval(timer);
   }, [currentVersion]);
 
-  // FİYAT GÜNCELLEME DÖNGÜSÜ (DÜZELTİLMİŞ & PROXY EKLENMİŞ)
+  // FİYAT GÜNCELLEME (GÜÇLENDİRİLMİŞ)
   React.useEffect(() => {
     if(!policy) return;
     
-    // Gelişmiş Sayı Çevirici
+    // Güçlü Sayı Çevirici
     const num = (v) => {
         if (!v) return 0;
-        if (typeof v === 'number') return v;
-        // Önce sadece rakam, nokta ve virgülleri bırak
-        let clean = v.toString().replace(/[^0-9.,]/g, '');
-        // Binlik ayracı olan noktaları sil (2.500 -> 2500)
-        clean = clean.replace(/\./g, '');
-        // Kuruş ayracı olan virgülü noktaya çevir (2500,50 -> 2500.50)
-        clean = clean.replace(',', '.');
-        return parseFloat(clean) || 0;
+        let str = v.toString().replace(/[^0-9.,-]/g, '').replace(/\./g, '').replace(',', '.');
+        return parseFloat(str) || 0;
     };
     
     async function load() {
-      try {
-        // PROXY KULLANIMI: Harem Altın direkt erişime izin vermezse buradan geçer
-        // AllOrigins servisi üzerinden veriyi çekiyoruz
-        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(API);
-        
-        const j = await safeFetch(proxyUrl); 
-        
-        if (!j || !j.data) {
-            console.warn("Veri çekilemedi veya format hatalı.");
-            return;
-        }
-        
-        const d = j.data;
-        const P = policy;
-
-        // Veri kontrolü
-        if (!d.ALTIN) {
-             console.warn("API yanıt verdi ama beklenen veriler yok.");
-             return;
-        }
-
-        const newP = {
-          qBuy: Math.round(num(d.CEYREK_ESKI.alis) + num(P.ceyrek_alis)),
-          qSell: Math.round(num(d.CEYREK_ESKI.satis) + num(P.ceyrek_satis)),
-          aBuy: Math.round(num(d.ATA_ESKI.alis) + num(P.ata_alis)),
-          aSell: Math.round(num(d.ATA_ESKI.satis) + num(P.ata_satis)),
-          g22: Math.round(num(d.AYAR22.satis) + num(P.gram22)),
-          g24: Math.round(num(d.ALTIN.satis) + num(P.gram24)),
-        };
-        newP.s025 = Math.round(newP.g24 * num(P.g025));
-        newP.s0522 = Math.round(newP.g22 * num(P.g05_22));
-        newP.s0524 = Math.round(newP.g24 * num(P.g05_24));
-
-        setPrices(prev => {
-          if(JSON.stringify(prev) !== JSON.stringify(newP)) setStability(0);
-          setPrevPrices(prev);
-          return newP;
-        });
-        setLastUpdate(new Date());
-      } catch (err) {
-          console.error("Fiyat çekme hatası:", err);
+      // Akıllı Fetch kullanıyoruz
+      const d = await smartFetch();
+      
+      if (!d || !d.ALTIN) {
+          console.warn("Veri çekilemedi (Tüm proxyler denendi).");
+          return;
       }
+
+      const P = policy;
+      const newP = {
+        qBuy: Math.round(num(d.CEYREK_ESKI.alis) + num(P.ceyrek_alis)),
+        qSell: Math.round(num(d.CEYREK_ESKI.satis) + num(P.ceyrek_satis)),
+        aBuy: Math.round(num(d.ATA_ESKI.alis) + num(P.ata_alis)),
+        aSell: Math.round(num(d.ATA_ESKI.satis) + num(P.ata_satis)),
+        g22: Math.round(num(d.AYAR22.satis) + num(P.gram22)),
+        g24: Math.round(num(d.ALTIN.satis) + num(P.gram24)),
+      };
+      newP.s025 = Math.round(newP.g24 * (num(P.g025) || 0.33));
+      newP.s0522 = Math.round(newP.g22 * (num(P.g05_22) || 0.539));
+      newP.s0524 = Math.round(newP.g24 * (num(P.g05_24) || 0.52));
+
+      setPrices(prev => {
+        if(JSON.stringify(prev) !== JSON.stringify(newP)) setStability(0);
+        setPrevPrices(prev);
+        return newP;
+      });
+      setLastUpdate(new Date());
     }
-    
     load();
     const t = setInterval(load, 10000); 
     const s = setInterval(() => setStability(c => c+1), 1000);
@@ -436,7 +407,6 @@ function App() {
   return (
     <div className="min-h-screen pb-16 flex flex-col items-center bg-gray-50">
       
-      {/* HEADER BUTONLAR */}
       <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
         <div className="pointer-events-auto">
           {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold">Çıkış</button>}
@@ -449,18 +419,16 @@ function App() {
         </div>
       </div>
 
-      {/* --- ANA KART --- */}
       <div id="capture-area" className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100">
         <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-500 to-yellow-200 opacity-60"></div>
         
-        {/* LOGO */}
         <div className="flex justify-center -mt-16 mb-4 relative z-10">
            <a href="https://www.instagram.com/bakirkoykuyumcusu/" target="_blank">
+             {/* LOGO BURAYA */}
              <img src="bk.jpeg" className="h-28 w-28 rounded-full border-[6px] border-white shadow-xl object-cover bg-white" alt="logo" crossOrigin="anonymous" />
            </a>
         </div>
 
-        {/* BAŞLIK */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-serif font-bold text-yellow-800 tracking-tight drop-shadow-sm">Bakırköy Kuyumcusu</h1>
           <div className="text-xs font-bold tracking-[0.3em] text-yellow-600 mt-2 uppercase opacity-80">
@@ -468,7 +436,6 @@ function App() {
           </div>
         </div>
 
-        {/* FİYAT TABLOSU */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-inner border border-white/60">
           <Row title="Çeyrek Altın" buy={prices.qBuy} sell={prices.qSell} prevBuy={prevPrices.qBuy} prevSell={prevPrices.qSell} />
           <Row title="Ata Altın" buy={prices.aBuy} sell={prices.aSell} prevBuy={prevPrices.aBuy} prevSell={prevPrices.aSell} />
@@ -487,7 +454,6 @@ function App() {
           </div>
         </div>
 
-        {/* VİTRİN KARTI */}
         {showcase && showcase.aktif && (
           <div className="mt-6 mx-2 bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-yellow-100 flex flex-col items-center text-center animate-pop">
              <div className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-3">✨ VİTRİN FIRSATI</div>
@@ -514,7 +480,6 @@ function App() {
       
       {stability > 30 && <div className="mt-4 text-xs text-gray-400 animate-pulse">● Piyasa durağan</div>}
 
-      {/* --- KAYAN YAZI --- */}
       {policy && policy.duyuru && (
         <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl">
             <div className="marquee-container">
@@ -528,7 +493,6 @@ function App() {
         </div>
       )}
 
-      {/* MODALLAR */}
       {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
       
       {adminOpen && (
@@ -543,7 +507,7 @@ function App() {
     </div>
   );
 }
-  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
 </script>
 </body>
