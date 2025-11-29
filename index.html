@@ -62,40 +62,48 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
 
-// --- AKILLI VERİ ÇEKİCİ (SMART FETCH) ---
-// Biri çalışmazsa diğerini dener, asla yarı yolda bırakmaz.
+// --- AKILLI VERİ ÇEKİCİ (SMART FETCH - 3 KATMANLI YEDEK) ---
 async function smartFetch() {
   const proxies = [
-    'https://corsproxy.io/?' + encodeURIComponent(API_URL), // 1. Tercih (Hızlı)
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(API_URL) // 2. Tercih (Yedek)
+    // 1. En Hızlısı (CodeTabs)
+    'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(API_URL),
+    // 2. Yedek (AllOrigins)
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(API_URL),
+    // 3. Son Çare (CorsProxy)
+    'https://corsproxy.io/?' + encodeURIComponent(API_URL)
   ];
 
   for (let url of proxies) {
     try {
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 15000); // 15 Saniye bekle
+      const id = setTimeout(() => controller.abort(), 10000); // 10 Saniye bekle
       
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(id);
 
-      if (!res.ok) continue; // Hata varsa diğerine geç
+      if (!res.ok) continue; 
       
       const json = await res.json();
       
-      // Veri dolu mu kontrol et (Harem Altın bazen data içinde bazen direkt döner)
+      // Veri doğrulama: Harem'in veri yapısına uygun mu?
       if (json && (json.data || json.ALTIN)) {
         return json.data ? json.data : json;
       }
     } catch (err) {
-      console.warn("Proxy başarısız, diğerine geçiliyor...", err);
+      console.warn("Proxy deneniyor...", err);
     }
   }
-  return null; // Hiçbiri çalışmazsa
+  return null; 
 }
 
 // --- BİLEŞENLER ---
 
 const AnimatedValue = React.memo(({ value, prev }) => {
+  // EĞER DEĞER GELMEDİYSE "..." GÖSTER (NaN YAZMASIN)
+  if (value === undefined || value === null || isNaN(value) || value === 0) {
+    return <div className="text-xl text-gray-300 font-bold">...</div>;
+  }
+
   let cls = "text-xl font-bold tracking-tight transition-all duration-500";
   if (prev && value !== prev) cls = value > prev ? "flash-up" : "flash-down";
   
@@ -133,7 +141,8 @@ const SmallBox = ({ title, value, prev }) => (
   <div className="bg-gray-50 p-2 rounded-lg text-center border border-gray-100">
     <div className="text-[10px] text-gray-400 mb-1">{title}</div>
     <div className="font-bold text-gray-800">
-      {fp(Math.round(value))} <span className="text-[9px] text-gray-400">₺</span>
+      {/* NaN Koruması buraya da eklendi */}
+      {(value && !isNaN(value)) ? fp(Math.round(value)) : "-"} <span className="text-[9px] text-gray-400">₺</span>
     </div>
   </div>
 );
@@ -189,16 +198,12 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
       if (!file) return;
       setUploading(true);
       const fileName = `vitrin_${Date.now()}`;
-      // NOT: Bucket adının 'resimler' olduğundan emin olun (Küçük harf)
+      // NOT: Bucket adın 'RESIMLER' ise burayı 'RESIMLER' yap. Küçük harfse 'resimler' kalsın.
       const { data, error } = await supa.storage.from('resimler').upload(fileName, file);
       if (error) throw error;
       const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
       updateVitrin('resim', publicUrl);
-    } catch (error) {
-      alert('Yükleme Hatası: ' + error.message);
-    } finally {
-      setUploading(false);
-    }
+    } catch (error) { alert('Hata: ' + error.message); } finally { setUploading(false); }
   };
 
   const forceRefreshAll = async () => {
@@ -207,19 +212,11 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
         const { data } = await supa.from('altin_politika').select('versiyon').eq('id', 1).single();
         const yeniVersiyon = (data?.versiyon || 1) + 1;
         await supa.from('altin_politika').update({ versiyon: yeniVersiyon }).eq('id', 1);
-        alert("Komut gönderildi! Tüm ekranlar 10sn içinde yenilenecek.");
-    } catch (e) {
-        alert("Hata: " + e.message);
-    } finally {
-        setRefreshing(false);
-    }
+        alert("Komut gönderildi! 10sn içinde yenilenecek.");
+    } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
   };
 
-  const fields = [
-    ["ceyrek_alis", "Çeyrek Alış"], ["ceyrek_satis", "Çeyrek Satış"],
-    ["ata_alis", "Ata Alış"], ["ata_satis", "Ata Satış"],
-    ["gram22", "22K Fark"], ["gram24", "24K Fark"]
-  ];
+  const fields = [ ["ceyrek_alis", "Çeyrek Alış"], ["ceyrek_satis", "Çeyrek Satış"], ["ata_alis", "Ata Alış"], ["ata_satis", "Ata Satış"], ["gram22", "22K Fark"], ["gram24", "24K Fark"] ];
 
   return (
     <div className="modal-backdrop">
@@ -264,6 +261,7 @@ function AdminModal({ open, draft, setDraft, showcaseDraft, setShowcaseDraft, on
                 <input type="text" placeholder="Açıklama" value={safeShowcase.aciklama || ""} onChange={e=>updateVitrin('aciklama', e.target.value)} className="w-full p-2 border rounded text-xs focus:border-yellow-500 outline-none" />
                 <input type="text" placeholder="Fiyat" value={safeShowcase.fiyat || ""} onChange={e=>updateVitrin('fiyat', e.target.value)} className="w-full p-2 border rounded text-xs focus:border-yellow-500 outline-none" />
                 
+                {/* Resim Yükleme */}
                 <div className="border p-2 rounded bg-gray-50">
                   <div className="flex justify-between items-center mb-1">
                     <label className="text-[9px] text-gray-500 uppercase">Ürün Görseli</label>
@@ -298,43 +296,29 @@ function App() {
   const [prevPrices, setPrevPrices] = React.useState({});
   const [lastUpdate, setLastUpdate] = React.useState(null);
   const [user, setUser] = React.useState(null);
-  
   const [policy, setPolicy] = React.useState(null);
   const [draft, setDraft] = React.useState(null);
   const [showcase, setShowcase] = React.useState(null);     
   const [showcaseDraft, setShowcaseDraft] = React.useState(null);
-
   const [loginOpen, setLoginOpen] = React.useState(false);
   const [adminOpen, setAdminOpen] = React.useState(false);
   const [stability, setStability] = React.useState(0);
   const [currentVersion, setCurrentVersion] = React.useState(null);
 
-  // BAŞLANGIÇ YÜKLEMESİ
   React.useEffect(() => {
     async function init() {
       const { data: pData } = await supa.from("altin_politika").select("*").eq("id", 1).single();
-      if (pData) {
-          setPolicy(pData); 
-          setDraft(pData);
-          if(pData.versiyon) setCurrentVersion(pData.versiyon);
-      }
-
+      if (pData) { setPolicy(pData); setDraft(pData); if(pData.versiyon) setCurrentVersion(pData.versiyon); }
       const { data: vData } = await supa.from("vitrin").select("*").eq("id", 1).single();
-      if(vData) {
-          setShowcase(vData);
-          setShowcaseDraft(vData);
-      }
+      if(vData) { setShowcase(vData); setShowcaseDraft(vData); }
     }
     init();
   }, []);
 
-  // OTOMATİK YENİLEME
   React.useEffect(() => {
       const checkVersion = async () => {
           const { data } = await supa.from('altin_politika').select('versiyon').eq('id', 1).single();
-          if (currentVersion && data?.versiyon && data.versiyon !== currentVersion) {
-              window.location.reload(); 
-          }
+          if (currentVersion && data?.versiyon && data.versiyon !== currentVersion) window.location.reload(); 
       };
       const timer = setInterval(checkVersion, 10000);
       return () => clearInterval(timer);
@@ -344,7 +328,6 @@ function App() {
   React.useEffect(() => {
     if(!policy) return;
     
-    // Güçlü Sayı Çevirici
     const num = (v) => {
         if (!v) return 0;
         let str = v.toString().replace(/[^0-9.,-]/g, '').replace(/\./g, '').replace(',', '.');
@@ -352,13 +335,9 @@ function App() {
     };
     
     async function load() {
-      // Akıllı Fetch kullanıyoruz
+      // YEDEKLI FETCH FONKSIYONU KULLANILIYOR
       const d = await smartFetch();
-      
-      if (!d || !d.ALTIN) {
-          console.warn("Veri çekilemedi (Tüm proxyler denendi).");
-          return;
-      }
+      if (!d || !d.ALTIN) return; // Hata varsa sessizce bekle (NaN yazmasın)
 
       const P = policy;
       const newP = {
@@ -480,6 +459,7 @@ function App() {
       
       {stability > 30 && <div className="mt-4 text-xs text-gray-400 animate-pulse">● Piyasa durağan</div>}
 
+      {/* --- KAYAN YAZI --- */}
       {policy && policy.duyuru && (
         <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl">
             <div className="marquee-container">
@@ -493,6 +473,7 @@ function App() {
         </div>
       )}
 
+      {/* MODALLAR */}
       {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
       
       {adminOpen && (
