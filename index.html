@@ -25,8 +25,8 @@
     .marquee-container { display: flex; overflow: hidden; white-space: nowrap; width: 100%; }
     .marquee-content { display: flex; width: max-content; animation: scroll 10s linear infinite; }
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-    .fade-in { animation: fadeIn 0.8s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .snowflake { position: absolute; background-color: white; border-radius: 50%; top: -10px; box-shadow: 0 0 5px rgba(255,255,255,0.8); animation: fall linear infinite; }
     @keyframes fall { 0% { transform: translateY(-10vh) translateX(0px); opacity: 0.8; } 100% { transform: translateY(110vh) translateX(20px); opacity: 0; } }
   </style>
@@ -37,7 +37,7 @@
 
 <script type="text/babel">
 
-// --- SUPABASE AYARLARI ---
+const API_URL = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
 const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -47,11 +47,14 @@ const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "
 
 // --- BİLEŞENLER ---
 const AnimatedValue = React.memo(({ value, prev }) => {
+  if (value === undefined || value === null || isNaN(value) || value === 0) {
+    return <div className="text-xl text-gray-300 font-bold">...</div>;
+  }
   let cls = "text-xl font-bold tracking-tight transition-all duration-500";
   if (prev && value !== prev) cls = value > prev ? "flash-up" : "flash-down";
   return (
     <div className={cls}>
-      {fp(value)} <span className="text-sm font-normal text-gray-400">₺</span>
+      {fp(Math.round(value))} <span className="text-sm font-normal text-gray-400">₺</span>
     </div>
   );
 });
@@ -83,12 +86,11 @@ const SmallBox = ({ title, value, prev }) => (
   <div className="bg-gray-50 p-2 rounded-lg text-center border border-gray-100">
     <div className="text-[10px] text-gray-400 mb-1">{title}</div>
     <div className="font-bold text-gray-800">
-      {fp(value)} <span className="text-[9px] text-gray-400">₺</span>
+      {(value && !isNaN(value)) ? fp(Math.round(value)) : "-"} <span className="text-[9px] text-gray-400">₺</span>
     </div>
   </div>
 );
 
-// --- MODALLAR ---
 function LocationModal({ onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -122,17 +124,20 @@ function WelcomeScreen({ onSelect, onLogin, onLocation }) {
       <div className="absolute top-0 left-0 z-20 pointer-events-none w-48"><img src="https://pngimg.com/uploads/christmas_garland/christmas_garland_PNG36.png" className="w-full opacity-90" style={{ transform: 'rotate(-5deg) translateX(-20px) translateY(-10px)' }} /></div>
       <div className="absolute top-0 right-0 z-20 pointer-events-none w-32"><img src="https://pngimg.com/uploads/christmas_ball/christmas_ball_PNG7.png" className="w-full opacity-95" style={{ transform: 'translateY(-10px)' }} /><div className="absolute top-0 left-1/2 w-[1px] h-[20px] bg-yellow-200/50 -translate-y-full"></div></div>
       <div className="absolute bottom-0 right-0 z-20 pointer-events-none w-32 opacity-60"><img src="https://pngimg.com/uploads/gift/gift_PNG100238.png" className="w-full" style={{ transform: 'rotate(-10deg) translateX(20px) translateY(10px)' }} /></div>
-
       <div className="relative z-30 w-full max-w-2xl flex flex-col items-center mt-8">
         <h1 className="text-5xl font-serif font-bold mb-2 tracking-tight drop-shadow-lg text-white">Bakırköy Kuyumcusu</h1>
         <p className="text-yellow-100 text-sm mb-12 uppercase tracking-[0.3em] opacity-90">Hoşgeldiniz</p>
-
         <div className="flex flex-wrap gap-4 w-full justify-center">
-          <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '160px' }}><span className="text-4xl drop-shadow-lg">📊</span><span className="font-bold text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span></button>
-          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '160px' }}><span className="text-4xl">✨</span><span className="font-bold text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span></button>
-          <button onClick={onLogin} className="flex-1 min-w-[140px] bg-gray-900/80 backdrop-blur-md text-white border border-gray-600 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-black" style={{ minHeight: '160px' }}><span className="text-4xl">🔒</span><span className="font-bold text-lg leading-tight tracking-wide">Yönetici<br/>Girişi</span></button>
+          <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '160px' }}>
+            <span className="text-4xl drop-shadow-lg">📊</span><span className="font-bold text-lg leading-tight tracking-wide drop-shadow-md">Canlı<br/>Piyasalar</span>
+          </button>
+          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '160px' }}>
+            <span className="text-4xl">✨</span><span className="font-bold text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
+          </button>
+          <button onClick={onLogin} className="flex-1 min-w-[140px] bg-gray-900/80 backdrop-blur-md text-white border border-gray-600 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-black" style={{ minHeight: '160px' }}>
+            <span className="text-4xl">🔒</span><span className="font-bold text-lg leading-tight tracking-wide">Yönetici<br/>Girişi</span>
+          </button>
         </div>
-        
         <button onClick={onLocation} className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"><span>📍</span> MAĞAZA KONUMU</button>
         <div className="mt-12 text-xs text-yellow-100/50 font-serif italic">"Güvenin ve Kalitenin Adresi"</div>
       </div>
@@ -140,16 +145,125 @@ function WelcomeScreen({ onSelect, onLogin, onLocation }) {
   );
 }
 
+// --- AKILLI VİTRİN SİHİRBAZI ---
+// --- AKILLI VİTRİN SİHİRBAZI (TASARIM BÜTÜNLÜĞÜ SAĞLANDI) ---
+// --- AKILLI VİTRİN SİHİRBAZI (KARTLI) ---
+// --- AKILLI VİTRİN SİHİRBAZI (FİYAT FİLTRELİ) ---
 function VitrinPage({ onBack, items }) {
+  const [step, setStep] = React.useState(0); // 0: Ana Seçim, 1: Kategori Seçimi, 2: Liste
+  const [filterType, setFilterType] = React.useState(null); 
+  const [selectedFilter, setSelectedFilter] = React.useState(null);
+  
+  // YENİ: Fiyat Filtresi State'i
+  const [priceRange, setPriceRange] = React.useState('all');
+
+  // Filtreleme Mantığı (Hem Kategori Hem Fiyat)
+  const filteredItems = React.useMemo(() => {
+    let result = items;
+
+    // 1. Kategori/Etiket Filtresi
+    if (selectedFilter) {
+      if (filterType === 'category') result = result.filter(i => i.kategori === selectedFilter);
+      if (filterType === 'tag') result = result.filter(i => i.etiket === selectedFilter);
+    }
+
+    // 2. Fiyat Filtresi (YENİ)
+    if (priceRange !== 'all') {
+      result = result.filter(item => {
+         // Fiyatı temizle ve sayıya çevir (Örn: "14.250 ₺" -> 14250)
+         const cleanPrice = item.fiyat ? parseInt(item.fiyat.toString().replace(/\./g, '').replace(/[^0-9]/g, '')) : 0;
+         
+         if (priceRange === 'low') return cleanPrice <= 5000;
+         if (priceRange === 'mid') return cleanPrice > 5000 && cleanPrice <= 15000;
+         if (priceRange === 'high') return cleanPrice > 15000 && cleanPrice <= 30000;
+         if (priceRange === 'premium') return cleanPrice > 30000;
+         return true;
+      });
+    }
+    
+    return result;
+  }, [items, selectedFilter, filterType, priceRange]);
+
+  // Adım 0: Yol Ayrımı (Aynı)
+  if (step === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
+         <button onClick={onBack} className="absolute top-6 left-6 text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg">⬅️</button>
+         <h2 className="text-3xl font-serif font-bold text-white mb-10 drop-shadow-lg">Size Nasıl Yardımcı Olalım?</h2>
+         <div className="grid gap-6 w-full max-w-md">
+            <button onClick={() => { setFilterType('tag'); setStep(1); }} className="bg-white/10 backdrop-blur-xl border border-white/40 text-white p-6 rounded-3xl shadow-xl flex items-center justify-between hover:bg-white/20 transition transform active:scale-95">
+              <span className="text-left"><span className="block text-xl font-bold mb-1">🎁 Ne İçin Bakıyorsunuz?</span><span className="text-xs text-yellow-100/80 font-medium tracking-wide">Hediye, Özel Gün, Yatırım...</span></span><span className="text-3xl opacity-80">👉</span>
+            </button>
+            <button onClick={() => { setFilterType('category'); setStep(1); }} className="bg-white/10 backdrop-blur-xl border border-white/40 text-white p-6 rounded-3xl shadow-xl flex items-center justify-between hover:bg-white/20 transition transform active:scale-95">
+              <span className="text-left"><span className="block text-xl font-bold mb-1">💍 Ne Tür Bakıyorsunuz?</span><span className="text-xs text-yellow-100/80 font-medium tracking-wide">Kolye, Bilezik, Yüzük...</span></span><span className="text-3xl opacity-80">👉</span>
+            </button>
+            <button onClick={() => { setFilterType(null); setSelectedFilter(null); setStep(2); }} className="mt-4 text-white/60 text-xs font-bold uppercase tracking-widest hover:text-white transition underline">Tüm Koleksiyonu Göster</button>
+         </div>
+      </div>
+    );
+  }
+
+  // Adım 1: Seçenekler (Aynı)
+  if (step === 1) {
+    const options = filterType === 'tag' 
+      ? ["Yılbaşı", "Sevgililer Günü", "Anneler Günü", "Düğün/Nişan", "Doğum Günü", "İçimden Geldi", "Diğer"]
+      : ["Kolye", "Bilezik", "Yüzük", "Küpe", "Set", "Saat", "Diğer"];
+    const title = filterType === 'tag' ? "Hangi Özel Gün?" : "Hangi Kategori?";
+
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full p-6 flex items-center">
+           <button onClick={() => setStep(0)} className="text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg">⬅️</button>
+        </div>
+        <h2 className="text-3xl font-serif font-bold text-white mb-8 drop-shadow-lg text-center">{title}</h2>
+        <div className="bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl p-6 w-full max-w-lg border border-white/50">
+            <div className="grid grid-cols-2 gap-3">
+              {options.map(opt => (
+                <button key={opt} onClick={() => { setSelectedFilter(opt); setStep(2); }} className="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl shadow-sm font-bold text-sm hover:bg-[#b45309] hover:text-white hover:border-[#b45309] hover:shadow-md transition active:scale-95">
+                  {opt}
+                </button>
+              ))}
+            </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Adım 2: Ürün Listesi (FİYAT FİLTRELİ)
   return (
     <div className="min-h-screen bg-[#fdfcf8] flex flex-col fade-in relative">
-       <div className="p-6 sticky top-0 z-50 flex items-center justify-between bg-[#fdfcf8]/95 backdrop-blur-sm">
-          <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90">✕</button>
-          <h1 className="text-xs font-bold text-gray-400 tracking-[0.3em] uppercase">Koleksiyon</h1>
-          <div className="w-5"></div>
+       
+       {/* Üst Bar */}
+       <div className="p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+             <button onClick={() => setStep(0)} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90">✕</button>
+             <h1 className="text-xs font-bold text-gray-400 tracking-[0.3em] uppercase">{selectedFilter || "Tüm Koleksiyon"}</h1>
+             <div className="w-5"></div>
+          </div>
+
+          {/* YENİ: Fiyat Filtresi Butonları */}
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+             {[
+               { label: 'Tümü', val: 'all' },
+               { label: '0-5 Bin ₺', val: 'low' },
+               { label: '5-15 Bin ₺', val: 'mid' },
+               { label: '15-30 Bin ₺', val: 'high' },
+               { label: '30 Bin+ ₺', val: 'premium' },
+             ].map(f => (
+               <button 
+                 key={f.val}
+                 onClick={() => setPriceRange(f.val)}
+                 className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition ${priceRange === f.val ? 'bg-[#b45309] text-white shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#b45309] hover:text-[#b45309]'}`}
+               >
+                 {f.label}
+               </button>
+             ))}
+          </div>
        </div>
-       <div className="flex flex-col pb-20 px-6">
-          {items && items.length > 0 ? items.map((urun, index) => (
+
+       {/* Liste */}
+       <div className="flex flex-col pb-20 px-6 pt-2">
+          {filteredItems.length > 0 ? filteredItems.map((urun, index) => (
              <div key={urun.id} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in" style={{animationDelay: `${index * 0.1}s`}}>
                 <div className="pt-8 pb-2 flex justify-center">
                     <div className="w-48 h-48 relative rounded-full bg-[#faf9f6] overflow-hidden shadow-inner border border-white ring-1 ring-gray-100">
@@ -157,7 +271,7 @@ function VitrinPage({ onBack, items }) {
                     </div>
                 </div>
                 <div className="p-6 text-center">
-                    <div className="text-[9px] font-bold text-yellow-600 uppercase tracking-widest mb-2">{urun.aciklama ? urun.aciklama.split(' ')[0] : 'ÖZEL'} PARÇA</div>
+                    <div className="text-[9px] font-bold text-yellow-600 uppercase tracking-widest mb-2">{urun.kategori || 'ÖZEL'} PARÇA</div>
                     <h2 className="font-serif text-xl text-gray-900 mb-2 leading-tight">{urun.baslik}</h2>
                     {urun.aciklama && <p className="text-[10px] text-gray-400 font-light mb-4 line-clamp-1">{urun.aciklama}</p>}
                     <div className="w-8 h-[1px] bg-gray-200 mx-auto mb-4"></div>
@@ -168,58 +282,106 @@ function VitrinPage({ onBack, items }) {
                 </div>
              </div>
           )) : (
-            <div className="flex flex-col items-center justify-center py-32 text-gray-300"><span className="text-4xl mb-4 opacity-20">💎</span><p className="font-serif italic text-sm">Vitrinde henüz ürün yok.</p></div>
+            <div className="flex flex-col items-center justify-center py-32 text-gray-300">
+                <span className="text-4xl mb-4 opacity-20">🏷️</span>
+                <p className="font-serif italic text-sm">Bu fiyat aralığında ürün yok.</p>
+                <button onClick={() => setPriceRange('all')} className="mt-4 text-[#b45309] text-xs font-bold underline">Filtreyi Temizle</button>
+            </div>
           )}
        </div>
-       <div className="text-center pb-12 opacity-30"><img src="bk.jpeg" className="w-6 h-6 rounded-full mx-auto mb-2 grayscale" alt="logo" crossOrigin="anonymous" /><div className="text-[8px] tracking-[0.3em] uppercase font-serif">Bakırköy Kuyumcusu</div></div>
     </div>
   );
 }
 
+// --- LOGIN MODAL (GİRİŞ EKRANI TASARIMIYLA AYNI) ---
 function LoginModal({ onClose, onLoginSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
-  const handleSubmit = (e) => { e.preventDefault(); login(); };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    login();
+  };
+
   async function login() {
     const { data, error } = await supa.auth.signInWithPassword({ email, password });
     if (error) setError("Hatalı giriş!"); else onLoginSuccess(data.user);
   }
+
   return (
     <div className="modal-backdrop">
-      <div className="modal p-6">
-        <h3 className="text-lg font-bold text-yellow-700 mb-4">Yönetici Paneli</h3>
-        <form onSubmit={handleSubmit}>
-          <input className="w-full p-3 mb-3 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 ring-yellow-200 outline-none" type="email" placeholder="E-posta" value={email} onChange={e=>setEmail(e.target.value)} />
-          <input className="w-full p-3 mb-4 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 ring-yellow-200 outline-none" type="password" placeholder="Şifre" value={password} onChange={e=>setPassword(e.target.value)} />
-          {error && <div className="text-red-500 text-xs mb-3">{error}</div>}
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded text-gray-500 hover:bg-gray-100">İptal</button>
-            <button type="submit" className="px-4 py-2 rounded bg-yellow-600 text-white font-bold shadow-lg shadow-yellow-200">Giriş</button>
+      {/* TASARIM DEĞİŞTİ: Beyaz kutu yerine şeffaf cam efekti */}
+      <div className="modal p-8 bg-gradient-to-br from-yellow-900/90 to-amber-800/90 backdrop-blur-xl border border-yellow-500/30 shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden">
+        
+        {/* Arka Plan Efektleri (Işıltı) */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500 blur-3xl opacity-20 rounded-full"></div>
+
+        <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center tracking-wide drop-shadow-sm">Yönetici Girişi</h3>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          
+          {/* Email Input */}
+          <div className="relative">
+             <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">✉️</span>
+             <input 
+               className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" 
+               type="email" 
+               placeholder="E-posta Adresi" 
+               value={email} 
+               onChange={e=>setEmail(e.target.value)} 
+             />
           </div>
+
+          {/* Şifre Input */}
+          <div className="relative">
+             <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">🔒</span>
+             <input 
+               className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" 
+               type="password" 
+               placeholder="Şifre" 
+               value={password} 
+               onChange={e=>setPassword(e.target.value)} 
+             />
+          </div>
+
+          {error && <div className="text-red-300 text-xs font-bold text-center bg-red-900/30 py-2 rounded-lg border border-red-500/30">{error}</div>}
+          
+          {/* Butonlar */}
+          <div className="flex gap-3 mt-2">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="flex-1 py-3 rounded-xl text-yellow-200/60 font-bold hover:bg-white/5 hover:text-white transition text-sm border border-transparent hover:border-white/10"
+            >
+              Vazgeç
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] transition transform active:scale-95 border border-yellow-400/50"
+            >
+              Giriş Yap
+            </button>
+          </div>
+
         </form>
       </div>
     </div>
   );
 }
 
-// --- YENİ ADMIN PANELİ (SADECE MANUEL FİYAT) ---
 function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose, onSave }) {
   if (!open) return null;
-  // KORUMA: Veri henüz yüklenmediyse bekleme ekranı göster
   if (!draft) return <div className="modal-backdrop"><div className="modal p-6 text-center">Veriler Yükleniyor...<button onClick={onClose} className="mt-4 text-sm text-red-500">İptal</button></div></div>;
 
   const [tab, setTab] = React.useState('genel'); 
   const [refreshing, setRefreshing] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
-  
-  // Bu state artık form verisini tutuyor
   const [form, setForm] = React.useState(draft);
-  const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', resim: '' });
+  const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel' });
 
-  const handleChange = (key, val) => {
-      setForm({ ...form, [key]: Number(val) || val });
-  };
+  const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
   const handleFileUpload = async (event) => {
     try {
@@ -237,15 +399,12 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const handleAddProduct = async () => {
       if(!newProduct.baslik || !newProduct.fiyat) return alert("Başlık ve fiyat zorunludur.");
       await supa.from('vitrin').insert(newProduct);
-      setNewProduct({ baslik: '', fiyat: '', resim: '' });
+      setNewProduct({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel' });
       refreshVitrin(); alert("Ürün eklendi!");
   };
 
   const handleDeleteProduct = async (id) => {
-      if(confirm("Silmek istiyor musunuz?")) {
-          await supa.from('vitrin').delete().eq('id', id);
-          refreshVitrin();
-      }
+      if(confirm("Silmek istiyor musunuz?")) { await supa.from('vitrin').delete().eq('id', id); refreshVitrin(); }
   };
 
   const forceRefreshAll = async () => {
@@ -253,7 +412,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     try {
         const yeniVersiyon = (form.versiyon || 1) + 1;
         await supa.from('ham_fiyatlar').update({ versiyon: yeniVersiyon }).eq('id', 1);
-        alert("Tüm cihazlar yenileniyor...");
+        alert("Komut gönderildi! (v" + yeniVersiyon + ")");
     } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
   };
 
@@ -261,14 +420,14 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     <div className="modal-backdrop">
       <div className="modal h-[80vh]">
         <div className="flex border-b">
-            <button onClick={()=>setTab('genel')} className={`flex-1 py-4 text-sm font-bold ${tab==='genel' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>📝 Fiyat Listesi</button>
+            <button onClick={()=>setTab('genel')} className={`flex-1 py-4 text-sm font-bold ${tab==='genel' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>📝 Fiyat</button>
             <button onClick={()=>setTab('vitrin')} className={`flex-1 py-4 text-sm font-bold ${tab==='vitrin' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>💎 Vitrin</button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
             {tab === 'genel' && (
                 <div>
                     <div className="mb-4 space-y-3">
-                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Fiyat Girişi (Manuel)</h4>
+                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Manuel Fiyat Girişi</h4>
                         <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Çeyrek ALIŞ</label><input type="number" value={form.ceyrek_alis || ''} onChange={e=>handleChange('ceyrek_alis', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
                         <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500 font-bold">Çeyrek SATIŞ</label><input type="number" value={form.ceyrek_satis || ''} onChange={e=>handleChange('ceyrek_satis', e.target.value)} className="p-2 border rounded w-full font-bold font-mono" /></div>
                         <hr className="my-2"/>
@@ -292,15 +451,34 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
                         <h4 className="text-xs font-bold text-gray-700 mb-3">➕ YENİ ÜRÜN EKLE</h4>
                         <input type="text" placeholder="Ürün Adı" value={newProduct.baslik} onChange={e=>setNewProduct({...newProduct, baslik: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
-                        <input type="text" placeholder="Fiyat" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
+                        <input type="text" placeholder="Fiyat (Örn: 14.500 ₺)" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
+                        
+                        {/* KATEGORİ SEÇİMİ */}
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                            {/* AdminModal içindeki Etiket Seçimi */}
+                            <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="p-2 border rounded text-xs bg-white">
+                                <option value="Genel">Genel</option>
+                                <option value="Yılbaşı">Yılbaşı 🎄</option>
+                                <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
+                                <option value="Anneler Günü">Anneler Günü 💐</option>
+                                <option value="Düğün/Nişan">Düğün/Nişan 👰</option>
+                                <option value="Doğum Günü">Doğum Günü 🎂</option>
+                                <option value="İçimden Geldi">İçimden Geldi 🎁</option>
+                                <option value="Diğer">Diğer</option> {/* 👈 BURAYA EKLE */}
+                            </select>
+                        </div>
+
                         <div className="flex items-center gap-2 mb-2"><input type="file" onChange={handleFileUpload} className="text-xs w-full" />{uploading && <span className="text-xs text-blue-500">...</span>}</div>
-                        <button onClick={handleAddProduct} className="w-full bg-green-600 text-white py-2 rounded text-xs font-bold hover:bg-green-700">Ekle</button>
+                        <button onClick={handleAddProduct} className="w-full bg-green-600 text-white py-2 rounded text-xs font-bold hover:bg-green-700">Listeye Ekle</button>
                     </div>
                     <div className="space-y-2">
                         {vitrinItems.map(item => (
                             <div key={item.id} className="flex items-center gap-3 p-2 border rounded bg-white">
                                 <img src={item.resim || "https://placehold.co/50"} className="w-10 h-10 rounded object-cover bg-gray-100" />
-                                <div className="flex-1"><div className="text-xs font-bold">{item.baslik}</div><div className="text-[10px] text-gray-500">{item.fiyat}</div></div>
+                                <div className="flex-1">
+                                    <div className="text-xs font-bold">{item.baslik}</div>
+                                    <div className="text-[9px] text-gray-400">{item.kategori} • {item.etiket}</div>
+                                </div>
                                 <button onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
                             </div>
                         ))}
@@ -322,10 +500,9 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   );
 }
 
-// --- ANA UYGULAMA ---
 function App() {
   const [view, setView] = React.useState('welcome');
-  const [prices, setPrices] = React.useState(null); // Başlangıçta null
+  const [prices, setPrices] = React.useState(null); 
   const [lastUpdate, setLastUpdate] = React.useState(null);
   const [user, setUser] = React.useState(null);
   const [vitrinItems, setVitrinItems] = React.useState([]);
@@ -335,13 +512,9 @@ function App() {
   const [currentVersion, setCurrentVersion] = React.useState(null);
   const [locationOpen, setLocationOpen] = React.useState(false);
 
-  // VERİ ÇEKME
   async function fetchData() {
       const { data: pData } = await supa.from("ham_fiyatlar").select("*").eq("id", 1).single();
-      if (pData) { 
-          setPrices(pData); 
-          if(pData.versiyon) setCurrentVersion(pData.versiyon); 
-      }
+      if (pData) { setPrices(pData); if(pData.versiyon) setCurrentVersion(pData.versiyon); }
       const { data: vData } = await supa.from("vitrin").select("*").order('id', { ascending: false });
       if(vData) setVitrinItems(vData);
       setLastUpdate(new Date());
@@ -349,13 +522,11 @@ function App() {
 
   React.useEffect(() => { 
       fetchData(); 
-      // Her 3 saniyede bir veriyi tazele (polling)
       const interval = setInterval(fetchData, 3000);
       const stab = setInterval(() => setStability(s => s + 1), 1000);
       return () => { clearInterval(interval); clearInterval(stab); };
   }, []);
 
-  // Otomatik Yenileme Kontrolü
   React.useEffect(() => {
       if(!currentVersion) return;
       const checkVersion = async () => {
@@ -383,10 +554,9 @@ function App() {
       setStability(0);
   };
 
-  const P = prices || {}; // Boşsa hata verme
-  // Küçük gram hesapları (Manuel girilen Has Altın üzerinden)
+  const P = prices || {}; 
   const g24 = P.gram_24 || 0;
-  const s025 = Math.round(g24 * 0.33); // Örnek çarpan
+  const s025 = Math.round(g24 * 0.33); 
   const s05_22 = Math.round((P.gram_22 || 0) * 0.55); 
   const s05_24 = Math.round(g24 * 0.55);
 
@@ -405,8 +575,8 @@ function App() {
                 {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold h-10 flex items-center">Çıkış</button>}
               </div>
               <div className="flex gap-3 pointer-events-auto">
-              
-                
+                <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📜</button>
+                <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📟</button>
                 <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📸</button>
                 <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">⚙️</button>
               </div>
@@ -425,7 +595,6 @@ function App() {
               </div>
               
               <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-inner border border-white/60">
-                {/* MANUEL FİYATLAR */}
                 <Row title="Çeyrek Altın" buy={P.ceyrek_alis || 0} sell={P.ceyrek_satis || 0} />
                 <Row title="Ata Altın" buy={P.ata_alis || 0} sell={P.ata_satis || 0} />
                 <div className="grid grid-cols-2 gap-4 mt-6">
@@ -464,7 +633,7 @@ function App() {
 
       {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
       
-      {adminOpen && (
+      {adminOpen && prices && (
           <AdminModal 
             open={adminOpen} 
             draft={prices} setDraft={setPrices} 
