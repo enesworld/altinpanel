@@ -405,7 +405,7 @@ function App() {
                 {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold h-10 flex items-center">Çıkış</button>}
               </div>
               <div className="flex gap-3 pointer-events-auto">
-                <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📜</button>
+              
                 <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📟</button>
                 <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📸</button>
                 <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">⚙️</button>
