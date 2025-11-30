@@ -185,6 +185,14 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#7f1d1d] via-[#b45309] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
       
+      {/* YÖNETİCİ GİRİŞİ (GİZLİ KİLİT - SAĞ ÜST KÖŞE) */}
+      <button 
+        onClick={onLogin} 
+        className="absolute top-6 right-6 z-50 text-white/20 hover:text-white/90 transition-all p-3 rounded-full hover:bg-white/10"
+      >
+        🔒
+      </button>
+
       <div className="absolute inset-0 pointer-events-none z-10">
         {snowflakes}
         {sparkles}
@@ -220,9 +228,7 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
           <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
           </button>
-          <button onClick={onLogin} className="flex-1 min-w-[140px] bg-gray-900/80 backdrop-blur-md text-white border border-gray-600 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-black" style={{ minHeight: '140px' }}>
-            <span className="text-3xl md:text-4xl">🔒</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Yönetici<br/>Girişi</span>
-          </button>
+          {/* Yönetici Girişi Buradan Kaldırıldı */}
         </div>
         <button onClick={onLocation} className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"><span>📍</span> MAĞAZA KONUMU</button>
         
@@ -288,7 +294,7 @@ function VitrinPage({ onBack, items }) {
 
   if (step === 1) {
     const options = filterType === 'tag' 
-      ? ["Yılbaşı", "Sevgililer Günü", "Anneler Günü", "Düğün/Nişan", "Doğum Günü", "İçimden Geldi", "Diğer"]
+      ? ["Kendim İçin", "Yılbaşı", "Sevgililer Günü", "Anneler Günü", "Düğün/Nişan", "Doğum Günü", "İçimden Geldi", "Diğer"]
       : ["Kolye", "Bilezik", "Yüzük", "Küpe", "Set", "Saat", "Diğer"];
     const title = filterType === 'tag' ? "Hangi Özel Gün?" : "Hangi Kategori?";
 
@@ -301,8 +307,12 @@ function VitrinPage({ onBack, items }) {
         <div className="bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl p-6 w-full max-w-lg border border-white/50">
             <div className="grid grid-cols-2 gap-3">
               {options.map(opt => (
-                <button key={opt} onClick={() => { setSelectedFilter(opt); setStep(2); }} className="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl shadow-sm font-bold text-sm hover:bg-[#b45309] hover:text-white hover:border-[#b45309] hover:shadow-md transition active:scale-95">
-                  {opt}
+                <button 
+                  key={opt} 
+                  onClick={() => { setSelectedFilter(opt); setStep(2); }} 
+                  className={`border border-gray-200 p-4 rounded-xl shadow-sm font-bold text-sm hover:shadow-md transition active:scale-95 ${opt === "Kendim İçin" ? "bg-red-600/90 text-white hover:bg-red-700 border-red-500 ring-2 ring-red-200" : "bg-gray-50 text-gray-700 hover:bg-[#b45309] hover:text-white hover:border-[#b45309]"}`}
+                >
+                  {opt} {opt === "Kendim İçin" ? "🙋‍♀️" : ""}
                 </button>
               ))}
             </div>
@@ -529,6 +539,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne İçin?</label>
                                 <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
                                     <option value="Genel">Genel</option>
+                                    <option value="Kendim İçin">Kendim İçin 🙋‍♀️</option> {/* Yeni Eklendi */}
                                     <option value="Yılbaşı">Yılbaşı 🎄</option>
                                     <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
                                     <option value="Anneler Günü">Anneler Günü 💐</option>
