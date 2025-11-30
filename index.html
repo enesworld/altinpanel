@@ -27,20 +27,8 @@
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .fade-in { animation: fadeIn 0.8s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* KAR TANESİ STİLİ */
-    .snowflake {
-      position: absolute;
-      background-color: white;
-      border-radius: 50%;
-      top: -10px;
-      box-shadow: 0 0 5px rgba(255,255,255,0.8);
-      animation: fall linear infinite;
-    }
-    @keyframes fall {
-      0% { transform: translateY(-10vh) translateX(0px); opacity: 0.8; }
-      100% { transform: translateY(110vh) translateX(20px); opacity: 0; }
-    }
+    .snowflake { position: absolute; background-color: white; border-radius: 50%; top: -10px; box-shadow: 0 0 5px rgba(255,255,255,0.8); animation: fall linear infinite; }
+    @keyframes fall { 0% { transform: translateY(-10vh) translateX(0px); opacity: 0.8; } 100% { transform: translateY(110vh) translateX(20px); opacity: 0; } }
   </style>
 </head>
 
@@ -49,7 +37,7 @@
 
 <script type="text/babel">
 
-const API_URL = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
+// --- SUPABASE AYARLARI ---
 const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -57,15 +45,13 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
 
+// --- BİLEŞENLER ---
 const AnimatedValue = React.memo(({ value, prev }) => {
-  if (value === undefined || value === null || isNaN(value) || value === 0) {
-    return <div className="text-xl text-gray-300 font-bold">...</div>;
-  }
   let cls = "text-xl font-bold tracking-tight transition-all duration-500";
   if (prev && value !== prev) cls = value > prev ? "flash-up" : "flash-down";
   return (
     <div className={cls}>
-      {fp(Math.round(value))} <span className="text-sm font-normal text-gray-400">₺</span>
+      {fp(value)} <span className="text-sm font-normal text-gray-400">₺</span>
     </div>
   );
 });
@@ -97,83 +83,44 @@ const SmallBox = ({ title, value, prev }) => (
   <div className="bg-gray-50 p-2 rounded-lg text-center border border-gray-100">
     <div className="text-[10px] text-gray-400 mb-1">{title}</div>
     <div className="font-bold text-gray-800">
-      {(value && !isNaN(value)) ? fp(Math.round(value)) : "-"} <span className="text-[9px] text-gray-400">₺</span>
+      {fp(value)} <span className="text-[9px] text-gray-400">₺</span>
     </div>
   </div>
 );
 
-// --- İLETİŞİM & KONUM MODALI ---
+// --- MODALLAR ---
 function LocationModal({ onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal p-6 text-center" onClick={e => e.stopPropagation()}>
         <h3 className="text-xl font-serif font-bold text-yellow-800 mb-2">Mağazamıza Bekleriz</h3>
-        <p className="text-gray-500 text-sm mb-6 px-4">Ürünlerimizi yakından incelemek ve kahvemizi içmek için sizi mağazamıza davet ediyoruz.</p>
-        
-        {/* HARİTA */}
         <div className="w-full h-48 bg-gray-100 rounded-xl overflow-hidden mb-4 shadow-inner border border-gray-200">
-           <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96389.47322781557!2d28.729118650839265!3d40.97773543712353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cabd0f8036b751%3A0xedcbfa136137d896!2zQmFrxLFya8O2eSBLdXl1bWN1c3U!5e0!3m2!1str!2str!4v1764501029275!5m2!1str!2str" 
-              width="100%" 
-              height="100%" 
-              style={{border:0}} 
-              allowFullScreen="" 
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade"
-           ></iframe>
+           <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96389.47322781557!2d28.729118650839265!3d40.97773543712353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cabd0f8036b751%3A0xedcbfa136137d896!2zQmFrxLFya8O2eSBLdXl1bWN1c3U!5e0!3m2!1str!2str!4v1764501029275!5m2!1str!2str" width="100%" height="100%" style={{border:0}} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
         </div>
-
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-4 text-left">
            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-bold">Adres</div>
-           <div className="text-sm font-bold text-gray-800 mb-3 leading-relaxed">
-             Bakırköy Kuyumcusu<br/>
-             Zeytinlik. Fahri Korutürk Cad. No. 14 <br/>
-             Bakırköy / İstanbul
-           </div>
-           
+           <div className="text-sm font-bold text-gray-800 mb-3 leading-relaxed">Bakırköy Kuyumcusu<br/>Cevizlik Mah. İstanbul Cad.<br/>Bakırköy / İstanbul</div>
            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-bold">Çalışma Saatleri</div>
-           <div className="text-sm font-bold text-gray-800">
-             Haftanın 7 Günü: 09:00 - 20:00
-           </div>
+           <div className="text-sm font-bold text-gray-800">Haftanın 7 Günü: 09:00 - 20:00</div>
         </div>
-
-        <button 
-          onClick={() => window.open('https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96389.47322781557!2d28.729118650839265!3d40.97773543712353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cabd0f8036b751%3A0xedcbfa136137d896!2zQmFrxLFya8O2eSBLdXl1bWN1c3U!5e0!3m2!1str!2str!4v1764501029275!5m2!1str!2str', '_blank')}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
-        >
-          <span>📍</span> Yol Tarifi Al
-        </button>
-        
+        <button onClick={() => window.open('https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96389.47322781557!2d28.729118650839265!3d40.97773543712353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cabd0f8036b751%3A0xedcbfa136137d896!2zQmFrxLFya8O2eSBLdXl1bWN1c3U!5e0!3m2!1str!2str!4v1764501029275!5m2!1str!2str', '_blank')} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"><span>📍</span> Yol Tarifi Al</button>
         <button onClick={onClose} className="mt-4 text-gray-400 text-sm hover:text-gray-600 underline">Kapat</button>
       </div>
     </div>
   );
 }
 
-// --- GİRİŞ EKRANI ---
 function WelcomeScreen({ onSelect, onLogin, onLocation }) {
   const snowflakes = Array.from({ length: 40 }).map((_, i) => {
-    const style = {
-      left: `${Math.random() * 100}%`,
-      width: `${Math.random() * 5 + 2}px`,
-      height: `${Math.random() * 5 + 2}px`,
-      animationDuration: `${Math.random() * 5 + 5}s`,
-      animationDelay: `${Math.random() * 5}s`,
-      opacity: Math.random() * 0.5 + 0.3,
-    };
+    const style = { left: `${Math.random() * 100}%`, width: `${Math.random() * 5 + 2}px`, height: `${Math.random() * 5 + 2}px`, animationDuration: `${Math.random() * 5 + 5}s`, animationDelay: `${Math.random() * 5}s`, opacity: Math.random() * 0.5 + 0.3 };
     return <div key={i} className="snowflake" style={style} />;
   });
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
-      
       <div className="absolute inset-0 pointer-events-none z-10">{snowflakes}</div>
-
       <div className="absolute top-0 left-0 z-20 pointer-events-none w-48"><img src="https://pngimg.com/uploads/christmas_garland/christmas_garland_PNG36.png" className="w-full opacity-90" style={{ transform: 'rotate(-5deg) translateX(-20px) translateY(-10px)' }} /></div>
-      <div className="absolute top-0 right-0 z-20 pointer-events-none w-32">
-          <img src="https://pngimg.com/uploads/christmas_ball/christmas_ball_PNG7.png" className="w-full opacity-95" style={{ transform: 'translateY(-10px)' }} />
-          <div className="absolute top-0 left-1/2 w-[1px] h-[20px] bg-yellow-200/50 -translate-y-full"></div>
-      </div>
+      <div className="absolute top-0 right-0 z-20 pointer-events-none w-32"><img src="https://pngimg.com/uploads/christmas_ball/christmas_ball_PNG7.png" className="w-full opacity-95" style={{ transform: 'translateY(-10px)' }} /><div className="absolute top-0 left-1/2 w-[1px] h-[20px] bg-yellow-200/50 -translate-y-full"></div></div>
       <div className="absolute bottom-0 right-0 z-20 pointer-events-none w-32 opacity-60"><img src="https://pngimg.com/uploads/gift/gift_PNG100238.png" className="w-full" style={{ transform: 'rotate(-10deg) translateX(20px) translateY(10px)' }} /></div>
 
       <div className="relative z-30 w-full max-w-2xl flex flex-col items-center mt-8">
@@ -181,44 +128,26 @@ function WelcomeScreen({ onSelect, onLogin, onLocation }) {
         <p className="text-yellow-100 text-sm mb-12 uppercase tracking-[0.3em] opacity-90">Hoşgeldiniz</p>
 
         <div className="flex flex-wrap gap-4 w-full justify-center">
-          <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '160px' }}>
-            <span className="text-4xl drop-shadow-lg">📊</span><span className="font-bold text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
-          </button>
-
-          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '160px' }}>
-            <span className="text-4xl">✨</span><span className="font-bold text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
-          </button>
-
-          <button onClick={onLogin} className="flex-1 min-w-[140px] bg-gray-900/80 backdrop-blur-md text-white border border-gray-600 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-black" style={{ minHeight: '160px' }}>
-            <span className="text-4xl">🔒</span><span className="font-bold text-lg leading-tight tracking-wide">Yönetici<br/>Girişi</span>
-          </button>
+          <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '160px' }}><span className="text-4xl drop-shadow-lg">📊</span><span className="font-bold text-lg leading-tight tracking-wide drop-shadow-md">Canlı<br/>Piyasalar</span></button>
+          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '160px' }}><span className="text-4xl">✨</span><span className="font-bold text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span></button>
+          <button onClick={onLogin} className="flex-1 min-w-[140px] bg-gray-900/80 backdrop-blur-md text-white border border-gray-600 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-black" style={{ minHeight: '160px' }}><span className="text-4xl">🔒</span><span className="font-bold text-lg leading-tight tracking-wide">Yönetici<br/>Girişi</span></button>
         </div>
         
-        <button 
-          onClick={onLocation}
-          className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"
-        >
-          <span>📍</span> MAĞAZA KONUMU
-        </button>
-
+        <button onClick={onLocation} className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"><span>📍</span> MAĞAZA KONUMU</button>
         <div className="mt-12 text-xs text-yellow-100/50 font-serif italic">"Güvenin ve Kalitenin Adresi"</div>
       </div>
     </div>
   );
 }
 
-// --- VİTRİN SAYFASI ---
-// --- VİTRİN SAYFASI (INSTAGRAM DM YÖNLENDİRMELİ) ---
 function VitrinPage({ onBack, items }) {
   return (
     <div className="min-h-screen bg-[#fdfcf8] flex flex-col fade-in relative">
-       
        <div className="p-6 sticky top-0 z-50 flex items-center justify-between bg-[#fdfcf8]/95 backdrop-blur-sm">
           <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90">✕</button>
           <h1 className="text-xs font-bold text-gray-400 tracking-[0.3em] uppercase">Koleksiyon</h1>
           <div className="w-5"></div>
        </div>
-
        <div className="flex flex-col pb-20 px-6">
           {items && items.length > 0 ? items.map((urun, index) => (
              <div key={urun.id} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in" style={{animationDelay: `${index * 0.1}s`}}>
@@ -234,15 +163,7 @@ function VitrinPage({ onBack, items }) {
                     <div className="w-8 h-[1px] bg-gray-200 mx-auto mb-4"></div>
                     <div className="flex flex-col gap-2 items-center">
                         <span className="text-lg font-medium text-gray-900 font-mono tracking-tighter">{urun.fiyat}</span>
-                        
-                        {/* BUTON GÜNCELLENDİ: INSTAGRAM DM */}
-                        <button 
-                          onClick={() => window.open('https://ig.me/m/bakirkoykuyumcusu', '_blank')} 
-                          className="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600 border-b border-pink-200 pb-1 hover:text-pink-800 hover:border-pink-800 transition-all"
-                        >
-                          Instagram'dan Ayırt 💬
-                        </button>
-
+                        <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600 border-b border-pink-200 pb-1 hover:text-pink-800 hover:border-pink-800 transition-all">Instagram'dan Ayırt 💬</button>
                     </div>
                 </div>
              </div>
@@ -250,11 +171,7 @@ function VitrinPage({ onBack, items }) {
             <div className="flex flex-col items-center justify-center py-32 text-gray-300"><span className="text-4xl mb-4 opacity-20">💎</span><p className="font-serif italic text-sm">Vitrinde henüz ürün yok.</p></div>
           )}
        </div>
-
-       <div className="text-center pb-12 opacity-30">
-          <img src="bk.jpeg" className="w-6 h-6 rounded-full mx-auto mb-2 grayscale" alt="logo" crossOrigin="anonymous" />
-          <div className="text-[8px] tracking-[0.3em] uppercase font-serif">Bakırköy Kuyumcusu</div>
-       </div>
+       <div className="text-center pb-12 opacity-30"><img src="bk.jpeg" className="w-6 h-6 rounded-full mx-auto mb-2 grayscale" alt="logo" crossOrigin="anonymous" /><div className="text-[8px] tracking-[0.3em] uppercase font-serif">Bakırköy Kuyumcusu</div></div>
     </div>
   );
 }
@@ -263,12 +180,7 @@ function LoginModal({ onClose, onLoginSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    login();
-  };
-
+  const handleSubmit = (e) => { e.preventDefault(); login(); };
   async function login() {
     const { data, error } = await supa.auth.signInWithPassword({ email, password });
     if (error) setError("Hatalı giriş!"); else onLoginSuccess(data.user);
@@ -291,12 +203,23 @@ function LoginModal({ onClose, onLoginSuccess }) {
   );
 }
 
+// --- YENİ ADMIN PANELİ (SADECE MANUEL FİYAT) ---
 function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose, onSave }) {
-  if (!open || !draft) return null;
+  if (!open) return null;
+  // KORUMA: Veri henüz yüklenmediyse bekleme ekranı göster
+  if (!draft) return <div className="modal-backdrop"><div className="modal p-6 text-center">Veriler Yükleniyor...<button onClick={onClose} className="mt-4 text-sm text-red-500">İptal</button></div></div>;
+
   const [tab, setTab] = React.useState('genel'); 
   const [refreshing, setRefreshing] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
+  
+  // Bu state artık form verisini tutuyor
+  const [form, setForm] = React.useState(draft);
   const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', resim: '' });
+
+  const handleChange = (key, val) => {
+      setForm({ ...form, [key]: Number(val) || val });
+  };
 
   const handleFileUpload = async (event) => {
     try {
@@ -319,7 +242,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   };
 
   const handleDeleteProduct = async (id) => {
-      if(confirm("Bu ürünü silmek istediğine emin misin?")) {
+      if(confirm("Silmek istiyor musunuz?")) {
           await supa.from('vitrin').delete().eq('id', id);
           refreshVitrin();
       }
@@ -328,40 +251,36 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const forceRefreshAll = async () => {
     setRefreshing(true);
     try {
-        const { data } = await supa.from('altin_politika').select('versiyon').eq('id', 1).single();
-        const yeniVersiyon = (data?.versiyon || 1) + 1;
-        await supa.from('altin_politika').update({ versiyon: yeniVersiyon }).eq('id', 1);
-        alert("Komut gönderildi!");
+        const yeniVersiyon = (form.versiyon || 1) + 1;
+        await supa.from('ham_fiyatlar').update({ versiyon: yeniVersiyon }).eq('id', 1);
+        alert("Tüm cihazlar yenileniyor...");
     } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
   };
-
-  const fields = [ ["ceyrek_alis", "Çeyrek Alış"], ["ceyrek_satis", "Çeyrek Satış"], ["ata_alis", "Ata Alış"], ["ata_satis", "Ata Satış"], ["gram22", "22K Fark"], ["gram24", "24K Fark"] ];
 
   return (
     <div className="modal-backdrop">
       <div className="modal h-[80vh]">
         <div className="flex border-b">
-            <button onClick={()=>setTab('genel')} className={`flex-1 py-4 text-sm font-bold ${tab==='genel' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>⚙️ Fiyat & Ayarlar</button>
-            <button onClick={()=>setTab('vitrin')} className={`flex-1 py-4 text-sm font-bold ${tab==='vitrin' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>💎 Vitrin Yönetimi</button>
+            <button onClick={()=>setTab('genel')} className={`flex-1 py-4 text-sm font-bold ${tab==='genel' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>📝 Fiyat Listesi</button>
+            <button onClick={()=>setTab('vitrin')} className={`flex-1 py-4 text-sm font-bold ${tab==='vitrin' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>💎 Vitrin</button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
             {tab === 'genel' && (
                 <div>
-                    <div className="mb-4">
-                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Fiyat Makasları</h4>
-                        <div className="grid grid-cols-2 gap-2 mb-3">
-                            {fields.map(([k, l]) => (
-                                <div key={k}><label className="text-[9px] text-gray-500">{l}</label><input type="number" value={draft[k]} onChange={e=>setDraft({...draft, [k]: Number(e.target.value)})} className="w-full p-2 border rounded text-right text-sm" /></div>
-                            ))}
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={()=>{ setDraft({ ...draft, ceyrek_alis:-150, ceyrek_satis:200, ata_alis:-800, ata_satis:1000, gram22:170, gram24:170 }); }} className="flex-1 bg-red-100 text-red-700 text-[10px] py-2 rounded font-bold">Makas Aç</button>
-                            <button onClick={()=>{ setDraft({ ...draft, ceyrek_alis:-100, ceyrek_satis:150, ata_alis:-250, ata_satis:800, gram22:100, gram24:110 }); }} className="flex-1 bg-blue-100 text-blue-700 text-[10px] py-2 rounded font-bold">Normale Dön</button>
-                        </div>
+                    <div className="mb-4 space-y-3">
+                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Fiyat Girişi (Manuel)</h4>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Çeyrek ALIŞ</label><input type="number" value={form.ceyrek_alis || ''} onChange={e=>handleChange('ceyrek_alis', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500 font-bold">Çeyrek SATIŞ</label><input type="number" value={form.ceyrek_satis || ''} onChange={e=>handleChange('ceyrek_satis', e.target.value)} className="p-2 border rounded w-full font-bold font-mono" /></div>
+                        <hr className="my-2"/>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Ata ALIŞ</label><input type="number" value={form.ata_alis || ''} onChange={e=>handleChange('ata_alis', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500 font-bold">Ata SATIŞ</label><input type="number" value={form.ata_satis || ''} onChange={e=>handleChange('ata_satis', e.target.value)} className="p-2 border rounded w-full font-bold font-mono" /></div>
+                        <hr className="my-2"/>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">22 Ayar (Satış)</label><input type="number" value={form.gram_22 || ''} onChange={e=>handleChange('gram_22', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Has Altın (24K)</label><input type="number" value={form.gram_24 || ''} onChange={e=>handleChange('gram_24', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
                     </div>
                     <div className="mb-4 pt-4 border-t border-dashed">
                         <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Kayan Yazı</h4>
-                        <input type="text" value={draft.duyuru || ""} onChange={e=>setDraft({...draft, duyuru: e.target.value})} className="w-full p-2 border rounded text-xs" />
+                        <input type="text" value={form.duyuru || ""} onChange={e=>handleChange('duyuru', e.target.value)} className="w-full p-2 border rounded text-xs" />
                     </div>
                     <div className="pt-4 border-t">
                         <button onClick={forceRefreshAll} disabled={refreshing} className="w-full bg-gray-800 text-white text-xs py-3 rounded font-bold">{refreshing ? "..." : "🔄 Tüm Cihazları Yenile"}</button>
@@ -373,22 +292,15 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
                         <h4 className="text-xs font-bold text-gray-700 mb-3">➕ YENİ ÜRÜN EKLE</h4>
                         <input type="text" placeholder="Ürün Adı" value={newProduct.baslik} onChange={e=>setNewProduct({...newProduct, baslik: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
-                        <input type="text" placeholder="Fiyat (Örn: 14.500 ₺)" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
-                        <div className="flex items-center gap-2 mb-2">
-                            <input type="file" onChange={handleFileUpload} className="text-xs w-full" />
-                            {uploading && <span className="text-xs text-blue-500">Yükleniyor...</span>}
-                        </div>
-                        <button onClick={handleAddProduct} className="w-full bg-green-600 text-white py-2 rounded text-xs font-bold hover:bg-green-700">Listeye Ekle</button>
+                        <input type="text" placeholder="Fiyat" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
+                        <div className="flex items-center gap-2 mb-2"><input type="file" onChange={handleFileUpload} className="text-xs w-full" />{uploading && <span className="text-xs text-blue-500">...</span>}</div>
+                        <button onClick={handleAddProduct} className="w-full bg-green-600 text-white py-2 rounded text-xs font-bold hover:bg-green-700">Ekle</button>
                     </div>
-                    <h4 className="text-xs font-bold text-gray-400 mb-2 uppercase">Mevcut Ürünler ({vitrinItems.length})</h4>
                     <div className="space-y-2">
                         {vitrinItems.map(item => (
                             <div key={item.id} className="flex items-center gap-3 p-2 border rounded bg-white">
                                 <img src={item.resim || "https://placehold.co/50"} className="w-10 h-10 rounded object-cover bg-gray-100" />
-                                <div className="flex-1">
-                                    <div className="text-xs font-bold">{item.baslik}</div>
-                                    <div className="text-[10px] text-gray-500">{item.fiyat}</div>
-                                </div>
+                                <div className="flex-1"><div className="text-xs font-bold">{item.baslik}</div><div className="text-[10px] text-gray-500">{item.fiyat}</div></div>
                                 <button onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
                             </div>
                         ))}
@@ -399,13 +311,11 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
         {tab === 'genel' && (
             <div className="p-4 border-t bg-gray-50 text-right">
                 <button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm mr-2">Kapat</button>
-                <button onClick={onSave} className="px-4 py-2 rounded bg-yellow-600 text-white font-bold text-sm shadow">Kaydet</button>
+                <button onClick={() => onSave(form)} className="px-4 py-2 rounded bg-yellow-600 text-white font-bold text-sm shadow">Kaydet</button>
             </div>
         )}
          {tab === 'vitrin' && (
-            <div className="p-4 border-t bg-gray-50 text-right">
-                <button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm">Kapat</button>
-            </div>
+            <div className="p-4 border-t bg-gray-50 text-right"><button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm">Kapat</button></div>
         )}
       </div>
     </div>
@@ -415,94 +325,46 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
 // --- ANA UYGULAMA ---
 function App() {
   const [view, setView] = React.useState('welcome');
-  const [prices, setPrices] = React.useState({});
-  const [prevPrices, setPrevPrices] = React.useState({});
+  const [prices, setPrices] = React.useState(null); // Başlangıçta null
   const [lastUpdate, setLastUpdate] = React.useState(null);
   const [user, setUser] = React.useState(null);
-  const [policy, setPolicy] = React.useState(null);
-  const [draft, setDraft] = React.useState(null);
   const [vitrinItems, setVitrinItems] = React.useState([]);
   const [loginOpen, setLoginOpen] = React.useState(false);
   const [adminOpen, setAdminOpen] = React.useState(false);
   const [stability, setStability] = React.useState(0);
   const [currentVersion, setCurrentVersion] = React.useState(null);
-  const [dataError, setDataError] = React.useState(false);
   const [locationOpen, setLocationOpen] = React.useState(false);
 
-  // fetchData fonksiyonunu BURAYA, en üste taşıdık. Artık AdminModal bunu bulabilir.
+  // VERİ ÇEKME
   async function fetchData() {
-      const { data: pData } = await supa.from("altin_politika").select("*").eq("id", 1).single();
-      if (pData) { setPolicy(pData); setDraft(pData); if(pData.versiyon) setCurrentVersion(pData.versiyon); }
-      
+      const { data: pData } = await supa.from("ham_fiyatlar").select("*").eq("id", 1).single();
+      if (pData) { 
+          setPrices(pData); 
+          if(pData.versiyon) setCurrentVersion(pData.versiyon); 
+      }
       const { data: vData } = await supa.from("vitrin").select("*").order('id', { ascending: false });
       if(vData) setVitrinItems(vData);
+      setLastUpdate(new Date());
   }
 
-  React.useEffect(() => { fetchData(); }, []);
+  React.useEffect(() => { 
+      fetchData(); 
+      // Her 3 saniyede bir veriyi tazele (polling)
+      const interval = setInterval(fetchData, 3000);
+      const stab = setInterval(() => setStability(s => s + 1), 1000);
+      return () => { clearInterval(interval); clearInterval(stab); };
+  }, []);
 
+  // Otomatik Yenileme Kontrolü
   React.useEffect(() => {
+      if(!currentVersion) return;
       const checkVersion = async () => {
-          const { data } = await supa.from('altin_politika').select('versiyon').eq('id', 1).single();
-          if (currentVersion && data?.versiyon && data.versiyon !== currentVersion) window.location.reload(); 
+          const { data } = await supa.from('ham_fiyatlar').select('versiyon').eq('id', 1).single();
+          if (data?.versiyon && data.versiyon !== currentVersion) window.location.reload(); 
       };
       const timer = setInterval(checkVersion, 10000);
       return () => clearInterval(timer);
   }, [currentVersion]);
-
-  React.useEffect(() => {
-    if(!policy) return;
-    const num = (v) => {
-        if (!v) return 0;
-        let str = v.toString().replace(/[^0-9.,-]/g, '').replace(/\./g, '').replace(',', '.');
-        return parseFloat(str) || 0;
-    };
-    const getVal = (data, ...keys) => { for (let k of keys) { if (data[k]) return data[k]; } return null; };
-    
-    async function load() {
-      try {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), 10000);
-        const res = await fetch(API_URL, { signal: controller.signal });
-        clearTimeout(id);
-        if (!res.ok) throw new Error("Ağ Hatası");
-        const json = await res.json();
-        const d = json.data; 
-        if (!d) { setDataError(true); return; }
-        setDataError(false);
-
-        const P = policy;
-        const rawQ  = getVal(d, 'CEYREK_ESKI', 'CEYREK', 'YENI_CEYREK');
-        const rawA  = getVal(d, 'ATA_ESKI', 'ATA', 'CUMHURIYET');
-        const raw22 = getVal(d, 'AYAR22', '22AYAR');
-        const raw24 = getVal(d, 'ALTIN', 'HASALTIN', 'GRAM');
-
-        if (!rawQ || !rawA || !raw22 || !raw24) return;
-
-        const newP = {
-          qBuy: Math.round(num(rawQ.alis) + num(P.ceyrek_alis)),
-          qSell: Math.round(num(rawQ.satis) + num(P.ceyrek_satis)),
-          aBuy: Math.round(num(rawA.alis) + num(P.ata_alis)),
-          aSell: Math.round(num(rawA.satis) + num(P.ata_satis)),
-          g22: Math.round(num(raw22.satis) + num(P.gram22)),
-          g24: Math.round(num(raw24.satis) + num(P.gram24)),
-        };
-        newP.s025 = Math.round(newP.g24 * (num(P.g025) || 0.33));
-        newP.s0522 = Math.round(newP.g22 * (num(P.g05_22) || 0.539));
-        newP.s0524 = Math.round(newP.g24 * (num(P.g05_24) || 0.52));
-
-        setPrices(prev => {
-          if(JSON.stringify(prev) !== JSON.stringify(newP)) setStability(0);
-          setPrevPrices(prev);
-          return newP;
-        });
-        setLastUpdate(new Date());
-      } catch (e) { setDataError(true); }
-    }
-    load();
-    const t = setInterval(load, 10000); 
-    const s = setInterval(() => setStability(c => c+1), 1000);
-    return () => { clearInterval(t); clearInterval(s); }
-  }, [policy]);
 
   const downloadImage = async () => {
     const el = document.getElementById("capture-area");
@@ -514,11 +376,19 @@ function App() {
     link.click();
   }
 
-  const handleSave = async () => {
-      await supa.from("altin_politika").update(draft).eq("id", 1);
-      setPolicy(draft);
+  const handleSave = async (newData) => {
+      await supa.from("ham_fiyatlar").update(newData).eq("id", 1);
+      setPrices(newData);
       setAdminOpen(false);
+      setStability(0);
   };
+
+  const P = prices || {}; // Boşsa hata verme
+  // Küçük gram hesapları (Manuel girilen Has Altın üzerinden)
+  const g24 = P.gram_24 || 0;
+  const s025 = Math.round(g24 * 0.33); // Örnek çarpan
+  const s05_22 = Math.round((P.gram_22 || 0) * 0.55); 
+  const s05_24 = Math.round(g24 * 0.55);
 
   return (
     <>
@@ -531,7 +401,6 @@ function App() {
             <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
               <div className="pointer-events-auto flex gap-2">
                 <button onClick={() => setView('welcome')} className="bg-white/80 backdrop-blur text-gray-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">🏠</button>
-                {/* KONUM BUTONU */}
                 <button onClick={() => setLocationOpen(true)} className="bg-white/80 backdrop-blur text-blue-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📍</button>
                 {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold h-10 flex items-center">Çıkış</button>}
               </div>
@@ -539,13 +408,11 @@ function App() {
                 <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📜</button>
                 <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📟</button>
                 <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📸</button>
-                {/* AYARLAR BUTONU */}
                 <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">⚙️</button>
               </div>
             </div>
 
             <div id="capture-area" className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100">
-              {dataError && <div className="absolute top-0 left-0 w-full bg-red-600 text-white text-[10px] font-bold text-center py-2 z-50 animate-pulse rounded-t-[2rem]">⚠️ VERİ AKIŞI SAĞLANAMIYOR - Fiyatlar Güncel Değil</div>}
               <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-500 to-yellow-200 opacity-60"></div>
               <div className="flex justify-center -mt-16 mb-4 relative z-10">
                  <a href="https://www.instagram.com/bakirkoykuyumcusu/" target="_blank">
@@ -556,17 +423,19 @@ function App() {
                 <h1 className="text-4xl font-serif font-bold text-yellow-800 tracking-tight drop-shadow-sm">Bakırköy Kuyumcusu</h1>
                 <div className="text-xs font-bold tracking-[0.3em] text-yellow-600 mt-2 uppercase opacity-80">{new Date().toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'})}</div>
               </div>
+              
               <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-inner border border-white/60">
-                <Row title="Çeyrek Altın" buy={prices.qBuy} sell={prices.qSell} prevBuy={prevPrices.qBuy} prevSell={prevPrices.qSell} />
-                <Row title="Ata Altın" buy={prices.aBuy} sell={prices.aSell} prevBuy={prevPrices.aBuy} prevSell={prevPrices.aSell} />
+                {/* MANUEL FİYATLAR */}
+                <Row title="Çeyrek Altın" buy={P.ceyrek_alis || 0} sell={P.ceyrek_satis || 0} />
+                <Row title="Ata Altın" buy={P.ata_alis || 0} sell={P.ata_satis || 0} />
                 <div className="grid grid-cols-2 gap-4 mt-6">
-                  <Box title="22 Ayar Gram" value={prices.g22} prev={prevPrices.g22} />
-                  <Box title="24 Ayar Gram" value={prices.g24} prev={prevPrices.g24} />
+                  <Box title="22 Ayar Gram" value={P.gram_22 || 0} />
+                  <Box title="24 Ayar Gram" value={P.gram_24 || 0} />
                 </div>
                 <div className="grid grid-cols-3 gap-3 mt-4">
-                  <SmallBox title="0.25g (24K)" value={prices.s025} />
-                  <SmallBox title="0.50g (22K)" value={prices.s0522} />
-                  <SmallBox title="0.50g (24K)" value={prices.s0524} />
+                  <SmallBox title="0.25g (24K)" value={s025} />
+                  <SmallBox title="0.50g (22K)" value={s05_22} />
+                  <SmallBox title="0.50g (24K)" value={s05_24} />
                 </div>
                 <div className="mt-6 pt-4 border-t border-dashed border-gray-200 flex justify-between items-center text-[10px] text-gray-400 font-mono">
                   <span>Saat: {ft(lastUpdate)}</span>
@@ -576,16 +445,16 @@ function App() {
               <div className="mt-8 text-center text-yellow-800/40 font-serif italic text-sm">"Güvenin ve Kalitenin Adresi"</div>
             </div>
             
-            {stability > 30 && <div className="mt-4 text-xs text-gray-400 animate-pulse">● Piyasa durağan</div>}
+            {stability > 30 && <div className="mt-4 text-xs text-gray-400 animate-pulse">● Fiyatlar güncel</div>}
 
-            {policy && policy.duyuru && (
+            {P.duyuru && (
               <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl">
                   <div className="marquee-container">
                       <div className="marquee-content">
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{policy.duyuru} •</span>
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{policy.duyuru} •</span>
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{policy.duyuru} •</span>
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{policy.duyuru} •</span>
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
                       </div>
                   </div>
               </div>
@@ -593,20 +462,18 @@ function App() {
          </div>
       )}
 
-      {/* MODALLAR HER ZAMAN RENDER EDİLİR */}
       {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
       
       {adminOpen && (
           <AdminModal 
             open={adminOpen} 
-            draft={draft} setDraft={setDraft} 
+            draft={prices} setDraft={setPrices} 
             vitrinItems={vitrinItems} refreshVitrin={fetchData}
             onClose={()=>setAdminOpen(false)} 
             onSave={handleSave} 
           />
       )}
       
-      {/* KONUM MODALI */}
       {locationOpen && <LocationModal onClose={() => setLocationOpen(false)} />}
 
     </>
