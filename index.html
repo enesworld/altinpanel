@@ -4,9 +4,12 @@
   <meta charset="UTF-8" />
   <title>Bakırköy Kuyumcusu</title>
   <link rel="icon" href="bk.jpeg" type="image/jpeg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Mobil Uyumluluk ve Çentik Desteği İçin Güncellendi -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#b45309">
 
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -17,52 +20,53 @@
 
   <style>
     /* Flash etkisini önlemek için arka plan rengi */
-    body { background: #b45309; }
+    body { 
+        background: #b45309; 
+        overscroll-behavior-y: none; /* Mobilde sayfayı aşağı çekince yenilemeyi engeller */
+        -webkit-tap-highlight-color: transparent; /* Mobilde tıklama gölgesini kaldırır */
+    }
     
+    /* iPhone'da Input Zoom Engelleme */
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+
     .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     .flash-down { color: #dc2626 !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
-    .modal { background: white; padding: 0; width: 90%; max-width: 400px; border-radius: 16px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
+    
+    /* Modal Mobilde Tam Ekran Gibi Davransın */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; }
+    .modal { background: white; padding: 0; width: 100%; max-width: 400px; border-radius: 24px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); overflow: hidden; display: flex; flex-direction: column; max-height: 90dvh; /* Mobilde klavye uyumu için dvh */ }
+    
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
     .marquee-container { display: flex; overflow: hidden; white-space: nowrap; width: 100%; }
-    .marquee-content { display: flex; width: max-content; animation: scroll 10s linear infinite; }
+    .marquee-content { display: flex; width: max-content; animation: scroll 15s linear infinite; } /* Mobilde daha yavaş aksın */
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    
     .fade-in { animation: fadeIn 0.5s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
     .snowflake { position: absolute; background-color: white; border-radius: 50%; top: -10px; box-shadow: 0 0 5px rgba(255,255,255,0.8); animation: fall linear infinite; }
     @keyframes fall { 0% { transform: translateY(-10vh) translateX(0px); opacity: 0.8; } 100% { transform: translateY(110vh) translateX(20px); opacity: 0; } }
     
-    /* Scrollbar Gizleme */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Lüks Geçiş Animasyonu (Soft Focus) */
     @keyframes softFocus {
-      0% { 
-        opacity: 0; 
-        transform: translateY(20px) scale(0.98); 
-        filter: blur(4px); 
-      }
-      100% { 
-        opacity: 1; 
-        transform: translateY(0) scale(1); 
-        filter: blur(0); 
-      }
+      0% { opacity: 0; transform: translateY(20px) scale(0.98); filter: blur(4px); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
     }
-    .animate-soft-enter { 
-      animation: softFocus 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-    }
+    .animate-soft-enter { animation: softFocus 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     
-    /* YZ Yükleniyor Animasyonu */
     .typing-indicator span {
       animation: blink 1.4s infinite both;
-      height: 5px; width: 5px; background: #854d0e; border-radius: 50%; display: inline-block; margin: 0 1px;
+      height: 6px; width: 6px; background: #854d0e; border-radius: 50%; display: inline-block; margin: 0 2px;
     }
     .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
     .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes blink { 0% { opacity: 0.1; } 20% { opacity: 1; } 100% { opacity: 0.1; } }
 
-    /* Yeni: Altın Işıltı Animasyonu */
     .sparkle {
       position: absolute;
       background: white;
@@ -78,7 +82,7 @@
   </style>
 </head>
 
-<body class="text-gray-800 antialiased font-sans">
+<body class="text-gray-800 antialiased font-sans select-none">
   <div id="root"></div>
 
 <script type="text/babel">
@@ -162,38 +166,38 @@ const SmallBox = ({ title, value, prev }) => (
   </div>
 );
 
-// --- YENİ BİLEŞEN: GEMINI ASİSTAN MODALI ---
+// --- GEMINI ASİSTAN MODALI (MOBİL UYUMLU) ---
 function GeminiAdvisorModal({ onClose, items }) {
   const [query, setQuery] = React.useState("");
-  const [lastQuestion, setLastQuestion] = React.useState(""); // Gönderilen soruyu tutmak için
+  const [lastQuestion, setLastQuestion] = React.useState(""); 
   const [response, setResponse] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+  
+  // Mesaj gelince otomatik aşağı kaydır
+  const chatEndRef = React.useRef(null);
+  React.useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [response, loading, lastQuestion]);
 
   const handleAsk = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
     
-    // UI Güncellemeleri
-    setLastQuestion(query); // Soruyu ekrana sabitle
-    setQuery(""); // Yazı alanını temizle
+    setLastQuestion(query); 
+    setQuery(""); 
     setLoading(true);
     setResponse("");
 
-    // Stok verisi analizi için fiyatları gönderiyoruz ama konuşması yasak
     const inventory = items.map(i => `${i.baslik} (${i.kategori}) - ${i.fiyat}`).join("\n");
-    
     const prompt = `Müşteri Sorusu: "${query}"\n\nStok Listesi:\n${inventory}`;
-    
-    // GÜNCELLENMİŞ SIKI LİMİTLER VE FİYAT GİZLİLİĞİ POLİTİKASI
     const system = `
       Sen Bakırköy Kuyumcusu'nun seçkin ve profesyonel mücevher danışmanısın.
-      
-      KESİN KURALLAR VE SINIRLAR (ASLA İHLAL ETME):
-      1. GÜVENLİK VE İTİBAR: Asla siyasi, dini, tartışmalı konulara girme. "Altın düşer mi/çıkar mı?" gibi spekülatif yatırım tavsiyeleri verme. Mağazayı zora sokacak hiçbir ifade kullanma.
-      2. FİYAT SÖYLEME: Stok listesindeki fiyatları sadece müşterinin bütçesine uygun ürünü bulmak için "sessizce" kullan. Müşteriye verdiğin cevapta ASLA RAKAM/FİYAT TELAFFUZ ETME. Sadece ürünün adını ve neden o kişiye yakışacağını anlat.
-      3. STOK BAĞLILIĞI: Sadece listedeki ürünleri öner. Listede yoksa "Benzer modellerimiz için mağazamıza bekleriz" de.
-      4. ÜSLUP: Çok kibar, lüks ve kısa (maksimum 2-3 cümle) konuş.
-      5. KONU DIŞI: Mücevher harici soruları (yemek, hava durumu vb.) "Ben sadece mücevher uzmanıyım ✨" diyerek reddet.
+      KESİN KURALLAR:
+      1. GÜVENLİK: Siyasi, dini, spekülatif konulara girme.
+      2. FİYAT: Müşteriye ASLA fiyat telaffuz etme. Sadece bütçesine uygun ürünü bulup özelliklerini anlat.
+      3. STOK: Sadece listedeki ürünleri öner.
+      4. ÜSLUP: Çok kibar, lüks ve kısa (max 3 cümle).
+      5. KONU DIŞI: Mücevher harici soruları reddet.
     `;
 
     const result = await callGemini(prompt, system);
@@ -203,11 +207,9 @@ function GeminiAdvisorModal({ onClose, items }) {
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal p-0 w-full max-w-md h-[500px] flex flex-col bg-white overflow-hidden" onClick={e => e.stopPropagation()}>
-        {/* Header - Renk Değişti (Bakır Tonları) */}
-        <div className="bg-gradient-to-r from-[#78350f] to-[#b45309] p-4 flex justify-between items-center text-white">
+      <div className="modal p-0 w-full h-[80dvh] flex flex-col bg-white overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="bg-gradient-to-r from-[#78350f] to-[#b45309] p-4 flex justify-between items-center text-white shrink-0">
           <div className="flex items-center gap-3">
-            {/* İnsan Figürü (Emoji) */}
             <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
                 <span className="text-xl">👩‍💼</span>
             </div>
@@ -216,33 +218,28 @@ function GeminiAdvisorModal({ onClose, items }) {
               <p className="text-[10px] text-orange-100 opacity-80">Size Özel Asistan</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/70 hover:text-white transition">✕</button>
+          <button onClick={onClose} className="text-white/70 hover:text-white p-2 text-xl">✕</button>
         </div>
 
-        {/* Chat Area */}
         <div className="flex-1 bg-[#fffaf0] p-4 overflow-y-auto">
-          {/* Welcome Message */}
           <div className="flex gap-3 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shadow-sm">👩‍💼</div>
+            <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shadow-sm shrink-0">👩‍💼</div>
             <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-orange-100 text-sm text-gray-700 leading-relaxed">
               Hoş geldiniz! Ben mağazanızın sanal asistanıyım. Size veya sevdiklerinize en uygun mücevheri bulmanızda yardımcı olabilirim. Ne arıyorsunuz? ✨
             </div>
           </div>
 
-          {/* User Query (Gönderilen soru lastQuestion ile gösteriliyor) */}
           {(lastQuestion || loading) && (
              <div className="flex gap-3 mb-4 flex-row-reverse">
-              {/* Kullanıcı Balon Rengi Değişti (Koyu Gri/Siyah) */}
-              <div className="bg-gray-800 text-white p-3 rounded-2xl rounded-tr-none shadow-md text-sm">
+              <div className="bg-gray-800 text-white p-3 rounded-2xl rounded-tr-none shadow-md text-sm max-w-[85%]">
                 {lastQuestion}
               </div>
             </div>
           )}
 
-          {/* AI Response */}
           {loading && (
              <div className="flex gap-3 mb-4">
-                <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100">👩‍💼</div>
+                <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shrink-0">👩‍💼</div>
                 <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-orange-100 text-sm text-gray-500 typing-indicator">
                    Yazıyor <span></span><span></span><span></span>
                 </div>
@@ -251,27 +248,27 @@ function GeminiAdvisorModal({ onClose, items }) {
           
           {response && !loading && (
              <div className="flex gap-3 mb-4 animate-soft-enter">
-                <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shadow-sm">👩‍💼</div>
+                <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shadow-sm shrink-0">👩‍💼</div>
                 <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-orange-100 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                    {response}
                 </div>
              </div>
           )}
+          <div ref={chatEndRef}></div>
         </div>
 
-        {/* Input Area */}
-        <form onSubmit={handleAsk} className="p-3 bg-white border-t border-orange-100 flex gap-2">
+        <form onSubmit={handleAsk} className="p-3 bg-white border-t border-orange-100 flex gap-2 shrink-0 pb-safe">
           <input 
             type="text" 
             value={query} 
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Örn: Eşime yıl dönümü hediyesi..." 
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 text-sm focus:ring-2 focus:ring-[#b45309] focus:border-transparent outline-none transition-all placeholder-gray-400"
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-3 text-sm focus:ring-2 focus:ring-[#b45309] focus:border-transparent outline-none transition-all placeholder-gray-400"
           />
           <button 
             type="submit" 
             disabled={loading || !query.trim()}
-            className="bg-[#b45309] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#92400e] disabled:opacity-50 transition shadow-lg transform active:scale-95"
+            className="bg-[#b45309] text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-[#92400e] disabled:opacity-50 transition shadow-lg transform active:scale-95 text-lg"
           >
             ➤
           </button>
@@ -295,15 +292,14 @@ function LocationModal({ onClose }) {
            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-bold">Çalışma Saatleri</div>
            <div className="text-sm font-bold text-gray-800">Haftanın 7 Günü: 09:00 - 20:00</div>
         </div>
-        <button onClick={() => window.open('https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96389.47322781557!2d28.729118650839265!3d40.97773543712353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cabd0f8036b751%3A0xedcbfa136137d896!2zQmFrxLFya8O2eSBLdXl1bWN1c3U!5e0!3m2!1str!2str!4v1764501029275!5m2!1str!2str', '_blank')} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"><span>📍</span> Yol Tarifi Al</button>
-        <button onClick={onClose} className="mt-4 text-gray-400 text-sm hover:text-gray-600 underline">Kapat</button>
+        <button onClick={() => window.open('https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96389.47322781557!2d28.729118650839265!3d40.97773543712353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cabd0f8036b751%3A0xedcbfa136137d896!2zQmFrxLFya8O2eSBLdXl1bWN1c3U!5e0!3m2!1str!2str!4v1764501029275!5m2!1str!2str', '_blank')} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 active:scale-95"><span>📍</span> Yol Tarifi Al</button>
+        <button onClick={onClose} className="mt-4 text-gray-400 text-sm hover:text-gray-600 underline py-2">Kapat</button>
       </div>
     </div>
   );
 }
 
 function WelcomeScreen({ onSelect, onLogin, onLocation, onAdvisor }) {
-  // Kar taneleri
   const snowflakes = Array.from({ length: 30 }).map((_, i) => {
     const style = { 
       left: `${Math.random() * 100}%`, 
@@ -311,12 +307,11 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, onAdvisor }) {
       height: `${Math.random() * 4 + 2}px`, 
       animationDuration: `${Math.random() * 10 + 10}s`, 
       animationDelay: `${Math.random() * 5}s`, 
-      opacity: Math.random() * 0.3 + 0.1 // Daha soft/şeffaf
+      opacity: Math.random() * 0.3 + 0.1 
     };
     return <div key={`snow-${i}`} className="snowflake" style={style} />;
   });
 
-  // Altın Işıltılar (Yeni)
   const sparkles = Array.from({ length: 15 }).map((_, i) => {
     const style = {
       top: `${Math.random() * 100}%`,
@@ -330,48 +325,38 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, onAdvisor }) {
   });
 
   return (
-    // DEĞİŞİKLİK 1: Yılbaşı için gradient başına 'from-[#7f1d1d]' (Bordo) eklendi.
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#7f1d1d] via-[#b45309] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
       
-      {/* Efektler */}
       <div className="absolute inset-0 pointer-events-none z-10">
         {snowflakes}
         {sparkles}
       </div>
       
-      {/* Container */}
       <div className="relative z-30 w-full max-w-2xl flex flex-col items-center mt-0">
         
-        {/* YENİ EKLENEN LOGO (Tıklanabilir yapıldı) */}
         <div 
             onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')}
-            className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500"
+            className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500 active:scale-95"
         >
-           {/* Arkadaki Işıltı Efekti */}
            <div className="absolute -inset-2 bg-white/20 rounded-full blur-xl animate-pulse"></div>
            <img 
              src="bk.jpeg" 
-             className="relative w-32 h-32 rounded-full border-[4px] border-white/90 shadow-[0_10px_40px_rgba(0,0,0,0.3)] object-cover" 
+             className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-[4px] border-white/90 shadow-[0_10px_40px_rgba(0,0,0,0.3)] object-cover" 
              alt="Bakırköy Kuyumcusu Logo" 
            />
         </div>
 
-        {/* DEĞİŞİKLİK 2: Başlığa Noel Baba şapkası eklendi */}
         <div className="relative">
             <span className="absolute -top-6 -left-6 text-4xl transform -rotate-12 drop-shadow-lg filter animate-pulse">🎅</span>
-            <h1 className="text-5xl font-serif font-bold mb-4 tracking-tight drop-shadow-lg text-white text-center">Bakırköy Kuyumcusu</h1>
+            <h1 className="text-3xl md:text-5xl font-serif font-bold mb-4 tracking-tight drop-shadow-lg text-white text-center">Bakırköy Kuyumcusu</h1>
         </div>
 
-        {/* DEĞİŞİKLİK 3: Karşılama mesajı güncellendi */}
-        <p className="text-yellow-100 text-sm mb-12 uppercase tracking-[0.3em] opacity-90 flex items-center gap-2">
+        <p className="text-yellow-100 text-xs md:text-sm mb-12 uppercase tracking-[0.2em] md:tracking-[0.3em] opacity-90 flex items-center gap-2">
            <span>❄️</span> Mutlu Yıllar & Hoşgeldiniz <span>❄️</span>
         </p>
         
-        {/* YZ ASİSTAN BUTONU */}
-        <button onClick={onAdvisor} className="mb-10 relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/60 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 flex items-center gap-3 group w-auto mx-auto ring-1 ring-white/30">
-           {/* Işık Yansıması Efekti */}
+        <button onClick={onAdvisor} className="mb-10 relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/60 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 active:scale-95 transition-all duration-300 flex items-center gap-3 group w-auto mx-auto ring-1 ring-white/30">
            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
-           
            <span className="text-2xl drop-shadow-md filter">👩‍💼</span>
            <div className="flex flex-col items-start">
              <span className="font-bold text-sm tracking-widest uppercase drop-shadow-sm leading-tight">Mücevher Asistanı</span>
@@ -381,18 +366,18 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, onAdvisor }) {
         </button>
 
         <div className="flex flex-wrap gap-4 w-full justify-center">
-          <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '160px' }}>
-            <span className="text-4xl drop-shadow-lg">📊</span><span className="font-bold text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
+          <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-4 md:p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '140px' }}>
+            <span className="text-3xl md:text-4xl drop-shadow-lg">📊</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
           </button>
-          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '160px' }}>
-            <span className="text-4xl">✨</span><span className="font-bold text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
+          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '140px' }}>
+            <span className="text-3xl md:text-4xl">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
           </button>
-          <button onClick={onLogin} className="flex-1 min-w-[140px] bg-gray-900/80 backdrop-blur-md text-white border border-gray-600 p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-black" style={{ minHeight: '160px' }}>
-            <span className="text-4xl">🔒</span><span className="font-bold text-lg leading-tight tracking-wide">Yönetici<br/>Girişi</span>
+          <button onClick={onLogin} className="flex-1 min-w-[140px] bg-gray-900/80 backdrop-blur-md text-white border border-gray-600 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-black" style={{ minHeight: '140px' }}>
+            <span className="text-3xl md:text-4xl">🔒</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Yönetici<br/>Girişi</span>
           </button>
         </div>
         <button onClick={onLocation} className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"><span>📍</span> MAĞAZA KONUMU</button>
-        <div className="mt-12 text-xs text-yellow-100/50 font-serif italic">"Güvenin ve Kalitenin Adresi"</div>
+        <div className="mt-12 text-[10px] md:text-xs text-yellow-100/50 font-serif italic pb-8">"Güvenin ve Kalitenin Adresi"</div>
       </div>
     </div>
   );
@@ -400,22 +385,17 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, onAdvisor }) {
 
 // --- AKILLI VİTRİN SİHİRBAZI ---
 function VitrinPage({ onBack, items }) {
-  const [step, setStep] = React.useState(0); // 0: Ana Seçim, 1: Seçenekler, 2: Liste
+  const [step, setStep] = React.useState(0);
   const [filterType, setFilterType] = React.useState(null); 
   const [selectedFilter, setSelectedFilter] = React.useState(null);
   const [priceRange, setPriceRange] = React.useState('all');
 
-  // Filtreleme Mantığı
   const filteredItems = React.useMemo(() => {
     let result = items;
-
-    // 1. Kategori/Etiket Filtresi
     if (selectedFilter) {
       if (filterType === 'category') result = result.filter(i => i.kategori === selectedFilter);
       if (filterType === 'tag') result = result.filter(i => i.etiket === selectedFilter);
     }
-
-    // 2. Fiyat Filtresi
     if (priceRange !== 'all') {
       result = result.filter(item => {
          const cleanPrice = item.fiyat ? parseInt(item.fiyat.toString().replace(/\./g, '').replace(/[^0-9]/g, '')) : 0;
@@ -429,11 +409,10 @@ function VitrinPage({ onBack, items }) {
     return result;
   }, [items, selectedFilter, filterType, priceRange]);
 
-  // Adım 0: Yol Ayrımı
   if (step === 0) {
     return (
       <div key="step0" className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
-         <button onClick={onBack} className="absolute top-6 left-6 text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg">⬅️</button>
+         <button onClick={onBack} className="absolute top-6 left-6 text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg active:scale-90">⬅️</button>
          <h2 className="text-3xl font-serif font-bold text-white mb-10 drop-shadow-lg">Size Nasıl Yardımcı Olalım?</h2>
          <div className="grid gap-6 w-full max-w-md">
             <button onClick={() => { setFilterType('tag'); setStep(1); }} className="bg-white/10 backdrop-blur-xl border border-white/40 text-white p-6 rounded-3xl shadow-xl flex items-center justify-between hover:bg-white/20 transition transform active:scale-95">
@@ -442,13 +421,12 @@ function VitrinPage({ onBack, items }) {
             <button onClick={() => { setFilterType('category'); setStep(1); }} className="bg-white/10 backdrop-blur-xl border border-white/40 text-white p-6 rounded-3xl shadow-xl flex items-center justify-between hover:bg-white/20 transition transform active:scale-95">
               <span className="text-left"><span className="block text-xl font-bold mb-1">💍 Ne Tür Bakıyorsunuz?</span><span className="text-xs text-yellow-100/80 font-medium tracking-wide">Kolye, Bilezik, Yüzük...</span></span><span className="text-3xl opacity-80">👉</span>
             </button>
-            <button onClick={() => { setFilterType(null); setSelectedFilter(null); setStep(2); }} className="mt-4 text-white/60 text-xs font-bold uppercase tracking-widest hover:text-white transition underline">Tüm Koleksiyonu Göster</button>
+            <button onClick={() => { setFilterType(null); setSelectedFilter(null); setStep(2); }} className="mt-4 text-white/60 text-xs font-bold uppercase tracking-widest hover:text-white transition underline p-2">Tüm Koleksiyonu Göster</button>
          </div>
       </div>
     );
   }
 
-  // Adım 1: Seçenekler
   if (step === 1) {
     const options = filterType === 'tag' 
       ? ["Yılbaşı", "Sevgililer Günü", "Anneler Günü", "Düğün/Nişan", "Doğum Günü", "İçimden Geldi", "Diğer"]
@@ -458,7 +436,7 @@ function VitrinPage({ onBack, items }) {
     return (
       <div key="step1" className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full p-6 flex items-center">
-           <button onClick={() => setStep(0)} className="text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg">⬅️</button>
+           <button onClick={() => setStep(0)} className="text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg active:scale-90">⬅️</button>
         </div>
         <h2 className="text-3xl font-serif font-bold text-white mb-8 drop-shadow-lg text-center">{title}</h2>
         <div className="bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl p-6 w-full max-w-lg border border-white/50">
@@ -474,17 +452,14 @@ function VitrinPage({ onBack, items }) {
     );
   }
 
-  // Adım 2: Ürün Listesi
   return (
     <div key="step2" className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
-       {/* Üst Bar */}
-       <div className="p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100">
+       <div className="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
-             <button onClick={() => setStep(0)} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90">✕</button>
+             <button onClick={() => setStep(0)} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">✕</button>
              <h1 className="text-xs font-bold text-gray-400 tracking-[0.3em] uppercase">{selectedFilter || "Tüm Koleksiyon"}</h1>
              <div className="w-5"></div>
           </div>
-          {/* Fiyat Filtresi */}
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
              {[
                { label: 'Tümü', val: 'all' },
@@ -504,10 +479,9 @@ function VitrinPage({ onBack, items }) {
           </div>
        </div>
 
-       {/* Liste */}
-       <div className="flex flex-col pb-20 px-6 pt-2">
+       <div className="flex flex-col pb-24 px-4 md:px-6 pt-2">
           {filteredItems.length > 0 ? filteredItems.map((urun, index) => (
-             <div key={urun.id} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in" style={{animationDelay: `${index * 0.1}s`}}>
+             <div key={urun.id} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in active:scale-[0.99] transition-transform" style={{animationDelay: `${index * 0.1}s`}}>
                 <div className="pt-8 pb-2 flex justify-center">
                     <div className="w-48 h-48 relative rounded-full bg-[#faf9f6] overflow-hidden shadow-inner border border-white ring-1 ring-gray-100">
                        <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover hover:scale-110 transition duration-700 ease-in-out" alt={urun.baslik} />
@@ -520,7 +494,7 @@ function VitrinPage({ onBack, items }) {
                     <div className="w-8 h-[1px] bg-gray-200 mx-auto mb-4"></div>
                     <div className="flex flex-col gap-2 items-center">
                         <span className="text-lg font-medium text-gray-900 font-mono tracking-tighter">{urun.fiyat}</span>
-                        <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600 border-b border-pink-200 pb-1 hover:text-pink-800 hover:border-pink-800 transition-all">Instagram'dan Ayırt 💬</button>
+                        <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600 border-b border-pink-200 pb-1 hover:text-pink-800 hover:border-pink-800 transition-all p-2">Instagram'dan Ayırt 💬</button>
                     </div>
                 </div>
              </div>
@@ -528,7 +502,7 @@ function VitrinPage({ onBack, items }) {
             <div className="flex flex-col items-center justify-center py-32 text-gray-300">
                 <span className="text-4xl mb-4 opacity-20">🏷️</span>
                 <p className="font-serif italic text-sm">Bu kriterlere uygun ürün yok.</p>
-                <button onClick={() => setPriceRange('all')} className="mt-4 text-[#b45309] text-xs font-bold underline">Filtreyi Temizle</button>
+                <button onClick={() => setPriceRange('all')} className="mt-4 text-[#b45309] text-xs font-bold underline p-2">Filtreyi Temizle</button>
             </div>
           )}
        </div>
@@ -571,7 +545,7 @@ function LoginModal({ onClose, onLoginSuccess }) {
           </div>
           {error && <div className="text-red-300 text-xs font-bold text-center bg-red-900/30 py-2 rounded-lg border border-red-500/30">{error}</div>}
           <div className="flex gap-3 mt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-yellow-200/60 font-bold hover:bg-white/5 hover:text-white transition text-sm border border-transparent hover:border-white/10">Vazgeç</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-yellow-200/60 font-bold hover:bg-white/5 hover:text-white transition text-sm border border-transparent hover:border-white/10 active:bg-white/10">Vazgeç</button>
             <button type="submit" className="flex-1 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] transition transform active:scale-95 border border-yellow-400/50">Giriş Yap</button>
           </div>
         </form>
@@ -628,7 +602,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const handleDeleteProduct = async (id) => {
       if(!confirm("Silmek istiyor musunuz?")) return;
       
-      // Supabase'den silme işlemi ve hata kontrolü
       const { error } = await supa.from('vitrin').delete().eq('id', id);
       
       if (error) {
@@ -649,12 +622,12 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
 
   return (
     <div className="modal-backdrop">
-      <div className="modal h-[80vh]">
-        <div className="flex border-b">
+      <div className="modal h-[90dvh]">
+        <div className="flex border-b shrink-0">
             <button onClick={()=>setTab('genel')} className={`flex-1 py-4 text-sm font-bold ${tab==='genel' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>📝 Fiyat</button>
             <button onClick={()=>setTab('vitrin')} className={`flex-1 py-4 text-sm font-bold ${tab==='vitrin' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>💎 Vitrin</button>
         </div>
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
             {tab === 'genel' && (
                 <div>
                     <div className="mb-4 space-y-3">
@@ -740,13 +713,13 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
             )}
         </div>
         {tab === 'genel' && (
-            <div className="p-4 border-t bg-gray-50 text-right">
+            <div className="p-4 border-t bg-gray-50 text-right shrink-0">
                 <button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm mr-2">Kapat</button>
                 <button onClick={() => onSave(form)} className="px-4 py-2 rounded bg-yellow-600 text-white font-bold text-sm shadow">Kaydet</button>
             </div>
         )}
          {tab === 'vitrin' && (
-            <div className="p-4 border-t bg-gray-50 text-right"><button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm">Kapat</button></div>
+            <div className="p-4 border-t bg-gray-50 text-right shrink-0"><button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm">Kapat</button></div>
         )}
       </div>
     </div>
@@ -761,7 +734,7 @@ function App() {
   const [vitrinItems, setVitrinItems] = React.useState([]);
   const [loginOpen, setLoginOpen] = React.useState(false);
   const [adminOpen, setAdminOpen] = React.useState(false);
-  const [advisorOpen, setAdvisorOpen] = React.useState(false); // YENİ
+  const [advisorOpen, setAdvisorOpen] = React.useState(false); 
   const [stability, setStability] = React.useState(0);
   const [currentVersion, setCurrentVersion] = React.useState(null);
   const [locationOpen, setLocationOpen] = React.useState(false);
@@ -821,27 +794,27 @@ function App() {
            onSelect={setView} 
            onLogin={() => setLoginOpen(true)} 
            onLocation={() => setLocationOpen(true)} 
-           onAdvisor={() => setAdvisorOpen(true)} // YENİ
+           onAdvisor={() => setAdvisorOpen(true)}
          />
       ) : view === 'showcase' ? (
          <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
       ) : (
-         <div className="min-h-screen pb-16 flex flex-col items-center bg-gray-50 fade-in">
+         <div className="min-h-screen pb-safe flex flex-col items-center bg-gray-50 fade-in">
             <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
               <div className="pointer-events-auto flex gap-2">
-                <button onClick={() => setView('welcome')} className="bg-white/80 backdrop-blur text-gray-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">🏠</button>
-                <button onClick={() => setLocationOpen(true)} className="bg-white/80 backdrop-blur text-blue-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📍</button>
-                {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold h-10 flex items-center">Çıkış</button>}
+                <button onClick={() => setView('welcome')} className="bg-white/80 backdrop-blur text-gray-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">🏠</button>
+                <button onClick={() => setLocationOpen(true)} className="bg-white/80 backdrop-blur text-blue-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📍</button>
+                {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold h-10 flex items-center active:scale-95">Çıkış</button>}
               </div>
               <div className="flex gap-3 pointer-events-auto">
-                <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📜</button>
-                <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📟</button>
-                <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">📸</button>
-                <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition">⚙️</button>
+                <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📜</button>
+                <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📟</button>
+                <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📸</button>
+                <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">⚙️</button>
               </div>
             </div>
 
-            <div id="capture-area" className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100">
+            <div id="capture-area" className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100 mb-20 mx-4">
               <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-500 to-yellow-200 opacity-60"></div>
               <div className="flex justify-center -mt-16 mb-4 relative z-10">
                  <a href="https://www.instagram.com/bakirkoykuyumcusu/" target="_blank">
@@ -849,11 +822,11 @@ function App() {
                  </a>
               </div>
               <div className="text-center mb-8">
-                <h1 className="text-4xl font-serif font-bold text-yellow-800 tracking-tight drop-shadow-sm">Bakırköy Kuyumcusu</h1>
+                <h1 className="text-3xl md:text-4xl font-serif font-bold text-yellow-800 tracking-tight drop-shadow-sm">Bakırköy Kuyumcusu</h1>
                 <div className="text-xs font-bold tracking-[0.3em] text-yellow-600 mt-2 uppercase opacity-80">{new Date().toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'})}</div>
               </div>
               
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-inner border border-white/60">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 shadow-inner border border-white/60">
                 <Row title="Çeyrek Altın" buy={P.ceyrek_alis || 0} sell={P.ceyrek_satis || 0} />
                 <Row title="Ata Altın" buy={P.ata_alis || 0} sell={P.ata_satis || 0} />
                 <div className="grid grid-cols-2 gap-4 mt-6">
@@ -873,10 +846,10 @@ function App() {
               <div className="mt-8 text-center text-yellow-800/40 font-serif italic text-sm">"Güvenin ve Kalitenin Adresi"</div>
             </div>
             
-            {stability > 30 && <div className="mt-4 text-xs text-gray-400 animate-pulse">● Fiyatlar güncel</div>}
+            {stability > 30 && <div className="fixed bottom-12 left-0 w-full text-center pointer-events-none"><div className="inline-block bg-black/50 backdrop-blur text-white px-3 py-1 rounded-full text-xs animate-pulse">● Fiyatlar güncel</div></div>}
 
             {P.duyuru && (
-              <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl">
+              <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl pb-safe">
                   <div className="marquee-container">
                       <div className="marquee-content">
                           <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
