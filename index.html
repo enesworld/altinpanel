@@ -65,6 +65,15 @@
       50% { opacity: 1; transform: scale(1); }
     }
 
+    /* Yeni: Neon Flash Animasyonu */
+    @keyframes neonFlash {
+        0%, 100% { box-shadow: 0 0 10px #ef4444; transform: scale(1); }
+        50% { box-shadow: 0 0 25px #fca5a5; transform: scale(1.02); }
+    }
+    .animate-neon {
+        animation: neonFlash 1.5s infinite ease-in-out;
+    }
+
   </style>
 </head>
 
@@ -148,7 +157,7 @@ function LocationModal({ onClose }) {
   );
 }
 
-function WelcomeScreen({ onSelect, onLogin, onLocation }) {
+function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   const snowflakes = Array.from({ length: 30 }).map((_, i) => {
     const style = { 
       left: `${Math.random() * 100}%`, 
@@ -216,6 +225,17 @@ function WelcomeScreen({ onSelect, onLogin, onLocation }) {
           </button>
         </div>
         <button onClick={onLocation} className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"><span>📍</span> MAĞAZA KONUMU</button>
+        
+        {/* YENİ: BÜYÜK DUYURU ALANI */}
+        {announcement && (
+            <div className="mt-8 w-full max-w-md mx-auto transform hover:scale-105 transition duration-300">
+                <div className="bg-gradient-to-r from-red-600 to-red-800 text-white text-center p-4 rounded-2xl shadow-2xl animate-neon border-2 border-yellow-400/50">
+                    <div className="text-[10px] text-yellow-200 uppercase tracking-widest mb-1">📢 DUYURU</div>
+                    <h3 className="text-lg md:text-xl font-bold uppercase tracking-wide drop-shadow-md leading-tight">{announcement}</h3>
+                </div>
+            </div>
+        )}
+
         <div className="mt-12 text-[10px] md:text-xs text-yellow-100/50 font-serif italic pb-8">"Güvenin ve Kalitenin Adresi"</div>
       </div>
     </div>
@@ -467,10 +487,18 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                         <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">22 Ayar (Satış)</label><input type="number" value={form.gram_22 || ''} onChange={e=>handleChange('gram_22', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
                         <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Has Altın (24K)</label><input type="number" value={form.gram_24 || ''} onChange={e=>handleChange('gram_24', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
                     </div>
+                    
                     <div className="mb-4 pt-4 border-t border-dashed">
-                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Kayan Yazı</h4>
+                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Kayan Yazı (Alt Şerit)</h4>
                         <input type="text" value={form.duyuru || ""} onChange={e=>handleChange('duyuru', e.target.value)} className="w-full p-2 border rounded text-xs" />
                     </div>
+
+                    {/* YENİ: BÜYÜK DUYURU ALANI GİRİŞİ */}
+                    <div className="mb-4 pt-4 border-t border-dashed">
+                        <h4 className="text-[10px] font-bold text-red-500 mb-2 uppercase">Ana Ekran Büyük Duyuru (Yanıp Sönen)</h4>
+                        <input type="text" value={form.buyuk_duyuru || ""} onChange={e=>handleChange('buyuk_duyuru', e.target.value)} className="w-full p-2 border border-red-200 rounded text-xs bg-red-50" placeholder="Örn: %20 İNDİRİM BAŞLADI!" />
+                    </div>
+
                     <div className="pt-4 border-t">
                         <button onClick={forceRefreshAll} disabled={refreshing} className="w-full bg-gray-800 text-white text-xs py-3 rounded font-bold">{refreshing ? "..." : "🔄 Tüm Cihazları Yenile"}</button>
                     </div>
@@ -615,7 +643,8 @@ function App() {
          <WelcomeScreen 
            onSelect={setView} 
            onLogin={() => setLoginOpen(true)} 
-           onLocation={() => setLocationOpen(true)} 
+           onLocation={() => setLocationOpen(true)}
+           announcement={P.buyuk_duyuru} // Büyük duyuru verisi buradan gidiyor
          />
       ) : view === 'showcase' ? (
          <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
