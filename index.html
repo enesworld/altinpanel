@@ -5,7 +5,6 @@
   <title>Bakırköy Kuyumcusu</title>
   <link rel="icon" href="bk.jpeg" type="image/jpeg" />
   
-  <!-- Mobil Uyumluluk ve Çentik Desteği İçin Güncellendi -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,29 +18,24 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
-    /* Flash etkisini önlemek için arka plan rengi */
     body { 
         background: #b45309; 
-        overscroll-behavior-y: none; /* Mobilde sayfayı aşağı çekince yenilemeyi engeller */
-        -webkit-tap-highlight-color: transparent; /* Mobilde tıklama gölgesini kaldırır */
+        overscroll-behavior-y: none;
+        -webkit-tap-highlight-color: transparent;
     }
     
-    /* iPhone'da Input Zoom Engelleme */
-    input, select, textarea {
-        font-size: 16px !important;
-    }
+    input, select, textarea { font-size: 16px !important; }
 
     .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     .flash-down { color: #dc2626 !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     
-    /* Modal Mobilde Tam Ekran Gibi Davransın */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; }
-    .modal { background: white; padding: 0; width: 100%; max-width: 400px; border-radius: 24px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); overflow: hidden; display: flex; flex-direction: column; max-height: 90dvh; /* Mobilde klavye uyumu için dvh */ }
+    .modal { background: white; padding: 0; width: 100%; max-width: 400px; border-radius: 24px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); overflow: hidden; display: flex; flex-direction: column; max-height: 90dvh; }
     
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
     .marquee-container { display: flex; overflow: hidden; white-space: nowrap; width: 100%; }
-    .marquee-content { display: flex; width: max-content; animation: scroll 15s linear infinite; } /* Mobilde daha yavaş aksın */
+    .marquee-content { display: flex; width: max-content; animation: scroll 15s linear infinite; }
     @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     
     .fade-in { animation: fadeIn 0.5s ease-out; }
@@ -59,14 +53,6 @@
     }
     .animate-soft-enter { animation: softFocus 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     
-    .typing-indicator span {
-      animation: blink 1.4s infinite both;
-      height: 6px; width: 6px; background: #854d0e; border-radius: 50%; display: inline-block; margin: 0 2px;
-    }
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink { 0% { opacity: 0.1; } 20% { opacity: 1; } 100% { opacity: 0.1; } }
-
     .sparkle {
       position: absolute;
       background: white;
@@ -91,34 +77,9 @@ const API_URL = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=t
 const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-const apiKey = ""; // Gemini API Key injected by environment
 
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
-
-// --- GEMINI HELPER FUNCTION ---
-async function callGemini(prompt, systemInstruction = "") {
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          systemInstruction: { parts: [{ text: systemInstruction }] }
-        }),
-      }
-    );
-
-    if (!response.ok) throw new Error(`API Hatası: ${response.status}`);
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Üzgünüm, şu an yanıt veremiyorum.";
-  } catch (error) {
-    console.error("Gemini Error:", error);
-    return "Bağlantı hatası oluştu. Lütfen tekrar deneyin.";
-  }
-}
 
 // --- BİLEŞENLER ---
 const AnimatedValue = React.memo(({ value, prev }) => {
@@ -166,118 +127,6 @@ const SmallBox = ({ title, value, prev }) => (
   </div>
 );
 
-// --- GEMINI ASİSTAN MODALI (MOBİL UYUMLU) ---
-function GeminiAdvisorModal({ onClose, items }) {
-  const [query, setQuery] = React.useState("");
-  const [lastQuestion, setLastQuestion] = React.useState(""); 
-  const [response, setResponse] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  
-  // Mesaj gelince otomatik aşağı kaydır
-  const chatEndRef = React.useRef(null);
-  React.useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [response, loading, lastQuestion]);
-
-  const handleAsk = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    
-    setLastQuestion(query); 
-    setQuery(""); 
-    setLoading(true);
-    setResponse("");
-
-    const inventory = items.map(i => `${i.baslik} (${i.kategori}) - ${i.fiyat}`).join("\n");
-    const prompt = `Müşteri Sorusu: "${query}"\n\nStok Listesi:\n${inventory}`;
-    const system = `
-      Sen Bakırköy Kuyumcusu'nun seçkin ve profesyonel mücevher danışmanısın.
-      KESİN KURALLAR:
-      1. GÜVENLİK: Siyasi, dini, spekülatif konulara girme.
-      2. FİYAT: Müşteriye ASLA fiyat telaffuz etme. Sadece bütçesine uygun ürünü bulup özelliklerini anlat.
-      3. STOK: Sadece listedeki ürünleri öner.
-      4. ÜSLUP: Çok kibar, lüks ve kısa (max 3 cümle).
-      5. KONU DIŞI: Mücevher harici soruları reddet.
-    `;
-
-    const result = await callGemini(prompt, system);
-    setResponse(result);
-    setLoading(false);
-  };
-
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal p-0 w-full h-[80dvh] flex flex-col bg-white overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="bg-gradient-to-r from-[#78350f] to-[#b45309] p-4 flex justify-between items-center text-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
-                <span className="text-xl">👩‍💼</span>
-            </div>
-            <div>
-              <h3 className="font-bold text-sm font-serif tracking-wide">Mücevher Danışmanı</h3>
-              <p className="text-[10px] text-orange-100 opacity-80">Size Özel Asistan</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-white/70 hover:text-white p-2 text-xl">✕</button>
-        </div>
-
-        <div className="flex-1 bg-[#fffaf0] p-4 overflow-y-auto">
-          <div className="flex gap-3 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shadow-sm shrink-0">👩‍💼</div>
-            <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-orange-100 text-sm text-gray-700 leading-relaxed">
-              Hoş geldiniz! Ben mağazanızın sanal asistanıyım. Size veya sevdiklerinize en uygun mücevheri bulmanızda yardımcı olabilirim. Ne arıyorsunuz? ✨
-            </div>
-          </div>
-
-          {(lastQuestion || loading) && (
-             <div className="flex gap-3 mb-4 flex-row-reverse">
-              <div className="bg-gray-800 text-white p-3 rounded-2xl rounded-tr-none shadow-md text-sm max-w-[85%]">
-                {lastQuestion}
-              </div>
-            </div>
-          )}
-
-          {loading && (
-             <div className="flex gap-3 mb-4">
-                <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shrink-0">👩‍💼</div>
-                <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-orange-100 text-sm text-gray-500 typing-indicator">
-                   Yazıyor <span></span><span></span><span></span>
-                </div>
-             </div>
-          )}
-          
-          {response && !loading && (
-             <div className="flex gap-3 mb-4 animate-soft-enter">
-                <div className="w-8 h-8 rounded-full bg-[#ffedd5] flex items-center justify-center text-lg border border-orange-100 shadow-sm shrink-0">👩‍💼</div>
-                <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-orange-100 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                   {response}
-                </div>
-             </div>
-          )}
-          <div ref={chatEndRef}></div>
-        </div>
-
-        <form onSubmit={handleAsk} className="p-3 bg-white border-t border-orange-100 flex gap-2 shrink-0 pb-safe">
-          <input 
-            type="text" 
-            value={query} 
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Örn: Eşime yıl dönümü hediyesi..." 
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-3 text-sm focus:ring-2 focus:ring-[#b45309] focus:border-transparent outline-none transition-all placeholder-gray-400"
-          />
-          <button 
-            type="submit" 
-            disabled={loading || !query.trim()}
-            className="bg-[#b45309] text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-[#92400e] disabled:opacity-50 transition shadow-lg transform active:scale-95 text-lg"
-          >
-            ➤
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 function LocationModal({ onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -299,7 +148,7 @@ function LocationModal({ onClose }) {
   );
 }
 
-function WelcomeScreen({ onSelect, onLogin, onLocation, onAdvisor }) {
+function WelcomeScreen({ onSelect, onLogin, onLocation }) {
   const snowflakes = Array.from({ length: 30 }).map((_, i) => {
     const style = { 
       left: `${Math.random() * 100}%`, 
@@ -355,16 +204,6 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, onAdvisor }) {
            <span>❄️</span> Mutlu Yıllar & Hoşgeldiniz <span>❄️</span>
         </p>
         
-        <button onClick={onAdvisor} className="mb-10 relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/60 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 active:scale-95 transition-all duration-300 flex items-center gap-3 group w-auto mx-auto ring-1 ring-white/30">
-           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
-           <span className="text-2xl drop-shadow-md filter">👩‍💼</span>
-           <div className="flex flex-col items-start">
-             <span className="font-bold text-sm tracking-widest uppercase drop-shadow-sm leading-tight">Mücevher Asistanı</span>
-             <span className="text-[10px] text-white/90 font-light tracking-wide">Size Özel Öneriler</span>
-           </div>
-           <span className="ml-2 text-white/60 text-sm group-hover:translate-x-1 transition-transform">➜</span>
-        </button>
-
         <div className="flex flex-wrap gap-4 w-full justify-center">
           <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-4 md:p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-lg">📊</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
@@ -561,7 +400,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const [tab, setTab] = React.useState('genel'); 
   const [refreshing, setRefreshing] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
-  const [generating, setGenerating] = React.useState(false);
   const [form, setForm] = React.useState(draft);
   const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
 
@@ -578,18 +416,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
       setNewProduct({ ...newProduct, resim: publicUrl });
     } catch (error) { alert('Hata: ' + error.message); } finally { setUploading(false); }
-  };
-
-  const generateAIContent = async () => {
-    if (!newProduct.baslik || !newProduct.kategori) {
-       alert("Lütfen önce ürün adı ve kategorisini girin.");
-       return;
-    }
-    setGenerating(true);
-    const prompt = `Lütfen şu mücevher ürünü için lüks, dikkat çekici ve satış odaklı kısa bir açıklama yaz (maksimum 15 kelime): Ürün: ${newProduct.baslik}, Kategori: ${newProduct.kategori}, Fiyat: ${newProduct.fiyat}. Türkçe yaz.`;
-    const result = await callGemini(prompt, "Sen lüks mücevher metin yazarısın.");
-    setNewProduct({ ...newProduct, aciklama: result.replace(/"/g, '') });
-    setGenerating(false);
   };
 
   const handleAddProduct = async () => {
@@ -686,12 +512,9 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                              </div>
                         </div>
 
-                        {/* YENİ: YZ Açıklama Butonu (Renk Güncellendi) */}
+                        {/* YZ Açıklama Butonu KALDIRILDI */}
                         <div className="flex gap-2 mb-2">
-                           <input type="text" placeholder="Açıklama (veya YZ ile yazdır)" value={newProduct.aciklama} onChange={e=>setNewProduct({...newProduct, aciklama: e.target.value})} className="flex-1 p-2 border rounded text-xs" />
-                           <button onClick={generateAIContent} disabled={generating} className="bg-[#b45309] text-white px-3 py-1 rounded text-xs font-bold whitespace-nowrap hover:bg-[#92400e] transition">
-                              {generating ? "..." : "✨ YZ ile Yaz"}
-                           </button>
+                           <input type="text" placeholder="Açıklama (İsteğe bağlı)" value={newProduct.aciklama} onChange={e=>setNewProduct({...newProduct, aciklama: e.target.value})} className="flex-1 p-2 border rounded text-xs" />
                         </div>
 
                         <div className="flex items-center gap-2 mb-2"><input type="file" onChange={handleFileUpload} className="text-xs w-full" />{uploading && <span className="text-xs text-blue-500">...</span>}</div>
@@ -734,7 +557,6 @@ function App() {
   const [vitrinItems, setVitrinItems] = React.useState([]);
   const [loginOpen, setLoginOpen] = React.useState(false);
   const [adminOpen, setAdminOpen] = React.useState(false);
-  const [advisorOpen, setAdvisorOpen] = React.useState(false); 
   const [stability, setStability] = React.useState(0);
   const [currentVersion, setCurrentVersion] = React.useState(null);
   const [locationOpen, setLocationOpen] = React.useState(false);
@@ -794,7 +616,6 @@ function App() {
            onSelect={setView} 
            onLogin={() => setLoginOpen(true)} 
            onLocation={() => setLocationOpen(true)} 
-           onAdvisor={() => setAdvisorOpen(true)}
          />
       ) : view === 'showcase' ? (
          <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
@@ -864,9 +685,6 @@ function App() {
       )}
 
       {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
-      
-      {/* YENİ: YZ Danışmanı Modalı */}
-      {advisorOpen && <GeminiAdvisorModal onClose={()=>setAdvisorOpen(false)} items={vitrinItems} />}
       
       {adminOpen && prices && (
           <AdminModal 
