@@ -29,6 +29,9 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .snowflake { position: absolute; background-color: white; border-radius: 50%; top: -10px; box-shadow: 0 0 5px rgba(255,255,255,0.8); animation: fall linear infinite; }
     @keyframes fall { 0% { transform: translateY(-10vh) translateX(0px); opacity: 0.8; } 100% { transform: translateY(110vh) translateX(20px); opacity: 0; } }
+    /* Scrollbar Gizleme */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 
@@ -146,33 +149,27 @@ function WelcomeScreen({ onSelect, onLogin, onLocation }) {
 }
 
 // --- AKILLI VİTRİN SİHİRBAZI ---
-// --- AKILLI VİTRİN SİHİRBAZI (TASARIM BÜTÜNLÜĞÜ SAĞLANDI) ---
-// --- AKILLI VİTRİN SİHİRBAZI (KARTLI) ---
-// --- AKILLI VİTRİN SİHİRBAZI (FİYAT FİLTRELİ) ---
 function VitrinPage({ onBack, items }) {
-  const [step, setStep] = React.useState(0); // 0: Ana Seçim, 1: Kategori Seçimi, 2: Liste
+  const [step, setStep] = React.useState(0); // 0: Ana Seçim, 1: Seçenekler, 2: Liste
   const [filterType, setFilterType] = React.useState(null); 
   const [selectedFilter, setSelectedFilter] = React.useState(null);
-  
-  // YENİ: Fiyat Filtresi State'i
   const [priceRange, setPriceRange] = React.useState('all');
 
-  // Filtreleme Mantığı (Hem Kategori Hem Fiyat)
+  // Filtreleme Mantığı
   const filteredItems = React.useMemo(() => {
     let result = items;
 
     // 1. Kategori/Etiket Filtresi
     if (selectedFilter) {
+      // DİKKAT: Veritabanında kategori ve etiket sütunları olmalı
       if (filterType === 'category') result = result.filter(i => i.kategori === selectedFilter);
       if (filterType === 'tag') result = result.filter(i => i.etiket === selectedFilter);
     }
 
-    // 2. Fiyat Filtresi (YENİ)
+    // 2. Fiyat Filtresi
     if (priceRange !== 'all') {
       result = result.filter(item => {
-         // Fiyatı temizle ve sayıya çevir (Örn: "14.250 ₺" -> 14250)
          const cleanPrice = item.fiyat ? parseInt(item.fiyat.toString().replace(/\./g, '').replace(/[^0-9]/g, '')) : 0;
-         
          if (priceRange === 'low') return cleanPrice <= 5000;
          if (priceRange === 'mid') return cleanPrice > 5000 && cleanPrice <= 15000;
          if (priceRange === 'high') return cleanPrice > 15000 && cleanPrice <= 30000;
@@ -180,11 +177,10 @@ function VitrinPage({ onBack, items }) {
          return true;
       });
     }
-    
     return result;
   }, [items, selectedFilter, filterType, priceRange]);
 
-  // Adım 0: Yol Ayrımı (Aynı)
+  // Adım 0: Yol Ayrımı
   if (step === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
@@ -203,7 +199,7 @@ function VitrinPage({ onBack, items }) {
     );
   }
 
-  // Adım 1: Seçenekler (Aynı)
+  // Adım 1: Seçenekler
   if (step === 1) {
     const options = filterType === 'tag' 
       ? ["Yılbaşı", "Sevgililer Günü", "Anneler Günü", "Düğün/Nişan", "Doğum Günü", "İçimden Geldi", "Diğer"]
@@ -229,10 +225,9 @@ function VitrinPage({ onBack, items }) {
     );
   }
 
-  // Adım 2: Ürün Listesi (FİYAT FİLTRELİ)
+  // Adım 2: Ürün Listesi
   return (
     <div className="min-h-screen bg-[#fdfcf8] flex flex-col fade-in relative">
-       
        {/* Üst Bar */}
        <div className="p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
@@ -240,8 +235,7 @@ function VitrinPage({ onBack, items }) {
              <h1 className="text-xs font-bold text-gray-400 tracking-[0.3em] uppercase">{selectedFilter || "Tüm Koleksiyon"}</h1>
              <div className="w-5"></div>
           </div>
-
-          {/* YENİ: Fiyat Filtresi Butonları */}
+          {/* Fiyat Filtresi */}
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
              {[
                { label: 'Tümü', val: 'all' },
@@ -284,7 +278,7 @@ function VitrinPage({ onBack, items }) {
           )) : (
             <div className="flex flex-col items-center justify-center py-32 text-gray-300">
                 <span className="text-4xl mb-4 opacity-20">🏷️</span>
-                <p className="font-serif italic text-sm">Bu fiyat aralığında ürün yok.</p>
+                <p className="font-serif italic text-sm">Bu kriterlere uygun ürün yok.</p>
                 <button onClick={() => setPriceRange('all')} className="mt-4 text-[#b45309] text-xs font-bold underline">Filtreyi Temizle</button>
             </div>
           )}
@@ -293,7 +287,7 @@ function VitrinPage({ onBack, items }) {
   );
 }
 
-// --- LOGIN MODAL (GİRİŞ EKRANI TASARIMIYLA AYNI) ---
+// --- LOGIN MODAL ---
 function LoginModal({ onClose, onLoginSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -311,60 +305,26 @@ function LoginModal({ onClose, onLoginSuccess }) {
 
   return (
     <div className="modal-backdrop">
-      {/* TASARIM DEĞİŞTİ: Beyaz kutu yerine şeffaf cam efekti */}
       <div className="modal p-8 bg-gradient-to-br from-yellow-900/90 to-amber-800/90 backdrop-blur-xl border border-yellow-500/30 shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden">
-        
-        {/* Arka Plan Efektleri (Işıltı) */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500 blur-3xl opacity-20 rounded-full"></div>
 
         <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center tracking-wide drop-shadow-sm">Yönetici Girişi</h3>
         
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          
-          {/* Email Input */}
           <div className="relative">
-             <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">✉️</span>
-             <input 
-               className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" 
-               type="email" 
-               placeholder="E-posta Adresi" 
-               value={email} 
-               onChange={e=>setEmail(e.target.value)} 
-             />
+              <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">✉️</span>
+              <input className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" type="email" placeholder="E-posta Adresi" value={email} onChange={e=>setEmail(e.target.value)} />
           </div>
-
-          {/* Şifre Input */}
           <div className="relative">
-             <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">🔒</span>
-             <input 
-               className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" 
-               type="password" 
-               placeholder="Şifre" 
-               value={password} 
-               onChange={e=>setPassword(e.target.value)} 
-             />
+              <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">🔒</span>
+              <input className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" type="password" placeholder="Şifre" value={password} onChange={e=>setPassword(e.target.value)} />
           </div>
-
           {error && <div className="text-red-300 text-xs font-bold text-center bg-red-900/30 py-2 rounded-lg border border-red-500/30">{error}</div>}
-          
-          {/* Butonlar */}
           <div className="flex gap-3 mt-2">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="flex-1 py-3 rounded-xl text-yellow-200/60 font-bold hover:bg-white/5 hover:text-white transition text-sm border border-transparent hover:border-white/10"
-            >
-              Vazgeç
-            </button>
-            <button 
-              type="submit" 
-              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] transition transform active:scale-95 border border-yellow-400/50"
-            >
-              Giriş Yap
-            </button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-yellow-200/60 font-bold hover:bg-white/5 hover:text-white transition text-sm border border-transparent hover:border-white/10">Vazgeç</button>
+            <button type="submit" className="flex-1 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] transition transform active:scale-95 border border-yellow-400/50">Giriş Yap</button>
           </div>
-
         </form>
       </div>
     </div>
@@ -453,19 +413,33 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                         <input type="text" placeholder="Ürün Adı" value={newProduct.baslik} onChange={e=>setNewProduct({...newProduct, baslik: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
                         <input type="text" placeholder="Fiyat (Örn: 14.500 ₺)" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
                         
-                        {/* KATEGORİ SEÇİMİ */}
+                        {/* KATEGORİ VE ETİKET SEÇİMİ (Sihirbaz İçin Kritik) */}
                         <div className="grid grid-cols-2 gap-2 mb-2">
-                            {/* AdminModal içindeki Etiket Seçimi */}
-                            <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="p-2 border rounded text-xs bg-white">
-                                <option value="Genel">Genel</option>
-                                <option value="Yılbaşı">Yılbaşı 🎄</option>
-                                <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
-                                <option value="Anneler Günü">Anneler Günü 💐</option>
-                                <option value="Düğün/Nişan">Düğün/Nişan 👰</option>
-                                <option value="Doğum Günü">Doğum Günü 🎂</option>
-                                <option value="İçimden Geldi">İçimden Geldi 🎁</option>
-                                <option value="Diğer">Diğer</option> {/* 👈 BURAYA EKLE */}
-                            </select>
+                             <div>
+                                <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne Tür?</label>
+                                <select value={newProduct.kategori} onChange={e=>setNewProduct({...newProduct, kategori: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
+                                    <option value="Kolye">Kolye</option>
+                                    <option value="Bilezik">Bilezik</option>
+                                    <option value="Yüzük">Yüzük</option>
+                                    <option value="Küpe">Küpe</option>
+                                    <option value="Set">Set</option>
+                                    <option value="Saat">Saat</option>
+                                    <option value="Diğer">Diğer</option>
+                                </select>
+                             </div>
+                             <div>
+                                <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne İçin?</label>
+                                <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
+                                    <option value="Genel">Genel</option>
+                                    <option value="Yılbaşı">Yılbaşı 🎄</option>
+                                    <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
+                                    <option value="Anneler Günü">Anneler Günü 💐</option>
+                                    <option value="Düğün/Nişan">Düğün/Nişan 👰</option>
+                                    <option value="Doğum Günü">Doğum Günü 🎂</option>
+                                    <option value="İçimden Geldi">İçimden Geldi 🎁</option>
+                                    <option value="Diğer">Diğer</option>
+                                </select>
+                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 mb-2"><input type="file" onChange={handleFileUpload} className="text-xs w-full" />{uploading && <span className="text-xs text-blue-500">...</span>}</div>
