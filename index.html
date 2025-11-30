@@ -16,7 +16,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
-    /* DEĞİŞİKLİK BURADA: Flash etkisini önlemek için #fafafa yerine #b45309 yaptık */
+    /* Flash etkisini önlemek için arka plan rengi */
     body { background: #b45309; }
     
     .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
@@ -31,9 +31,27 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .snowflake { position: absolute; background-color: white; border-radius: 50%; top: -10px; box-shadow: 0 0 5px rgba(255,255,255,0.8); animation: fall linear infinite; }
     @keyframes fall { 0% { transform: translateY(-10vh) translateX(0px); opacity: 0.8; } 100% { transform: translateY(110vh) translateX(20px); opacity: 0; } }
+    
     /* Scrollbar Gizleme */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Lüks Geçiş Animasyonu (Soft Focus) */
+    @keyframes softFocus {
+      0% { 
+        opacity: 0; 
+        transform: translateY(20px) scale(0.98); 
+        filter: blur(4px); 
+      }
+      100% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+        filter: blur(0); 
+      }
+    }
+    .animate-soft-enter { 
+      animation: softFocus 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+    }
   </style>
 </head>
 
@@ -163,7 +181,6 @@ function VitrinPage({ onBack, items }) {
 
     // 1. Kategori/Etiket Filtresi
     if (selectedFilter) {
-      // DİKKAT: Veritabanında kategori ve etiket sütunları olmalı
       if (filterType === 'category') result = result.filter(i => i.kategori === selectedFilter);
       if (filterType === 'tag') result = result.filter(i => i.etiket === selectedFilter);
     }
@@ -185,7 +202,7 @@ function VitrinPage({ onBack, items }) {
   // Adım 0: Yol Ayrımı
   if (step === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
+      <div key="step0" className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
          <button onClick={onBack} className="absolute top-6 left-6 text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg">⬅️</button>
          <h2 className="text-3xl font-serif font-bold text-white mb-10 drop-shadow-lg">Size Nasıl Yardımcı Olalım?</h2>
          <div className="grid gap-6 w-full max-w-md">
@@ -209,7 +226,7 @@ function VitrinPage({ onBack, items }) {
     const title = filterType === 'tag' ? "Hangi Özel Gün?" : "Hangi Kategori?";
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in relative overflow-hidden">
+      <div key="step1" className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full p-6 flex items-center">
            <button onClick={() => setStep(0)} className="text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg">⬅️</button>
         </div>
@@ -229,7 +246,7 @@ function VitrinPage({ onBack, items }) {
 
   // Adım 2: Ürün Listesi
   return (
-    <div className="min-h-screen bg-[#fdfcf8] flex flex-col fade-in relative">
+    <div key="step2" className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
        {/* Üst Bar */}
        <div className="p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
@@ -464,7 +481,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                     <div className="text-xs font-bold">{item.baslik}</div>
                                     <div className="text-[9px] text-gray-400">{item.kategori} • {item.etiket}</div>
                                 </div>
-                                <button onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
+                                <button type="button" onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
                             </div>
                         ))}
                     </div>
