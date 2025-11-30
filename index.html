@@ -16,7 +16,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
-    body { background: #fafafa; }
+    /* DEĞİŞİKLİK BURADA: Flash etkisini önlemek için #fafafa yerine #b45309 yaptık */
+    body { background: #b45309; }
+    
     .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     .flash-down { color: #dc2626 !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
@@ -364,7 +366,16 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   };
 
   const handleDeleteProduct = async (id) => {
-      if(confirm("Silmek istiyor musunuz?")) { await supa.from('vitrin').delete().eq('id', id); refreshVitrin(); }
+      if(!confirm("Silmek istiyor musunuz?")) return;
+      
+      // Supabase'den silme işlemi ve hata kontrolü
+      const { error } = await supa.from('vitrin').delete().eq('id', id);
+      
+      if (error) {
+        alert("Silme işlemi başarısız: " + error.message);
+      } else {
+        refreshVitrin();
+      }
   };
 
   const forceRefreshAll = async () => {
