@@ -74,6 +74,16 @@
         animation: neonFlash 1.5s infinite ease-in-out;
     }
 
+    /* Yorumlar İçin Yavaş Kaydırma */
+    .reviews-scroll {
+        display: flex;
+        width: max-content;
+        animation: scroll 40s linear infinite; /* Daha akıcı olması için süre artırıldı */
+    }
+    .reviews-scroll:hover {
+        animation-play-state: paused; /* Üzerine gelince dursun */
+    }
+
   </style>
 </head>
 
@@ -198,7 +208,8 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
         {sparkles}
       </div>
       
-      <div className="relative z-30 w-full max-w-2xl flex flex-col items-center mt-0">
+      {/* ANA İÇERİK - ORTALANMIŞ KISIM */}
+      <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-6 z-30 relative">
         
         <div 
             onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')}
@@ -228,11 +239,14 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
           <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
           </button>
-          {/* Yönetici Girişi Buradan Kaldırıldı */}
+          {/* En Çok Merak Ettikleriniz (Altın Sarısı) */}
+          <button onClick={() => onSelect('faq')} className="flex-1 min-w-[140px] bg-gradient-to-br from-yellow-500 to-amber-500 text-white border-2 border-yellow-300 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-yellow-400 hover:to-amber-400" style={{ minHeight: '140px' }}>
+            <span className="text-3xl md:text-4xl drop-shadow-md">🤔</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">En Çok Merak<br/>Ettikleriniz</span>
+          </button>
         </div>
         <button onClick={onLocation} className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"><span>📍</span> MAĞAZA KONUMU</button>
         
-        {/* YENİ: BÜYÜK DUYURU ALANI */}
+        {/* BÜYÜK DUYURU ALANI */}
         {announcement && (
             <div className="mt-8 w-full max-w-md mx-auto transform hover:scale-105 transition duration-300">
                 <div className="bg-gradient-to-r from-red-600 to-red-800 text-white text-center p-4 rounded-2xl shadow-2xl animate-neon border-2 border-yellow-400/50">
@@ -241,9 +255,85 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
                 </div>
             </div>
         )}
-
+        
         <div className="mt-12 text-[10px] md:text-xs text-yellow-100/50 font-serif italic pb-8">"Güvenin ve Kalitenin Adresi"</div>
       </div>
+    </div>
+  );
+}
+
+// --- YENİ: SIK SORULAN SORULAR SAYFASI ---
+function FAQPage({ onBack }) {
+  const questions = [
+    { 
+      q: "Altın bozdurulurken neden değer kaybediyor?", 
+      a: "Altın takılarda bir 'işçilik' maliyeti bulunur. Bozdurma işleminde bu işçilik bedeli fiyattan düşülür. Ayrıca yatırım araçlarında (çeyrek, gram vb.) güncel piyasa koşullarına göre uygulanan alış-satış makası nedeniyle fiyat farkı oluşmaktadır." 
+    },
+    { 
+      q: "Özel sipariş alıyor musunuz?", 
+      a: "Evet, hayalinizdeki tasarımı atölyemizde gerçeğe dönüştürüyoruz. Ancak modelin detaylarını netleştirmek, doğru ölçü almak ve çizimi sizinle kesinleştirmek için mağazamızı ziyaret etmeniz gerekmektedir." 
+    },
+    { 
+      q: "Kredi kartı geçerli mi, taksit var mı?", 
+      a: "Mağazamızda tüm banka kredi kartları geçerlidir. Taksit sayısı ise güncel BDDK yönetmeliği gereği altın ve mücevher alışverişlerinde şu an için 3 taksit ile sınırlandırılmıştır." 
+    },
+    { 
+      q: "Ürünlerin garantisi var mı?", 
+      a: "Tüm ürünlerimiz Bakırköy Kuyumcusu garantisi altındadır. Kullanıcı kaynaklı hasarlarda (kopma, ezilme vb.) eğer tamir mümkünse atölyemizde ücretsiz veya maliyetine destek oluyoruz. Ancak tamiri mümkün olmayan ağır kullanıcı hatalarında sorumluluk müşterimize aittir." 
+    },
+    { 
+      q: "Eski altınlarımı yenisiyle değiştirebilir miyim?", 
+      a: "Elbette! Eski altınlarınızı güncel kur üzerinden, şeffaf bir şekilde hesaplıyoruz. Yeni alacağınız ürünlerde ise 'değişim indirimi' uygulayarak size en uygun fiyatı sunuyoruz." 
+    },
+    { 
+      q: "Neden her kuyumcuda fiyatlar farklı?", 
+      a: "Altın fiyatı standart olsa da 'işçilik' sanattır. Bizim ürünlerimiz yüksek kalite standartlarında, dayanıklı ve özel işçilikle üretilir. İşçilik kalitesi, tasarım farkı ve kullanılan kilit sistemleri bile fiyatı etkiler." 
+    },
+    { 
+      q: "İnternet ile mağaza arasında neden fiyat farkı var?", 
+      a: "İnternetteki ürünler genellikle fotoğrafta göründüğünden daha hafif veya ince üretilmiş olabilir. Mağazamızda ise ürünü elinize alır, ağırlığını hisseder ve kalitesinden %100 emin olursunuz. Ayrıca mağazadan alışveriş; anında teslimat, ücretsiz bakım ve her zaman karşınızda bir muhatap bulabilme güveni sunar." 
+    }
+  ];
+
+  const [openIndex, setOpenIndex] = React.useState(null);
+
+  return (
+    <div className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
+       {/* Üst Bar */}
+       <div className="p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center gap-4">
+          <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</button>
+          <h1 className="text-sm font-bold text-gray-800 tracking-widest uppercase">En Çok Merak Ettikleriniz</h1>
+       </div>
+
+       <div className="p-6 pb-24">
+          <div className="space-y-4 max-w-2xl mx-auto">
+            {questions.map((item, index) => (
+              <div key={index} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                <button 
+                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  className="w-full text-left p-5 flex justify-between items-center gap-4"
+                >
+                  <span className="font-bold text-gray-800 text-sm">{item.q}</span>
+                  <span className={`text-xl transition-transform duration-300 text-[#b45309] ${openIndex === index ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className="p-5 pt-0 text-sm text-gray-600 leading-relaxed border-t border-dashed border-gray-100 mt-2">
+                    {item.a}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* İLETİŞİM NUMARASI BURAYA TAŞINDI */}
+            <div className="mt-12 text-center pb-8">
+                <div className="text-xs text-gray-400 font-medium mb-3">Başka sorularınız mı var? Bizi arayın</div>
+                <a href="tel:02125707778" className="inline-flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-800 px-8 py-4 rounded-full shadow-lg font-bold text-lg hover:bg-gray-50 hover:scale-105 transition-all active:scale-95 ring-1 ring-gray-100">
+                    <span className="text-2xl">📞</span> 0212 570 77 78
+                </a>
+            </div>
+
+          </div>
+       </div>
     </div>
   );
 }
@@ -655,10 +745,12 @@ function App() {
            onSelect={setView} 
            onLogin={() => setLoginOpen(true)} 
            onLocation={() => setLocationOpen(true)}
-           announcement={P.buyuk_duyuru} // Büyük duyuru verisi buradan gidiyor
+           announcement={P.buyuk_duyuru}
          />
       ) : view === 'showcase' ? (
          <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
+      ) : view === 'faq' ? ( // YENİ: FAQ Sayfası Yönlendirmesi
+         <FAQPage onBack={() => setView('welcome')} />
       ) : (
          <div className="min-h-screen pb-safe flex flex-col items-center bg-gray-50 fade-in">
             <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
