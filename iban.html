@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ödeme Bilgileri – Bakırköy Kuyumcusu</title>
+  <link rel="icon" href="bk.jpeg" type="image/jpeg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { 
+        font-family: system-ui, -apple-system, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        /* Ana Uygulama ile Aynı Arka Plan */
+        background: linear-gradient(to bottom right, #7f1d1d, #b45309, #92400e);
+        min-height: 100vh;
+        color: #1f2937;
+    }
+    
+    /* Cam Efekti (Glassmorphism) */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Seçim Rengi */
+    ::selection {
+        background: #fbbf24;
+        color: #78350f;
+    }
+
+    /* Fade In Animasyonu */
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="flex items-center justify-center p-4 fade-in">
+
+  <div class="w-full max-w-md glass-panel rounded-[2rem] overflow-hidden relative">
+    
+    <!-- Üst Bar -->
+    <div class="bg-gradient-to-r from-[#fdfcf8] to-[#fff7ed] border-b border-orange-100 p-8 text-center relative">
+        <!-- Süsleme (Parlaklık) -->
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 opacity-80"></div>
+        
+        <div class="text-4xl mb-2">💳</div>
+        <h1 class="text-2xl font-serif font-bold text-gray-900 tracking-tight">Ödeme Bilgileri</h1>
+        <p class="text-xs text-orange-800/70 mt-2 uppercase tracking-[0.2em] font-medium">Güvenli Ödeme Noktası</p>
+    </div>
+
+    <!-- İçerik -->
+    <div class="p-6 pb-8 bg-white/50">
+      
+      <!-- Akbank Kartı -->
+      <div class="bg-white border border-orange-100 rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:shadow-md transition-all mb-5">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-[#b45309]"></div>
+          
+          <!-- Banka Adı ve IBAN Kopyala -->
+          <div class="flex justify-between items-center mb-3 pl-2">
+              <h3 class="font-serif text-lg font-bold text-gray-800 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-600 inline-block"></span> Akbank
+              </h3>
+              <button onclick="copyToClipboard('TR00 0000 0000 0000 0000 0000 00', this)" class="text-[10px] font-bold bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full hover:bg-[#b45309] hover:text-white transition flex items-center gap-1 cursor-pointer active:scale-95 uppercase tracking-wide border border-gray-200">
+                  📋 Kopyala
+              </button>
+          </div>
+          
+          <!-- IBAN No -->
+          <div class="font-mono text-sm text-gray-600 tracking-wide bg-gray-50/80 p-3 rounded-lg border border-gray-100 mb-3 select-all break-all text-center">
+              TR00 0000 0000 0000 0000 0000 00
+          </div>
+
+          <!-- Alıcı Adı ve Kopyala -->
+          <div class="flex justify-between items-center pt-2 border-t border-dashed border-gray-200 pl-2">
+              <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                  ALICI: <span class="text-gray-800">AD SOYAD</span>
+              </div>
+              <button onclick="copyToClipboard('AD SOYAD', this)" class="text-[10px] text-gray-400 hover:text-[#b45309] transition cursor-pointer flex items-center gap-1 font-bold" title="İsmi Kopyala">
+                  📋 İsim
+              </button>
+          </div>
+      </div>
+
+      <!-- Yapı Kredi Kartı -->
+      <div class="bg-white border border-orange-100 rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:shadow-md transition-all mb-8">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-[#b45309]"></div>
+          
+          <!-- Banka Adı ve IBAN Kopyala -->
+          <div class="flex justify-between items-center mb-3 pl-2">
+              <h3 class="font-serif text-lg font-bold text-gray-800 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span> Yapı Kredi
+              </h3>
+              <button onclick="copyToClipboard('TR11 1111 1111 1111 1111 1111 11', this)" class="text-[10px] font-bold bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full hover:bg-[#b45309] hover:text-white transition flex items-center gap-1 cursor-pointer active:scale-95 uppercase tracking-wide border border-gray-200">
+                  📋 Kopyala
+              </button>
+          </div>
+          
+          <!-- IBAN No -->
+          <div class="font-mono text-sm text-gray-600 tracking-wide bg-gray-50/80 p-3 rounded-lg border border-gray-100 mb-3 select-all break-all text-center">
+              TR11 1111 1111 1111 1111 1111 11
+          </div>
+
+          <!-- Alıcı Adı ve Kopyala -->
+          <div class="flex justify-between items-center pt-2 border-t border-dashed border-gray-200 pl-2">
+              <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                  ALICI: <span class="text-gray-800">AD SOYAD</span>
+              </div>
+              <button onclick="copyToClipboard('AD SOYAD', this)" class="text-[10px] text-gray-400 hover:text-[#b45309] transition cursor-pointer flex items-center gap-1 font-bold" title="İsmi Kopyala">
+                  📋 İsim
+              </button>
+          </div>
+      </div>
+
+      <!-- Bilgi Notu -->
+      <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100 text-center mb-8">
+        <p class="text-xs text-red-600/90 font-semibold leading-relaxed">
+           <span class="font-bold text-[#b45309]">⚠️ Önemli:</span> 29.700 TL ve üzeri ödemelerde açıklama kısmına <br/> <b>T.C. Kimlik Numarası</b> yazılması zorunludur.
+        </p>
+      </div>
+
+      <!-- İletişim ve Geri Dön -->
+      <div class="text-center space-y-6">
+        <a href="tel:02125707778" class="inline-flex items-center justify-center gap-3 bg-[#b45309] text-white px-8 py-3 rounded-full shadow-lg shadow-orange-900/20 font-bold text-sm hover:bg-[#92400e] hover:scale-105 transition-all active:scale-95 no-underline">
+            <span>📞</span> Bizi Arayın: 0212 570 77 78
+        </a>
+        
+        <!-- Geri Dön Butonu -->
+        <div class="pt-2">
+            <button onclick="window.history.back()" class="text-xs text-gray-400 border-b border-transparent hover:border-gray-400 hover:text-gray-600 transition pb-1 uppercase tracking-widest font-bold">
+                ← Mağazaya Dön
+            </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Kopyalama Fonksiyonu (Buton Üzerinde Bildirim) -->
+  <script>
+    function copyToClipboard(text, btnElement) {
+      // Butonun orijinal içeriğini sakla
+      const originalContent = btnElement.innerHTML;
+      const originalClass = btnElement.className;
+
+      const onSuccess = () => {
+        // Buton içeriğini ve stilini değiştir (Yeşil ve Onay İkonu)
+        btnElement.innerHTML = '✅ Kopyalandı';
+        btnElement.className = "text-[10px] font-bold bg-green-100 text-green-700 px-3 py-1.5 rounded-full transition flex items-center gap-1 cursor-default uppercase tracking-wide border border-green-200";
+        
+        // 2 saniye sonra eski haline döndür
+        setTimeout(() => {
+          btnElement.innerHTML = originalContent;
+          btnElement.className = originalClass;
+        }, 2000);
+      };
+
+      // Modern API
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(err => {
+          console.warn('Modern kopyalama başarısız, yedek yöntem deneniyor...', err);
+          fallbackCopy(text, onSuccess);
+        });
+      } else {
+        fallbackCopy(text, onSuccess);
+      }
+    }
+
+    // Yedek Kopyalama Yöntemi
+    function fallbackCopy(text, onSuccess) {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) onSuccess();
+      } catch (err) {
+        console.error('Tüm kopyalama yöntemleri başarısız:', err);
+        alert("Kopyalama yapılamadı. Lütfen metni elle seçip kopyalayın.");
+      }
+    }
+  </script>
+
+</body>
+</html>
