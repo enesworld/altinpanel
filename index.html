@@ -29,10 +29,13 @@
     .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     .flash-down { color: #dc2626 !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; backdrop-filter: blur(4px); }
     .modal { background: white; padding: 0; width: 100%; max-width: 400px; border-radius: 24px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); overflow: hidden; display: flex; flex-direction: column; max-height: 90dvh; }
     
-    @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    /* Geniş Modal (CRM İçin) */
+    .modal-wide { max-width: 900px; height: 85vh; }
+
+    @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
     .marquee-container { display: flex; overflow: hidden; white-space: nowrap; width: 100%; }
     .marquee-content { display: flex; width: max-content; animation: scroll 15s linear infinite; }
@@ -65,24 +68,11 @@
       50% { opacity: 1; transform: scale(1); }
     }
 
-    /* Yeni: Neon Flash Animasyonu */
     @keyframes neonFlash {
         0%, 100% { box-shadow: 0 0 10px #ef4444; transform: scale(1); }
         50% { box-shadow: 0 0 25px #fca5a5; transform: scale(1.02); }
     }
-    .animate-neon {
-        animation: neonFlash 1.5s infinite ease-in-out;
-    }
-
-    /* Yorumlar İçin Yavaş Kaydırma */
-    .reviews-scroll {
-        display: flex;
-        width: max-content;
-        animation: scroll 40s linear infinite; /* Daha akıcı olması için süre artırıldı */
-    }
-    .reviews-scroll:hover {
-        animation-play-state: paused; /* Üzerine gelince dursun */
-    }
+    .animate-neon { animation: neonFlash 1.5s infinite ease-in-out; }
 
   </style>
 </head>
@@ -92,7 +82,6 @@
 
 <script type="text/babel">
 
-const API_URL = "https://canlipiyasalar.haremaltin.com/tmp/altin.json?dil_kodu=tr";
 const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -100,7 +89,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
 
-// --- BİLEŞENLER ---
+// --- YARDIMCI BİLEŞENLER ---
 const AnimatedValue = React.memo(({ value, prev }) => {
   if (value === undefined || value === null || isNaN(value) || value === 0) {
     return <div className="text-xl text-gray-300 font-bold">...</div>;
@@ -157,8 +146,6 @@ function LocationModal({ onClose }) {
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-4 text-left">
            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-bold">Adres</div>
            <div className="text-sm font-bold text-gray-800 mb-3 leading-relaxed">Bakırköy Kuyumcusu<br/>Zeytinlik mah. Fahri Korutürk cad No 14<br/>Bakırköy / İstanbul</div>
-           <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-bold">Çalışma Saatleri</div>
-           <div className="text-sm font-bold text-gray-800">Haftanın 7 Günü: 09:00 - 20:00</div>
         </div>
         <button onClick={() => window.open('https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96389.47322781557!2d28.729118650839265!3d40.97773543712353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cabd0f8036b751%3A0xedcbfa136137d896!2zQmFrxLFya8O2eSBLdXl1bWN1c3U!5e0!3m2!1str!2str!4v1764501029275!5m2!1str!2str', '_blank')} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 active:scale-95"><span>📍</span> Yol Tarifi Al</button>
         <button onClick={onClose} className="mt-4 text-gray-400 text-sm hover:text-gray-600 underline py-2">Kapat</button>
@@ -166,6 +153,8 @@ function LocationModal({ onClose }) {
     </div>
   );
 }
+
+// --- ANA SAYFA VE DİĞER MODÜLLER ---
 
 function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   const snowflakes = Array.from({ length: 30 }).map((_, i) => {
@@ -195,7 +184,6 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#7f1d1d] via-[#b45309] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
       
-      {/* YÖNETİCİ GİRİŞİ (GİZLİ KİLİT - SAĞ ÜST KÖŞE) */}
       <button 
         onClick={onLogin} 
         className="absolute top-6 right-6 z-50 text-white/20 hover:text-white/90 transition-all p-3 rounded-full hover:bg-white/10"
@@ -208,9 +196,7 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
         {sparkles}
       </div>
       
-      {/* ANA İÇERİK - ORTALANMIŞ KISIM */}
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-6 z-30 relative">
-        
         <div 
             onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')}
             className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500 active:scale-95"
@@ -239,14 +225,12 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
           <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
           </button>
-          {/* En Çok Merak Ettikleriniz (Altın Sarısı) */}
           <button onClick={() => onSelect('faq')} className="flex-1 min-w-[140px] bg-gradient-to-br from-yellow-500 to-amber-500 text-white border-2 border-yellow-300 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-yellow-400 hover:to-amber-400" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-md">🤔</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">En Çok Merak<br/>Ettikleriniz</span>
           </button>
         </div>
         <button onClick={onLocation} className="mt-8 bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full shadow-lg hover:bg-white/20 transition flex items-center gap-2 text-sm font-bold active:scale-95 tracking-wider"><span>📍</span> MAĞAZA KONUMU</button>
         
-        {/* BÜYÜK DUYURU ALANI */}
         {announcement && (
             <div className="mt-8 w-full max-w-md mx-auto transform hover:scale-105 transition duration-300">
                 <div className="bg-gradient-to-r from-red-600 to-red-800 text-white text-center p-4 rounded-2xl shadow-2xl animate-neon border-2 border-yellow-400/50">
@@ -262,83 +246,44 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   );
 }
 
-// --- YENİ: SIK SORULAN SORULAR SAYFASI ---
 function FAQPage({ onBack }) {
   const questions = [
-    { 
-      q: "Altın bozdurulurken neden değer kaybediyor?", 
-      a: "Altın takılarda bir 'işçilik' maliyeti bulunur. Bozdurma işleminde bu işçilik bedeli fiyattan düşülür. Ayrıca yatırım araçlarında (çeyrek, gram vb.) güncel piyasa koşullarına göre uygulanan alış-satış makası nedeniyle fiyat farkı oluşmaktadır." 
-    },
-    { 
-      q: "Özel sipariş alıyor musunuz?", 
-      a: "Evet, hayalinizdeki tasarımı atölyemizde gerçeğe dönüştürüyoruz. Ancak modelin detaylarını netleştirmek, doğru ölçü almak ve çizimi sizinle kesinleştirmek için mağazamızı ziyaret etmeniz gerekmektedir." 
-    },
-    { 
-      q: "Kredi kartı geçerli mi, taksit var mı?", 
-      a: "Mağazamızda tüm banka kredi kartları geçerlidir. Taksit sayısı ise güncel BDDK yönetmeliği gereği altın ve mücevher alışverişlerinde şu an için 3 taksit ile sınırlandırılmıştır." 
-    },
-    { 
-      q: "Ürünlerin garantisi var mı?", 
-      a: "Tüm ürünlerimiz Bakırköy Kuyumcusu garantisi altındadır. Kullanıcı kaynaklı hasarlarda (kopma, ezilme vb.) eğer tamir mümkünse atölyemizde ücretsiz veya maliyetine destek oluyoruz. Ancak tamiri mümkün olmayan ağır kullanıcı hatalarında sorumluluk müşterimize aittir." 
-    },
-    { 
-      q: "Eski altınlarımı yenisiyle değiştirebilir miyim?", 
-      a: "Elbette! Eski altınlarınızı güncel kur üzerinden, şeffaf bir şekilde hesaplıyoruz. Yeni alacağınız ürünlerde ise 'değişim indirimi' uygulayarak size en uygun fiyatı sunuyoruz." 
-    },
-    { 
-      q: "Neden her kuyumcuda fiyatlar farklı?", 
-      a: "Altın fiyatı standart olsa da 'işçilik' sanattır. Bizim ürünlerimiz yüksek kalite standartlarında, dayanıklı ve özel işçilikle üretilir. İşçilik kalitesi, tasarım farkı ve kullanılan kilit sistemleri bile fiyatı etkiler." 
-    },
-    { 
-      q: "İnternet ile mağaza arasında neden fiyat farkı var?", 
-      a: "İnternetteki ürünler genellikle fotoğrafta göründüğünden daha hafif veya ince üretilmiş olabilir. Mağazamızda ise ürünü elinize alır, ağırlığını hisseder ve kalitesinden %100 emin olursunuz. Ayrıca mağazadan alışveriş; anında teslimat, ücretsiz bakım ve her zaman karşınızda bir muhatap bulabilme güveni sunar." 
-    }
+    { q: "Altın bozdurulurken neden değer kaybediyor?", a: "Altın takılarda bir 'işçilik' maliyeti bulunur. Bozdurma işleminde bu işçilik bedeli fiyattan düşülür..." },
+    { q: "Özel sipariş alıyor musunuz?", a: "Evet, hayalinizdeki tasarımı atölyemizde gerçeğe dönüştürüyoruz..." },
+    { q: "Kredi kartı geçerli mi, taksit var mı?", a: "Mağazamızda tüm banka kredi kartları geçerlidir. Altın ve mücevherde yasal taksit sınırları uygulanır." },
+    { q: "Ürünlerin garantisi var mı?", a: "Tüm ürünlerimiz Bakırköy Kuyumcusu garantisi altındadır." }
   ];
-
   const [openIndex, setOpenIndex] = React.useState(null);
 
   return (
     <div className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
-       {/* Üst Bar */}
        <div className="p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center gap-4">
           <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</button>
           <h1 className="text-sm font-bold text-gray-800 tracking-widest uppercase">En Çok Merak Ettikleriniz</h1>
        </div>
-
        <div className="p-6 pb-24">
           <div className="space-y-4 max-w-2xl mx-auto">
             {questions.map((item, index) => (
               <div key={index} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
-                <button 
-                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                  className="w-full text-left p-5 flex justify-between items-center gap-4"
-                >
+                <button onClick={() => setOpenIndex(openIndex === index ? null : index)} className="w-full text-left p-5 flex justify-between items-center gap-4">
                   <span className="font-bold text-gray-800 text-sm">{item.q}</span>
                   <span className={`text-xl transition-transform duration-300 text-[#b45309] ${openIndex === index ? 'rotate-180' : ''}`}>▼</span>
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <div className="p-5 pt-0 text-sm text-gray-600 leading-relaxed border-t border-dashed border-gray-100 mt-2">
-                    {item.a}
-                  </div>
+                  <div className="p-5 pt-0 text-sm text-gray-600 leading-relaxed border-t border-dashed border-gray-100 mt-2">{item.a}</div>
                 </div>
               </div>
             ))}
-
-            {/* İLETİŞİM NUMARASI BURAYA TAŞINDI */}
             <div className="mt-12 text-center pb-8">
                 <div className="text-xs text-gray-400 font-medium mb-3">Başka sorularınız mı var? Bizi arayın</div>
-                <a href="tel:02125707778" className="inline-flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-800 px-8 py-4 rounded-full shadow-lg font-bold text-lg hover:bg-gray-50 hover:scale-105 transition-all active:scale-95 ring-1 ring-gray-100">
-                    <span className="text-2xl">📞</span> 0212 570 77 78
-                </a>
+                <a href="tel:02125707778" className="inline-flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-800 px-8 py-4 rounded-full shadow-lg font-bold text-lg hover:bg-gray-50 hover:scale-105 transition-all active:scale-95 ring-1 ring-gray-100"><span className="text-2xl">📞</span> 0212 570 77 78</a>
             </div>
-
           </div>
        </div>
     </div>
   );
 }
 
-// --- AKILLI VİTRİN SİHİRBAZI ---
 function VitrinPage({ onBack, items }) {
   const [step, setStep] = React.useState(0);
   const [filterType, setFilterType] = React.useState(null); 
@@ -387,23 +332,14 @@ function VitrinPage({ onBack, items }) {
       ? ["Kendim İçin", "Yılbaşı", "Sevgililer Günü", "Anneler Günü", "Düğün/Nişan", "Doğum Günü", "İçimden Geldi", "Diğer"]
       : ["Kolye", "Bilezik", "Yüzük", "Küpe", "Set", "Saat", "Diğer"];
     const title = filterType === 'tag' ? "Hangi Özel Gün?" : "Hangi Kategori?";
-
     return (
       <div key="step1" className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full p-6 flex items-center">
-           <button onClick={() => setStep(0)} className="text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg active:scale-90">⬅️</button>
-        </div>
+        <div className="absolute top-0 left-0 w-full p-6 flex items-center"><button onClick={() => setStep(0)} className="text-2xl bg-white/20 backdrop-blur p-3 rounded-full text-white hover:bg-white/40 transition shadow-lg active:scale-90">⬅️</button></div>
         <h2 className="text-3xl font-serif font-bold text-white mb-8 drop-shadow-lg text-center">{title}</h2>
         <div className="bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl p-6 w-full max-w-lg border border-white/50">
             <div className="grid grid-cols-2 gap-3">
               {options.map(opt => (
-                <button 
-                  key={opt} 
-                  onClick={() => { setSelectedFilter(opt); setStep(2); }} 
-                  className={`border border-gray-200 p-4 rounded-xl shadow-sm font-bold text-sm hover:shadow-md transition active:scale-95 ${opt === "Kendim İçin" ? "bg-red-600/90 text-white hover:bg-red-700 border-red-500 ring-2 ring-red-200" : "bg-gray-50 text-gray-700 hover:bg-[#b45309] hover:text-white hover:border-[#b45309]"}`}
-                >
-                  {opt} {opt === "Kendim İçin" ? "🙋‍♀️" : ""}
-                </button>
+                <button key={opt} onClick={() => { setSelectedFilter(opt); setStep(2); }} className={`border border-gray-200 p-4 rounded-xl shadow-sm font-bold text-sm hover:shadow-md transition active:scale-95 ${opt === "Kendim İçin" ? "bg-red-600/90 text-white hover:bg-red-700 border-red-500 ring-2 ring-red-200" : "bg-gray-50 text-gray-700 hover:bg-[#b45309] hover:text-white hover:border-[#b45309]"}`}>{opt}</button>
               ))}
             </div>
         </div>
@@ -420,24 +356,11 @@ function VitrinPage({ onBack, items }) {
              <div className="w-5"></div>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-             {[
-               { label: 'Tümü', val: 'all' },
-               { label: '0-5 Bin ₺', val: 'low' },
-               { label: '5-15 Bin ₺', val: 'mid' },
-               { label: '15-30 Bin ₺', val: 'high' },
-               { label: '30 Bin+ ₺', val: 'premium' },
-             ].map(f => (
-               <button 
-                 key={f.val}
-                 onClick={() => setPriceRange(f.val)}
-                 className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition ${priceRange === f.val ? 'bg-[#b45309] text-white shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#b45309] hover:text-[#b45309]'}`}
-               >
-                 {f.label}
-               </button>
+             {[{ label: 'Tümü', val: 'all' }, { label: '0-5 Bin ₺', val: 'low' }, { label: '5-15 Bin ₺', val: 'mid' }, { label: '15-30 Bin ₺', val: 'high' }, { label: '30 Bin+ ₺', val: 'premium' }].map(f => (
+               <button key={f.val} onClick={() => setPriceRange(f.val)} className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition ${priceRange === f.val ? 'bg-[#b45309] text-white shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#b45309] hover:text-[#b45309]'}`}>{f.label}</button>
              ))}
           </div>
        </div>
-
        <div className="flex flex-col pb-24 px-4 md:px-6 pt-2">
           {filteredItems.length > 0 ? filteredItems.map((urun, index) => (
              <div key={urun.id} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in active:scale-[0.99] transition-transform" style={{animationDelay: `${index * 0.1}s`}}>
@@ -449,8 +372,6 @@ function VitrinPage({ onBack, items }) {
                 <div className="p-6 text-center">
                     <div className="text-[9px] font-bold text-yellow-600 uppercase tracking-widest mb-2">{urun.kategori || 'ÖZEL'} PARÇA</div>
                     <h2 className="font-serif text-xl text-gray-900 mb-2 leading-tight">{urun.baslik}</h2>
-                    {urun.aciklama && <p className="text-[10px] text-gray-400 font-light mb-4 line-clamp-1">{urun.aciklama}</p>}
-                    <div className="w-8 h-[1px] bg-gray-200 mx-auto mb-4"></div>
                     <div className="flex flex-col gap-2 items-center">
                         <span className="text-lg font-medium text-gray-900 font-mono tracking-tighter">{urun.fiyat}</span>
                         <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600 border-b border-pink-200 pb-1 hover:text-pink-800 hover:border-pink-800 transition-all p-2">Instagram'dan Ayırt 💬</button>
@@ -469,289 +390,321 @@ function VitrinPage({ onBack, items }) {
   );
 }
 
-// --- LOGIN MODAL ---
-function LoginModal({ onClose, onLoginSuccess }) {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
+// --- MÜŞTERİ PANELİ (EKLENEN MODAL) ---
+const availableTags = ["VIP", "Pazarlıkçı", "Sık Gelen", "Yeni", "Sorunlu", "Referanslı", "Yatırımcı"];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    login();
-  };
+function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, currentUser }) {
+  const [mode, setMode] = React.useState('list');
+  const [search, setSearch] = React.useState("");
+  const [selectedCust, setSelectedCust] = React.useState(null);
+  const [activeTab, setActiveTab] = React.useState('info');
+  
+  const [visits, setVisits] = React.useState([]);
+  const [reminders, setReminders] = React.useState([]);
+  const [loadingDetails, setLoadingDetails] = React.useState(false);
 
-  async function login() {
-    const { data, error } = await supa.auth.signInWithPassword({ email, password });
-    if (error) setError("Hatalı giriş!"); else onLoginSuccess(data.user);
+  const [formData, setFormData] = React.useState({});
+  const [newVisit, setNewVisit] = React.useState({ product_type: '', amount: '', description: '', notes: '' });
+  const [newReminder, setNewReminder] = React.useState({ title: '', due_at: '', description: '' });
+
+  const filtered = React.useMemo(() => {
+    const s = search.toLowerCase();
+    return customers.filter(c => 
+      c.full_name?.toLowerCase().includes(s) || 
+      c.phone?.includes(s) ||
+      (c.tags && c.tags.some(t => t.toLowerCase().includes(s)))
+    );
+  }, [customers, search]);
+
+  async function fetchDetails(id) {
+     setLoadingDetails(true);
+     const v = await supa.from('customer_visits').select('*').eq('customer_id', id).order('visit_date', { ascending: false });
+     if(v.data) setVisits(v.data);
+     
+     const r = await supa.from('customer_reminders').select('*').eq('customer_id', id).order('due_at', { ascending: true });
+     if(r.data) setReminders(r.data);
+     setLoadingDetails(false);
   }
 
-  return (
-    <div className="modal-backdrop">
-      <div className="modal p-8 bg-gradient-to-br from-yellow-900/90 to-amber-800/90 backdrop-blur-xl border border-yellow-500/30 shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500 blur-3xl opacity-20 rounded-full"></div>
-
-        <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center tracking-wide drop-shadow-sm">Yönetici Girişi</h3>
-        
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="relative">
-              <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">✉️</span>
-              <input className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" type="email" placeholder="E-posta Adresi" value={email} onChange={e=>setEmail(e.target.value)} />
-          </div>
-          <div className="relative">
-              <span className="absolute left-3 top-3 text-yellow-200/50 text-lg">🔒</span>
-              <input className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 border border-yellow-500/20 text-white placeholder-yellow-100/30 focus:outline-none focus:border-yellow-400/50 focus:bg-black/40 transition" type="password" placeholder="Şifre" value={password} onChange={e=>setPassword(e.target.value)} />
-          </div>
-          {error && <div className="text-red-300 text-xs font-bold text-center bg-red-900/30 py-2 rounded-lg border border-red-500/30">{error}</div>}
-          <div className="flex gap-3 mt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-yellow-200/60 font-bold hover:bg-white/5 hover:text-white transition text-sm border border-transparent hover:border-white/10 active:bg-white/10">Vazgeç</button>
-            <button type="submit" className="flex-1 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] transition transform active:scale-95 border border-yellow-400/50">Giriş Yap</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose, onSave }) {
-  if (!open) return null;
-  if (!draft) return <div className="modal-backdrop"><div className="modal p-6 text-center">Veriler Yükleniyor...<button onClick={onClose} className="mt-4 text-sm text-red-500">İptal</button></div></div>;
-
-  const [tab, setTab] = React.useState('genel'); 
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [uploading, setUploading] = React.useState(false);
-  const [form, setForm] = React.useState(draft);
-  const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
-
-  const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
-
-  const handleFileUpload = async (event) => {
-    try {
-      const file = event.target.files[0];
-      if (!file) return;
-      setUploading(true);
-      const fileName = `vitrin_${Date.now()}`;
-      const { data, error } = await supa.storage.from('resimler').upload(fileName, file); 
-      if (error) throw error;
-      const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
-      setNewProduct({ ...newProduct, resim: publicUrl });
-    } catch (error) { alert('Hata: ' + error.message); } finally { setUploading(false); }
-  };
-
-  const handleAddProduct = async () => {
-      if(!newProduct.baslik || !newProduct.fiyat) return alert("Başlık ve fiyat zorunludur.");
-      await supa.from('vitrin').insert(newProduct);
-      setNewProduct({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
-      refreshVitrin(); alert("Ürün eklendi!");
-  };
-
-  const handleDeleteProduct = async (id) => {
-      if(!confirm("Silmek istiyor musunuz?")) return;
+  const handleSaveCustomer = async () => {
+      if(!formData.full_name) return alert("İsim zorunlu");
       
-      const { error } = await supa.from('vitrin').delete().eq('id', id);
-      
-      if (error) {
-        alert("Silme işlemi başarısız: " + error.message);
+      let error;
+      if (formData.id) {
+         const { id, ...rest } = formData;
+         const res = await supa.from('customers').update(rest).eq('id', id);
+         error = res.error;
       } else {
-        refreshVitrin();
+         const payload = { ...formData, user_id: currentUser?.id || null };
+         const res = await supa.from('customers').insert(payload);
+         error = res.error;
+      }
+
+      if(error) return alert("Hata: " + error.message);
+      
+      setFormData({});
+      setMode('list');
+      if(formData.id) setSelectedCust(formData);
+      fetchCustomers();
+  };
+
+  const handleEditClick = () => {
+      setFormData(selectedCust);
+      setMode('add');
+  };
+
+  const handleDeleteClick = async () => {
+      if(!confirm("DİKKAT! Bu müşteri ve tüm verileri kalıcı olarak silinecek. Emin misiniz?")) return;
+      
+      setLoadingDetails(true); 
+      // İlişkili kayıtları temizle (Cascade yoksa diye)
+      await supa.from('customer_visits').delete().eq('customer_id', selectedCust.id);
+      await supa.from('customer_reminders').delete().eq('customer_id', selectedCust.id);
+      const { error } = await supa.from('customers').delete().eq('id', selectedCust.id);
+      
+      setLoadingDetails(false);
+
+      if(error) {
+          alert("Silinemedi! Hata detayı: " + error.message);
+      } else {
+          alert("Müşteri başarıyla silindi.");
+          setSelectedCust(null);
+          setMode('list');
+          fetchCustomers();
+          fetchReminders();
       }
   };
 
-  const forceRefreshAll = async () => {
-    setRefreshing(true);
-    try {
-        const yeniVersiyon = (form.versiyon || 1) + 1;
-        await supa.from('ham_fiyatlar').update({ versiyon: yeniVersiyon }).eq('id', 1);
-        alert("Komut gönderildi! (v" + yeniVersiyon + ")");
-    } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
+  const toggleTag = (tag) => {
+      const currentTags = formData.tags || [];
+      if (currentTags.includes(tag)) {
+          setFormData({ ...formData, tags: currentTags.filter(t => t !== tag) });
+      } else {
+          setFormData({ ...formData, tags: [...currentTags, tag] });
+      }
+  };
+
+  const handleAddVisit = async () => {
+     if(!selectedCust) return;
+     const { error } = await supa.from('customer_visits').insert({ ...newVisit, customer_id: selectedCust.id });
+     if(!error) { setNewVisit({ product_type: '', amount: '', description: '', notes: '' }); fetchDetails(selectedCust.id); }
+  };
+
+  const handleAddReminder = async () => {
+     if(!selectedCust || !newReminder.title || !newReminder.due_at) return alert("Başlık ve Tarih girin");
+     const { error } = await supa.from('customer_reminders').insert({ ...newReminder, customer_id: selectedCust.id });
+     if(!error) { 
+        setNewReminder({ title: '', due_at: '', description: '' }); 
+        fetchDetails(selectedCust.id); 
+        fetchReminders(); 
+     }
+  };
+
+  const handleUpdateReminder = async (id, status) => {
+     await supa.from('customer_reminders').update({ status }).eq('id', id);
+     fetchDetails(selectedCust.id);
+     fetchReminders(); 
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal h-[90dvh]">
-        <div className="flex border-b shrink-0">
-            <button onClick={()=>setTab('genel')} className={`flex-1 py-4 text-sm font-bold ${tab==='genel' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>📝 Fiyat</button>
-            <button onClick={()=>setTab('vitrin')} className={`flex-1 py-4 text-sm font-bold ${tab==='vitrin' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>💎 Vitrin</button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            {tab === 'genel' && (
-                <div>
-                    <div className="mb-4 space-y-3">
-                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Manuel Fiyat Girişi</h4>
-                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Çeyrek ALIŞ</label><input type="number" value={form.ceyrek_alis || ''} onChange={e=>handleChange('ceyrek_alis', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
-                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500 font-bold">Çeyrek SATIŞ</label><input type="number" value={form.ceyrek_satis || ''} onChange={e=>handleChange('ceyrek_satis', e.target.value)} className="p-2 border rounded w-full font-bold font-mono" /></div>
-                        <hr className="my-2"/>
-                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Ata ALIŞ</label><input type="number" value={form.ata_alis || ''} onChange={e=>handleChange('ata_alis', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
-                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500 font-bold">Ata SATIŞ</label><input type="number" value={form.ata_satis || ''} onChange={e=>handleChange('ata_satis', e.target.value)} className="p-2 border rounded w-full font-bold font-mono" /></div>
-                        <hr className="my-2"/>
-                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">22 Ayar (Satış)</label><input type="number" value={form.gram_22 || ''} onChange={e=>handleChange('gram_22', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
-                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Has Altın (24K)</label><input type="number" value={form.gram_24 || ''} onChange={e=>handleChange('gram_24', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
-                    </div>
-                    
-                    <div className="mb-4 pt-4 border-t border-dashed">
-                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Kayan Yazı (Alt Şerit)</h4>
-                        <input type="text" value={form.duyuru || ""} onChange={e=>handleChange('duyuru', e.target.value)} className="w-full p-2 border rounded text-xs" />
-                    </div>
-
-                    {/* YENİ: BÜYÜK DUYURU ALANI GİRİŞİ */}
-                    <div className="mb-4 pt-4 border-t border-dashed">
-                        <h4 className="text-[10px] font-bold text-red-500 mb-2 uppercase">Ana Ekran Büyük Duyuru (Yanıp Sönen)</h4>
-                        <input type="text" value={form.buyuk_duyuru || ""} onChange={e=>handleChange('buyuk_duyuru', e.target.value)} className="w-full p-2 border border-red-200 rounded text-xs bg-red-50" placeholder="Örn: %20 İNDİRİM BAŞLADI!" />
-                    </div>
-
-                    <div className="pt-4 border-t">
-                        <button onClick={forceRefreshAll} disabled={refreshing} className="w-full bg-gray-800 text-white text-xs py-3 rounded font-bold">{refreshing ? "..." : "🔄 Tüm Cihazları Yenile"}</button>
-                    </div>
-                </div>
-            )}
-            {tab === 'vitrin' && (
-                <div>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
-                        <h4 className="text-xs font-bold text-gray-700 mb-3">➕ YENİ ÜRÜN EKLE</h4>
-                        <input type="text" placeholder="Ürün Adı" value={newProduct.baslik} onChange={e=>setNewProduct({...newProduct, baslik: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
-                        <input type="text" placeholder="Fiyat (Örn: 14.500 ₺)" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
-                        
-                        {/* KATEGORİ VE ETİKET SEÇİMİ */}
-                        <div className="grid grid-cols-2 gap-2 mb-2">
-                             <div>
-                                <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne Tür?</label>
-                                <select value={newProduct.kategori} onChange={e=>setNewProduct({...newProduct, kategori: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
-                                    <option value="Kolye">Kolye</option>
-                                    <option value="Bilezik">Bilezik</option>
-                                    <option value="Yüzük">Yüzük</option>
-                                    <option value="Küpe">Küpe</option>
-                                    <option value="Set">Set</option>
-                                    <option value="Saat">Saat</option>
-                                    <option value="Diğer">Diğer</option>
-                                </select>
-                             </div>
-                             <div>
-                                <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne İçin?</label>
-                                <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
-                                    <option value="Genel">Genel</option>
-                                    <option value="Kendim İçin">Kendim İçin 🙋‍♀️</option> {/* Yeni Eklendi */}
-                                    <option value="Yılbaşı">Yılbaşı 🎄</option>
-                                    <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
-                                    <option value="Anneler Günü">Anneler Günü 💐</option>
-                                    <option value="Düğün/Nişan">Düğün/Nişan 👰</option>
-                                    <option value="Doğum Günü">Doğum Günü 🎂</option>
-                                    <option value="İçimden Geldi">İçimden Geldi 🎁</option>
-                                    <option value="Diğer">Diğer</option>
-                                </select>
-                             </div>
-                        </div>
-
-                        {/* YZ Açıklama Butonu KALDIRILDI */}
-                        <div className="flex gap-2 mb-2">
-                           <input type="text" placeholder="Açıklama (İsteğe bağlı)" value={newProduct.aciklama} onChange={e=>setNewProduct({...newProduct, aciklama: e.target.value})} className="flex-1 p-2 border rounded text-xs" />
-                        </div>
-
-                        <div className="flex items-center gap-2 mb-2"><input type="file" onChange={handleFileUpload} className="text-xs w-full" />{uploading && <span className="text-xs text-blue-500">...</span>}</div>
-                        <button onClick={handleAddProduct} className="w-full bg-green-600 text-white py-2 rounded text-xs font-bold hover:bg-green-700">Listeye Ekle</button>
-                    </div>
-                    <div className="space-y-2">
-                        {vitrinItems.map(item => (
-                            <div key={item.id} className="flex items-center gap-3 p-2 border rounded bg-white">
-                                <img src={item.resim || "https://placehold.co/50"} className="w-10 h-10 rounded object-cover bg-gray-100" />
-                                <div className="flex-1">
-                                    <div className="text-xs font-bold">{item.baslik}</div>
-                                    <div className="text-[9px] text-gray-400">{item.kategori} • {item.etiket}</div>
-                                </div>
-                                <button type="button" onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-        {tab === 'genel' && (
-            <div className="p-4 border-t bg-gray-50 text-right shrink-0">
-                <button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm mr-2">Kapat</button>
-                <button onClick={() => onSave(form)} className="px-4 py-2 rounded bg-yellow-600 text-white font-bold text-sm shadow">Kaydet</button>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal modal-wide flex flex-row overflow-hidden bg-gray-50" onClick={e=>e.stopPropagation()}>
+         
+         {/* SOL KOLON: LİSTE */}
+         <div className={`flex-1 flex flex-col border-r border-gray-200 bg-white ${selectedCust ? 'hidden md:flex' : 'flex'}`}>
+            <div className="p-3 border-b flex items-center justify-between bg-gray-50">
+               <h2 className="font-bold text-gray-700">Müşteriler</h2>
+               <button onClick={()=>{setFormData({}); setMode('add');}} className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-green-200">+ Yeni</button>
             </div>
-        )}
-         {tab === 'vitrin' && (
-            <div className="p-4 border-t bg-gray-50 text-right shrink-0"><button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm">Kapat</button></div>
-        )}
+            <div className="p-2 border-b">
+               <input autoFocus placeholder="🔍 İsim veya Etiket..." value={search} onChange={e=>setSearch(e.target.value)} className="w-full bg-gray-100 p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-yellow-400" />
+            </div>
+            
+            {/* YENİ / DÜZENLEME FORMU */}
+            {mode === 'add' ? (
+                <div className="p-4 overflow-y-auto flex-1 bg-yellow-50/30">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-sm">{formData.id ? 'Düzenle' : 'Yeni Kayıt'}</h3>
+                        <button onClick={()=>{setMode('list'); setFormData({});}} className="text-gray-400 text-xs">İptal</button>
+                    </div>
+                    <div className="space-y-3">
+                        <input className="w-full p-2 border rounded text-sm" placeholder="Ad Soyad *" value={formData.full_name || ''} onChange={e=>setFormData({...formData, full_name:e.target.value})} />
+                        <input className="w-full p-2 border rounded text-sm" placeholder="Telefon" type="tel" value={formData.phone || ''} onChange={e=>setFormData({...formData, phone:e.target.value})} />
+                        
+                        {/* ETİKET SEÇİMİ */}
+                        <div>
+                            <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Etiketler</label>
+                            <div className="flex flex-wrap gap-2">
+                                {availableTags.map(tag => (
+                                    <button 
+                                        key={tag} 
+                                        type="button" 
+                                        onClick={()=>toggleTag(tag)} 
+                                        className={`text-xs px-2 py-1 rounded-full border transition ${formData.tags?.includes(tag) ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-500 border-gray-200'}`}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                             <input className="p-2 border rounded text-sm" placeholder="Min Bütçe" type="number" value={formData.budget_min || ''} onChange={e=>setFormData({...formData, budget_min:e.target.value})} />
+                             <input className="p-2 border rounded text-sm" placeholder="Max Bütçe" type="number" value={formData.budget_max || ''} onChange={e=>setFormData({...formData, budget_max:e.target.value})} />
+                        </div>
+                        <select className="w-full p-2 border rounded text-sm bg-white" value={formData.gold_color_pref || ''} onChange={e=>setFormData({...formData, gold_color_pref:e.target.value})}>
+                            <option value="">Altın Rengi?</option><option value="Sarı">Sarı</option><option value="Beyaz">Beyaz</option><option value="Rose">Rose</option>
+                        </select>
+                        <textarea className="w-full p-2 border rounded text-sm" placeholder="Notlar..." rows="3" value={formData.notes || ''} onChange={e=>setFormData({...formData, notes:e.target.value})}></textarea>
+                        <button onClick={handleSaveCustomer} className="w-full bg-yellow-600 text-white py-2 rounded font-bold text-sm">Kaydet</button>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                    {filtered.map(c => (
+                        <div key={c.id} onClick={()=>{setSelectedCust(c); fetchDetails(c.id);}} className={`p-3 rounded-xl border cursor-pointer transition flex justify-between items-center ${selectedCust?.id===c.id ? 'bg-yellow-50 border-yellow-400 ring-1 ring-yellow-400' : 'bg-white border-gray-100 hover:bg-gray-50'}`}>
+                            <div>
+                                <div className="font-bold text-sm text-gray-800">{c.full_name}</div>
+                                <div className="text-[10px] text-gray-500 mb-1">{c.phone || '-'}</div>
+                                {/* ETİKETLERİ LİSTEDE GÖSTER */}
+                                <div className="flex flex-wrap gap-1">
+                                    {c.tags && c.tags.map(t => (
+                                        <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">{t}</span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="text-gray-300 text-xs">›</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+         </div>
+
+         {/* SAĞ KOLON: DETAY */}
+         <div className={`flex-[2] flex flex-col bg-gray-50 ${!selectedCust ? 'hidden md:flex items-center justify-center' : 'flex'}`}>
+            {!selectedCust ? (
+                <div className="text-center text-gray-300">
+                    <div className="text-4xl mb-2">👈</div>
+                    <div className="text-sm">Listeden bir müşteri seçin</div>
+                </div>
+            ) : (
+                <>
+                    {/* Header */}
+                    <div className="bg-white p-4 border-b shadow-sm flex justify-between items-center sticky top-0 z-10">
+                        <div className="flex items-center gap-3">
+                            <button onClick={()=>setSelectedCust(null)} className="md:hidden text-gray-500 text-xl">⬅️</button>
+                            <div>
+                                <h1 className="font-serif font-bold text-xl leading-none flex items-center gap-2">
+                                    {selectedCust.full_name}
+                                </h1>
+                                <div className="flex gap-1 mt-1">
+                                    {selectedCust.tags && selectedCust.tags.map(t => (
+                                        <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 font-bold">{t}</span>
+                                    ))}
+                                </div>
+                                <a href={`https://wa.me/${selectedCust.phone?.replace(/\s/g,'').replace(/^0/,'90')}`} target="_blank" className="text-[10px] text-green-600 font-bold hover:underline block mt-1">WhatsApp ile Mesaj At</a>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={handleEditClick} className="bg-gray-100 p-2 rounded-lg hover:bg-gray-200" title="Düzenle">✏️</button>
+                            <button onClick={handleDeleteClick} className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100" title="Sil">🗑️</button>
+                            <div className="w-[1px] h-6 bg-gray-200 mx-1"></div>
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                {['info','visits','reminders'].map(t => (
+                                    <button key={t} onClick={()=>setActiveTab(t)} className={`px-3 py-1 rounded-md text-xs font-bold transition ${activeTab===t ? 'bg-white shadow text-yellow-700' : 'text-gray-500 hover:text-gray-700'}`}>
+                                        {t==='info'?'Profil':t==='visits'?'Geçmiş':t==='reminders'?'Hatırlat':''}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto p-4">
+                        {loadingDetails && <div className="text-center text-xs text-gray-400">Yükleniyor...</div>}
+                        
+                        {!loadingDetails && activeTab === 'info' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-white p-3 rounded-xl border border-gray-200">
+                                    <h4 className="text-[10px] uppercase font-bold text-gray-400 mb-2">Finansal</h4>
+                                    <div className="text-sm"><span className="text-gray-500">Bütçe:</span> <b>{selectedCust.budget_min}-{selectedCust.budget_max}</b></div>
+                                    <div className="text-sm"><span className="text-gray-500">Segment:</span> <b>{selectedCust.segment||'-'}</b></div>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl border border-gray-200">
+                                    <h4 className="text-[10px] uppercase font-bold text-gray-400 mb-2">Tercihler</h4>
+                                    <div className="text-sm"><span className="text-gray-500">Renk:</span> <b>{selectedCust.gold_color_pref||'-'}</b></div>
+                                    <div className="text-sm"><span className="text-gray-500">Tarz:</span> <b>{selectedCust.style_pref||'-'}</b></div>
+                                </div>
+                                <div className="col-span-2 bg-yellow-50/50 p-3 rounded-xl border border-yellow-100">
+                                    <h4 className="text-[10px] uppercase font-bold text-yellow-600 mb-1">Notlar</h4>
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedCust.notes || "Not yok."}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {!loadingDetails && activeTab === 'visits' && (
+                            <div className="space-y-4">
+                                <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                    <div className="flex gap-2 mb-2">
+                                        <input className="flex-1 p-2 border rounded text-xs" placeholder="Ne aldı? (Bilezik vb)" value={newVisit.product_type} onChange={e=>setNewVisit({...newVisit, product_type:e.target.value})} />
+                                        <input className="w-20 p-2 border rounded text-xs" type="number" placeholder="Tutar" value={newVisit.amount} onChange={e=>setNewVisit({...newVisit, amount:e.target.value})} />
+                                    </div>
+                                    <input className="w-full p-2 border rounded text-xs mb-2" placeholder="Detay notu..." value={newVisit.description} onChange={e=>setNewVisit({...newVisit, description:e.target.value})} />
+                                    <button onClick={handleAddVisit} className="w-full bg-gray-800 text-white py-1.5 rounded text-xs font-bold">Ziyaret Ekle</button>
+                                </div>
+                                <div className="space-y-2">
+                                    {visits.map(v => (
+                                        <div key={v.id} className="bg-white p-3 rounded-xl border-l-4 border-blue-400 shadow-sm flex justify-between items-start">
+                                            <div>
+                                                <div className="font-bold text-sm text-gray-800">{v.product_type}</div>
+                                                <div className="text-xs text-gray-500">{new Date(v.visit_date).toLocaleDateString()}</div>
+                                                <div className="text-xs text-gray-600 mt-1">{v.description}</div>
+                                            </div>
+                                            {v.amount && <div className="font-mono font-bold text-sm text-gray-700">{v.amount}₺</div>}
+                                        </div>
+                                    ))}
+                                    {visits.length===0 && <div className="text-center text-xs text-gray-400 py-4">Henüz ziyaret yok.</div>}
+                                </div>
+                            </div>
+                        )}
+
+                        {!loadingDetails && activeTab === 'reminders' && (
+                            <div className="space-y-4">
+                                <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                    <input className="w-full p-2 border rounded text-xs mb-2" placeholder="Hatırlatma başlığı..." value={newReminder.title} onChange={e=>setNewReminder({...newReminder, title:e.target.value})} />
+                                    <div className="flex gap-2">
+                                        <input className="flex-1 p-2 border rounded text-xs" type="datetime-local" value={newReminder.due_at} onChange={e=>setNewReminder({...newReminder, due_at:e.target.value})} />
+                                        <button onClick={handleAddReminder} className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs font-bold">Kur</button>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {reminders.map(r => (
+                                        <div key={r.id} className={`p-3 rounded-xl border-l-4 shadow-sm flex justify-between items-center ${r.status==='done' ? 'bg-gray-100 border-gray-400 opacity-60' : 'bg-white border-orange-500'}`}>
+                                            <div>
+                                                <div className={`font-bold text-sm ${r.status==='done'?'line-through':''}`}>{r.title}</div>
+                                                <div className="text-[10px] text-gray-500">{new Date(r.due_at).toLocaleString()}</div>
+                                            </div>
+                                            <button onClick={()=>handleUpdateReminder(r.id, r.status==='done'?'pending':'done')} className="text-[10px] border px-2 py-1 rounded hover:bg-gray-50">
+                                                {r.status==='done'?'Geri Al':'Tamamla'}
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {reminders.length===0 && <div className="text-center text-xs text-gray-400 py-4">Hatırlatma yok.</div>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
+         </div>
       </div>
     </div>
   );
 }
 
-function App() {
-  const [view, setView] = React.useState('welcome');
-  const [prices, setPrices] = React.useState(null); 
-  const [lastUpdate, setLastUpdate] = React.useState(null);
-  const [user, setUser] = React.useState(null);
-  const [vitrinItems, setVitrinItems] = React.useState([]);
-  const [loginOpen, setLoginOpen] = React.useState(false);
-  const [adminOpen, setAdminOpen] = React.useState(false);
-  const [stability, setStability] = React.useState(0);
-  const [currentVersion, setCurrentVersion] = React.useState(null);
-  const [locationOpen, setLocationOpen] = React.useState(false);
-
-  async function fetchData() {
-      const { data: pData } = await supa.from("ham_fiyatlar").select("*").eq("id", 1).single();
-      if (pData) { setPrices(pData); if(pData.versiyon) setCurrentVersion(pData.versiyon); }
-      const { data: vData } = await supa.from("vitrin").select("*").order('id', { ascending: false });
-      if(vData) setVitrinItems(vData);
-      setLastUpdate(new Date());
-  }
-
-  React.useEffect(() => { 
-      fetchData(); 
-      const interval = setInterval(fetchData, 3000);
-      const stab = setInterval(() => setStability(s => s + 1), 1000);
-      return () => { clearInterval(interval); clearInterval(stab); };
-  }, []);
-
-  React.useEffect(() => {
-      if(!currentVersion) return;
-      const checkVersion = async () => {
-          const { data } = await supa.from('ham_fiyatlar').select('versiyon').eq('id', 1).single();
-          if (data?.versiyon && data.versiyon !== currentVersion) window.location.reload(); 
-      };
-      const timer = setInterval(checkVersion, 10000);
-      return () => clearInterval(timer);
-  }, [currentVersion]);
-
-  const downloadImage = async () => {
-    const el = document.getElementById("capture-area");
-    if(!el) return;
-    const canvas = await html2canvas(el, { scale: 3, backgroundColor: null, useCORS: true });
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = `Fiyatlar_${new Date().toLocaleDateString()}.png`;
-    link.click();
-  }
-
-  const handleSave = async (newData) => {
-      await supa.from("ham_fiyatlar").update(newData).eq("id", 1);
-      setPrices(newData);
-      setAdminOpen(false);
-      setStability(0);
-  };
-
-  const P = prices || {}; 
-  const g24 = P.gram_24 || 0;
-  const s025 = Math.round(g24 * 0.33); 
-  const s05_22 = Math.round((P.gram_22 || 0) * 0.55); 
-  const s05_24 = Math.round(g24 * 0.55);
-
+// --- ANA DASHBOARD BİLEŞENİ (FİYAT EKRANI) ---
+function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen, pendingRemindersCount, setAdminOpen, setLoginOpen, P, ft, lastUpdate, downloadImage, s025, s05_22, s05_24, stability, supa, setUser }) {
   return (
-    <>
-      {view === 'welcome' ? (
-         <WelcomeScreen 
-           onSelect={setView} 
-           onLogin={() => setLoginOpen(true)} 
-           onLocation={() => setLocationOpen(true)}
-           announcement={P.buyuk_duyuru}
-         />
-      ) : view === 'showcase' ? (
-         <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
-      ) : view === 'faq' ? ( // YENİ: FAQ Sayfası Yönlendirmesi
-         <FAQPage onBack={() => setView('welcome')} />
-      ) : (
          <div className="min-h-screen pb-safe flex flex-col items-center bg-gray-50 fade-in">
             <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
               <div className="pointer-events-auto flex gap-2">
@@ -763,6 +716,19 @@ function App() {
                 <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📜</button>
                 <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📟</button>
                 <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📸</button>
+                
+                {/* CRM BUTTON WITH NOTIFICATION BADGE */}
+                {user && (
+                    <button onClick={()=>setCustomerModalOpen(true)} className="relative w-10 h-10 bg-yellow-100/90 text-yellow-800 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95 border border-yellow-500">
+                        👥
+                        {pendingRemindersCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse border border-white">
+                                {pendingRemindersCount}
+                            </span>
+                        )}
+                    </button>
+                )}
+                
                 <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">⚙️</button>
               </div>
             </div>
@@ -814,8 +780,301 @@ function App() {
               </div>
             )}
          </div>
+  );
+}
+
+function LoginModal({ onClose, onLoginSuccess }) {
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+  const handleSubmit = (e) => { e.preventDefault(); login(); };
+  async function login() {
+    const { data, error } = await supa.auth.signInWithPassword({ email, password });
+    if (error) setError("Hatalı giriş!"); else onLoginSuccess(data.user);
+  }
+  return (
+    <div className="modal-backdrop">
+      <div className="modal p-8 bg-gradient-to-br from-yellow-900/90 to-amber-800/90 backdrop-blur-xl border border-yellow-500/30 shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden">
+        <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center">Yönetici Girişi</h3>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <input className="w-full p-3 rounded-xl bg-black/20 text-white" type="email" placeholder="E-posta Adresi" value={email} onChange={e=>setEmail(e.target.value)} />
+          <input className="w-full p-3 rounded-xl bg-black/20 text-white" type="password" placeholder="Şifre" value={password} onChange={e=>setPassword(e.target.value)} />
+          {error && <div className="text-red-300 text-xs font-bold text-center">{error}</div>}
+          <div className="flex gap-3 mt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-white/60">Vazgeç</button>
+            <button type="submit" className="flex-1 py-3 rounded-xl bg-yellow-600 text-white font-bold shadow-lg">Giriş Yap</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose, onSave }) {
+  if (!open) return null;
+  if (!draft) return <div className="modal-backdrop"><div className="modal p-6 text-center">Veriler Yükleniyor...</div></div>;
+
+  const [tab, setTab] = React.useState('genel'); 
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
+  const [form, setForm] = React.useState(draft);
+  const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
+
+  const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
+
+  const handleFileUpload = async (event) => {
+    try {
+      const file = event.target.files[0];
+      if (!file) return;
+      setUploading(true);
+      const fileName = `vitrin_${Date.now()}`;
+      const { data, error } = await supa.storage.from('resimler').upload(fileName, file); 
+      if (error) throw error;
+      const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
+      setNewProduct({ ...newProduct, resim: publicUrl });
+    } catch (error) { alert('Hata: ' + error.message); } finally { setUploading(false); }
+  };
+
+  const handleAddProduct = async () => {
+      if(!newProduct.baslik || !newProduct.fiyat) return alert("Başlık ve fiyat zorunludur.");
+      await supa.from('vitrin').insert(newProduct);
+      setNewProduct({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
+      refreshVitrin(); alert("Ürün eklendi!");
+  };
+
+  const handleDeleteProduct = async (id) => {
+      if(!confirm("Silmek istiyor musunuz?")) return;
+      const { error } = await supa.from('vitrin').delete().eq('id', id);
+      if (!error) refreshVitrin();
+  };
+
+  const forceRefreshAll = async () => {
+    setRefreshing(true);
+    try {
+        const yeniVersiyon = (form.versiyon || 1) + 1;
+        await supa.from('ham_fiyatlar').update({ versiyon: yeniVersiyon }).eq('id', 1);
+        alert("Komut gönderildi! (v" + yeniVersiyon + ")");
+    } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
+  };
+
+  return (
+    <div className="modal-backdrop">
+      <div className="modal h-[90dvh]">
+        <div className="flex border-b shrink-0">
+            <button onClick={()=>setTab('genel')} className={`flex-1 py-4 text-sm font-bold ${tab==='genel' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>📝 Fiyat</button>
+            <button onClick={()=>setTab('vitrin')} className={`flex-1 py-4 text-sm font-bold ${tab==='vitrin' ? 'bg-yellow-50 text-yellow-800 border-b-2 border-yellow-500' : 'text-gray-500'}`}>💎 Vitrin</button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            {tab === 'genel' && (
+                <div>
+                    <div className="mb-4 space-y-3">
+                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Manuel Fiyat Girişi</h4>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Çeyrek ALIŞ</label><input type="number" value={form.ceyrek_alis || ''} onChange={e=>handleChange('ceyrek_alis', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500 font-bold">Çeyrek SATIŞ</label><input type="number" value={form.ceyrek_satis || ''} onChange={e=>handleChange('ceyrek_satis', e.target.value)} className="p-2 border rounded w-full font-bold font-mono" /></div>
+                        <hr className="my-2"/>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Ata ALIŞ</label><input type="number" value={form.ata_alis || ''} onChange={e=>handleChange('ata_alis', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500 font-bold">Ata SATIŞ</label><input type="number" value={form.ata_satis || ''} onChange={e=>handleChange('ata_satis', e.target.value)} className="p-2 border rounded w-full font-bold font-mono" /></div>
+                        <hr className="my-2"/>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">22 Ayar (Satış)</label><input type="number" value={form.gram_22 || ''} onChange={e=>handleChange('gram_22', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
+                        <div className="grid grid-cols-2 gap-2"><label className="text-xs text-gray-500">Has Altın (24K)</label><input type="number" value={form.gram_24 || ''} onChange={e=>handleChange('gram_24', e.target.value)} className="p-2 border rounded w-full font-mono" /></div>
+                    </div>
+                    
+                    <div className="mb-4 pt-4 border-t border-dashed">
+                        <h4 className="text-[10px] font-bold text-gray-400 mb-2 uppercase">Kayan Yazı (Alt Şerit)</h4>
+                        <input type="text" value={form.duyuru || ""} onChange={e=>handleChange('duyuru', e.target.value)} className="w-full p-2 border rounded text-xs" />
+                    </div>
+
+                    <div className="mb-4 pt-4 border-t border-dashed">
+                        <h4 className="text-[10px] font-bold text-red-500 mb-2 uppercase">Ana Ekran Büyük Duyuru</h4>
+                        <input type="text" value={form.buyuk_duyuru || ""} onChange={e=>handleChange('buyuk_duyuru', e.target.value)} className="w-full p-2 border border-red-200 rounded text-xs bg-red-50" placeholder="Örn: %20 İNDİRİM BAŞLADI!" />
+                    </div>
+
+                    <div className="pt-4 border-t">
+                        <button onClick={forceRefreshAll} disabled={refreshing} className="w-full bg-gray-800 text-white text-xs py-3 rounded font-bold">{refreshing ? "..." : "🔄 Tüm Cihazları Yenile"}</button>
+                    </div>
+                </div>
+            )}
+            {tab === 'vitrin' && (
+                <div>
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+                        <h4 className="text-xs font-bold text-gray-700 mb-3">➕ YENİ ÜRÜN EKLE</h4>
+                        <input type="text" placeholder="Ürün Adı" value={newProduct.baslik} onChange={e=>setNewProduct({...newProduct, baslik: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
+                        <input type="text" placeholder="Fiyat (Örn: 14.500 ₺)" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
+                        
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                             <div>
+                                <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne Tür?</label>
+                                <select value={newProduct.kategori} onChange={e=>setNewProduct({...newProduct, kategori: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
+                                    <option value="Kolye">Kolye</option>
+                                    <option value="Bilezik">Bilezik</option>
+                                    <option value="Yüzük">Yüzük</option>
+                                    <option value="Küpe">Küpe</option>
+                                    <option value="Set">Set</option>
+                                    <option value="Saat">Saat</option>
+                                    <option value="Diğer">Diğer</option>
+                                </select>
+                             </div>
+                             <div>
+                                <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne İçin?</label>
+                                <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
+                                    <option value="Genel">Genel</option>
+                                    <option value="Kendim İçin">Kendim İçin 🙋‍♀️</option>
+                                    <option value="Yılbaşı">Yılbaşı 🎄</option>
+                                    <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
+                                    <option value="Anneler Günü">Anneler Günü 💐</option>
+                                    <option value="Düğün/Nişan">Düğün/Nişan 👰</option>
+                                    <option value="Doğum Günü">Doğum Günü 🎂</option>
+                                    <option value="İçimden Geldi">İçimden Geldi 🎁</option>
+                                    <option value="Diğer">Diğer</option>
+                                </select>
+                             </div>
+                        </div>
+                        <div className="flex items-center gap-2 mb-2"><input type="file" onChange={handleFileUpload} className="text-xs w-full" />{uploading && <span className="text-xs text-blue-500">...</span>}</div>
+                        <button onClick={handleAddProduct} className="w-full bg-green-600 text-white py-2 rounded text-xs font-bold hover:bg-green-700">Listeye Ekle</button>
+                    </div>
+                    <div className="space-y-2">
+                        {vitrinItems.map(item => (
+                            <div key={item.id} className="flex items-center gap-3 p-2 border rounded bg-white">
+                                <img src={item.resim || "https://placehold.co/50"} className="w-10 h-10 rounded object-cover bg-gray-100" />
+                                <div className="flex-1">
+                                    <div className="text-xs font-bold">{item.baslik}</div>
+                                    <div className="text-[9px] text-gray-400">{item.kategori} • {item.etiket}</div>
+                                </div>
+                                <button type="button" onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+        {tab === 'genel' && (
+            <div className="p-4 border-t bg-gray-50 text-right shrink-0">
+                <button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm mr-2">Kapat</button>
+                <button onClick={() => onSave(form)} className="px-4 py-2 rounded bg-yellow-600 text-white font-bold text-sm shadow">Kaydet</button>
+            </div>
+        )}
+         {tab === 'vitrin' && (
+            <div className="p-4 border-t bg-gray-50 text-right shrink-0"><button onClick={onClose} className="px-4 py-2 rounded text-gray-500 text-sm">Kapat</button></div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [view, setView] = React.useState('welcome'); // welcome, market, showcase, faq
+  const [prices, setPrices] = React.useState(null); 
+  const [lastUpdate, setLastUpdate] = React.useState(null);
+  const [user, setUser] = React.useState(null);
+  const [vitrinItems, setVitrinItems] = React.useState([]);
+  const [loginOpen, setLoginOpen] = React.useState(false);
+  const [adminOpen, setAdminOpen] = React.useState(false);
+  const [stability, setStability] = React.useState(0);
+  const [currentVersion, setCurrentVersion] = React.useState(null);
+  const [locationOpen, setLocationOpen] = React.useState(false);
+  
+  // CRM Modals
+  const [customerModalOpen, setCustomerModalOpen] = React.useState(false);
+  const [customers, setCustomers] = React.useState([]);
+  const [pendingRemindersCount, setPendingRemindersCount] = React.useState(0);
+
+  async function fetchData() {
+      const { data: pData } = await supa.from("ham_fiyatlar").select("*").eq("id", 1).single();
+      if (pData) { setPrices(pData); if(pData.versiyon) setCurrentVersion(pData.versiyon); }
+      const { data: vData } = await supa.from("vitrin").select("*").order('id', { ascending: false });
+      if(vData) setVitrinItems(vData);
+      setLastUpdate(new Date());
+  }
+
+  // Müşterileri ve Hatırlatmaları Çek
+  async function fetchCustomersAndReminders() {
+      if(!user) return;
+      const { data } = await supa.from('customers').select('*').order('created_at', { ascending: false });
+      if(data) setCustomers(data);
+      
+      const r = await supa.from('customer_reminders').select('*').eq('status', 'pending');
+      if(r.data) {
+          const now = new Date();
+          const due = r.data.filter(x => new Date(x.due_at) <= now);
+          setPendingRemindersCount(due.length);
+      }
+  }
+
+  React.useEffect(() => { 
+      fetchData(); 
+      const interval = setInterval(fetchData, 3000);
+      const stab = setInterval(() => setStability(s => s + 1), 1000);
+      return () => { clearInterval(interval); clearInterval(stab); };
+  }, []);
+
+  React.useEffect(() => {
+     if(user) fetchCustomersAndReminders();
+  }, [user]);
+
+  React.useEffect(() => {
+      if(!currentVersion) return;
+      const checkVersion = async () => {
+          const { data } = await supa.from('ham_fiyatlar').select('versiyon').eq('id', 1).single();
+          if (data?.versiyon && data.versiyon !== currentVersion) window.location.reload(); 
+      };
+      const timer = setInterval(checkVersion, 10000);
+      return () => clearInterval(timer);
+  }, [currentVersion]);
+
+  const downloadImage = async () => {
+    const el = document.getElementById("capture-area");
+    if(!el) return;
+    const canvas = await html2canvas(el, { scale: 3, backgroundColor: null, useCORS: true });
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `Fiyatlar_${new Date().toLocaleDateString()}.png`;
+    link.click();
+  }
+
+  const handleSave = async (newData) => {
+      await supa.from("ham_fiyatlar").update(newData).eq("id", 1);
+      setPrices(newData);
+      setAdminOpen(false);
+      setStability(0);
+  };
+
+  const P = prices || {}; 
+  const g24 = P.gram_24 || 0;
+  const s025 = Math.round(g24 * 0.33); 
+  const s05_22 = Math.round((P.gram_22 || 0) * 0.55); 
+  const s05_24 = Math.round(g24 * 0.55);
+
+  return (
+    <>
+      {/* 1. GÖRÜNÜM YÖNETİMİ */}
+      {view === 'welcome' && (
+         <WelcomeScreen 
+           onSelect={setView} 
+           onLogin={() => setLoginOpen(true)} 
+           onLocation={() => setLocationOpen(true)}
+           announcement={P.buyuk_duyuru}
+         />
       )}
 
+      {view === 'showcase' && (
+         <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
+      )}
+
+      {view === 'faq' && (
+         <FAQPage onBack={() => setView('welcome')} />
+      )}
+
+      {view === 'market' && (
+         <MarketDashboard 
+            setView={setView} setLocationOpen={setLocationOpen} user={user} 
+            setCustomerModalOpen={setCustomerModalOpen} pendingRemindersCount={pendingRemindersCount} 
+            setAdminOpen={setAdminOpen} setLoginOpen={setLoginOpen} P={P} ft={ft} 
+            lastUpdate={lastUpdate} downloadImage={downloadImage} s025={s025} 
+            s05_22={s05_22} s05_24={s05_24} stability={stability} supa={supa} setUser={setUser}
+         />
+      )}
+
+      {/* 2. GLOBAL MODALLAR (HER YERDEN ERİŞİLEBİLİR) */}
       {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
       
       {adminOpen && prices && (
@@ -828,8 +1087,17 @@ function App() {
           />
       )}
       
-      {locationOpen && <LocationModal onClose={() => setLocationOpen(false)} />}
+      {customerModalOpen && user && (
+          <CustomerModal 
+            onClose={()=>setCustomerModalOpen(false)} 
+            customers={customers}
+            fetchCustomers={fetchCustomersAndReminders}
+            fetchReminders={fetchCustomersAndReminders}
+            currentUser={user}
+          />
+      )}
 
+      {locationOpen && <LocationModal onClose={() => setLocationOpen(false)} />}
     </>
   );
 }
