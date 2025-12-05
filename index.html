@@ -10,13 +10,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#b45309">
 
-  <!-- 1. ADIM: React Production Moduna Geçiş (Daha hızlı ve hafif) -->
+  <!-- React Production Mod (Hız için) -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- html2canvas buradan kaldırıldı, lazy-load yapılacak -->
 
   <style>
     body { 
@@ -33,10 +32,7 @@
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; backdrop-filter: blur(8px); }
     .modal { background: white; padding: 0; width: 100%; max-width: 400px; border-radius: 24px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); overflow: hidden; display: flex; flex-direction: column; max-height: 90dvh; }
     
-    /* Geniş Modal (CRM İçin) */
     .modal-wide { max-width: 900px; height: 85vh; }
-
-    /* Performans İçin: content-visibility */
     .product-card { content-visibility: auto; contain-intrinsic-size: 100px 300px; }
 
     @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -93,7 +89,6 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
 
-// Fiyat Formatlayıcı
 const formatCurrency = (val) => {
     if (!val) return "";
     const cleanVal = val.toString().replace(/[^0-9]/g, '');
@@ -101,15 +96,11 @@ const formatCurrency = (val) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
 };
 
-// --- RESİM OPTİMİZASYON MOTORU ---
-// 2. ADIM: Kalite ve Boyut Optimizasyonu (Kod Tarafı)
 const getOptimizedImageUrl = (url, width = 500) => {
     if (!url || url.includes("placehold.co") || url.startsWith("blob:")) return url;
-    // Outlet ve listeler için daha düşük kalite (%50) ve webp formatı
     return `${url}?width=${width}&resize=cover&quality=50&format=webp`;
 };
 
-// --- YARDIMCI BİLEŞENLER ---
 const AnimatedValue = React.memo(({ value, prev }) => {
   if (value === undefined || value === null || isNaN(value) || value === 0) {
     return <div className="text-xl text-gray-300 font-bold">...</div>;
@@ -174,7 +165,6 @@ function LocationModal({ onClose }) {
   );
 }
 
-// --- ÜRÜN DETAY MODALI ---
 function ProductDetailModal({ product, onClose }) {
     if (!product) return null;
     return (
@@ -219,7 +209,6 @@ function ProductDetailModal({ product, onClose }) {
     );
 }
 
-// --- ANA SAYFA ---
 function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   const snowflakes = Array.from({ length: 30 }).map((_, i) => {
     const style = { 
@@ -248,12 +237,7 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#7f1d1d] via-[#b45309] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
       
-      <button 
-        onClick={onLogin} 
-        className="absolute top-6 right-6 z-50 text-white/20 hover:text-white/90 transition-all p-3 rounded-full hover:bg-white/10"
-      >
-        🔒
-      </button>
+      <button onClick={onLogin} className="absolute top-6 right-6 z-50 text-white/20 hover:text-white/90 transition-all p-3 rounded-full hover:bg-white/10">🔒</button>
 
       <div className="absolute inset-0 pointer-events-none z-10">
         {snowflakes}
@@ -261,16 +245,9 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
       </div>
       
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-6 z-30 relative">
-        <div 
-           onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')}
-           className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500 active:scale-95"
-        >
+        <div onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')} className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500 active:scale-95">
            <div className="absolute -inset-2 bg-white/20 rounded-full blur-xl animate-pulse"></div>
-           <img 
-             src="bk.jpeg" 
-             className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-[4px] border-white/90 shadow-[0_10px_40px_rgba(0,0,0,0.3)] object-cover" 
-             alt="Bakırköy Kuyumcusu Logo" 
-           />
+           <img src="bk.jpeg" className="relative w-24 h-24 md:w-32 md:h-32 rounded-full border-[4px] border-white/90 shadow-[0_10px_40px_rgba(0,0,0,0.3)] object-cover" alt="Bakırköy Kuyumcusu Logo" />
         </div>
 
         <div className="relative">
@@ -283,22 +260,19 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
         </p>
         
         <div className="flex flex-wrap gap-4 w-full justify-center">
-          {/* Market Butonu */}
           <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-4 md:p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-lg">📊</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
           </button>
           
-          {/* Vitrin Butonu - HAZIRLANIYOR */}
           <button disabled className="flex-1 min-w-[140px] bg-gray-200 text-gray-500 p-4 md:p-6 rounded-3xl shadow-none flex flex-col items-center justify-center gap-3 cursor-not-allowed border-2 border-gray-300" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl opacity-50">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Hazırlanıyor</span>
           </button>
 
-          {/* OUTLET BUTONU */}
-          <button onClick={() => onSelect('outlet')} className="flex-1 min-w-[140px] bg-gradient-to-br from-red-600 to-rose-700 text-white border-2 border-red-400 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-red-500 hover:to-rose-600 ring-2 ring-red-200/50" style={{ minHeight: '140px' }}>
+          {/* OUTLET BUTONU: Doğrudan Yeni Sayfaya Yönlendirir (Hızlı) */}
+          <button onClick={() => window.location.href = 'outlet.html'} className="flex-1 min-w-[140px] bg-gradient-to-br from-red-600 to-rose-700 text-white border-2 border-red-400 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-red-500 hover:to-rose-600 ring-2 ring-red-200/50" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-md animate-pulse">🔥</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Outlet &<br/>Fırsatlar</span>
           </button>
 
-          {/* SSS Butonu */}
           <button onClick={() => onSelect('faq')} className="flex-1 min-w-[140px] bg-gradient-to-br from-yellow-500 to-amber-500 text-white border-2 border-yellow-300 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-yellow-400 hover:to-amber-400" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-md">🤔</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">En Çok Merak<br/>Ettikleriniz</span>
           </button>
@@ -322,34 +296,13 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
 
 function FAQPage({ onBack }) {
   const questions = [
-    { 
-      q: "Altın bozdurulurken neden değer kaybediyor?", 
-      a: "Altın takılarda bir 'işçilik' maliyeti bulunur. Bozdurma işleminde bu işçilik bedeli fiyattan düşülür. Ayrıca yatırım araçlarında (çeyrek, gram vb.) güncel piyasa koşullarına göre uygulanan alış-satış makası nedeniyle fiyat farkı oluşmaktadır." 
-    },
-    { 
-      q: "Özel sipariş alıyor musunuz?", 
-      a: "Evet, hayalinizdeki tasarımı atölyemizde gerçeğe dönüştürüyoruz. Ancak modelin detaylarını netleştirmek, doğru ölçü almak ve çizimi sizinle kesinleştirmek için mağazamızı ziyaret etmeniz gerekmektedir." 
-    },
-    { 
-      q: "Kredi kartı geçerli mi, taksit var mı?", 
-      a: "Mağazamızda tüm banka kredi kartları geçerlidir. Taksit sayısı ise güncel BDDK yönetmeliği gereği altın ve mücevher alışverişlerinde şu an için 3 taksit ile sınırlandırılmıştır." 
-    },
-    { 
-      q: "Ürünlerin garantisi var mı?", 
-      a: "Tüm ürünlerimiz Bakırköy Kuyumcusu garantisi altındadır. Kullanıcı kaynaklı hasarlarda (kopma, ezilme vb.) eğer tamir mümkünse atölyemizde ücretsiz veya maliyetine destek oluyoruz." 
-    },
-    { 
-      q: "Eski altınlarımı yenisiyle değiştirebilir miyim?", 
-      a: "Elbette! Eski altınlarınızı güncel kur üzerinden, şeffaf bir şekilde hesaplıyoruz. Yeni alacağınız ürünlerde ise 'değişim indirimi' uygulayarak size en uygun fiyatı sunuyoruz." 
-    },
-    { 
-      q: "Neden her kuyumcuda fiyatlar farklı?", 
-      a: "Altın fiyatı standart olsa da 'işçilik' sanattır. Bizim ürünlerimiz yüksek kalite standartlarında, dayanıklı ve özel işçilikle üretilir. İşçilik kalitesi, tasarım farkı ve kullanılan kilit sistemleri bile fiyatı etkiler." 
-    },
-    { 
-      q: "İnternet ile mağaza arasında neden fiyat farkı var?", 
-      a: "İnternetteki ürünler genellikle fotoğrafta göründüğünden daha hafif veya ince üretilmiş olabilir. Mağazamızda ise ürünü elinize alır, ağırlığını hisseder ve kalitesinden %100 emin olursunuz." 
-    }
+    { q: "Altın bozdurulurken neden değer kaybediyor?", a: "Altın takılarda bir 'işçilik' maliyeti bulunur. Bozdurma işleminde bu işçilik bedeli fiyattan düşülür. Ayrıca yatırım araçlarında (çeyrek, gram vb.) güncel piyasa koşullarına göre uygulanan alış-satış makası nedeniyle fiyat farkı oluşmaktadır." },
+    { q: "Özel sipariş alıyor musunuz?", a: "Evet, hayalinizdeki tasarımı atölyemizde gerçeğe dönüştürüyoruz. Ancak modelin detaylarını netleştirmek, doğru ölçü almak ve çizimi sizinle kesinleştirmek için mağazamızı ziyaret etmeniz gerekmektedir." },
+    { q: "Kredi kartı geçerli mi, taksit var mı?", a: "Mağazamızda tüm banka kredi kartları geçerlidir. Taksit sayısı ise güncel BDDK yönetmeliği gereği altın ve mücevher alışverişlerinde şu an için 3 taksit ile sınırlandırılmıştır." },
+    { q: "Ürünlerin garantisi var mı?", a: "Tüm ürünlerimiz Bakırköy Kuyumcusu garantisi altındadır. Kullanıcı kaynaklı hasarlarda (kopma, ezilme vb.) eğer tamir mümkünse atölyemizde ücretsiz veya maliyetine destek oluyoruz." },
+    { q: "Eski altınlarımı yenisiyle değiştirebilir miyim?", a: "Elbette! Eski altınlarınızı güncel kur üzerinden, şeffaf bir şekilde hesaplıyoruz. Yeni alacağınız ürünlerde ise 'değişim indirimi' uygulayarak size en uygun fiyatı sunuyoruz." },
+    { q: "Neden her kuyumcuda fiyatlar farklı?", a: "Altın fiyatı standart olsa da 'işçilik' sanattır. Bizim ürünlerimiz yüksek kalite standartlarında, dayanıklı ve özel işçilikle üretilir. İşçilik kalitesi, tasarım farkı ve kullanılan kilit sistemleri bile fiyatı etkiler." },
+    { q: "İnternet ile mağaza arasında neden fiyat farkı var?", a: "İnternetteki ürünler genellikle fotoğrafta göründüğünden daha hafif veya ince üretilmiş olabilir. Mağazamızda ise ürünü elinize alır, ağırlığını hisseder ve kalitesinden %100 emin olursunuz." }
   ];
   const [openIndex, setOpenIndex] = React.useState(null);
 
@@ -382,7 +335,6 @@ function FAQPage({ onBack }) {
   );
 }
 
-// PERFORMANS VE PAGINATION İÇİN OPTİMİZE EDİLMİŞ SAYFALAR
 const VitrinPage = React.memo(function VitrinPage({ onBack, items }) {
   const [step, setStep] = React.useState(0);
   const [filterType, setFilterType] = React.useState(null); 
@@ -411,7 +363,6 @@ const VitrinPage = React.memo(function VitrinPage({ onBack, items }) {
     return result;
   }, [items, selectedFilter, filterType, priceRange]);
 
-  // Filtre değişince sayfayı başa sar
   React.useEffect(() => {
     setPage(1);
   }, [selectedFilter, priceRange]);
@@ -491,7 +442,6 @@ const VitrinPage = React.memo(function VitrinPage({ onBack, items }) {
              </div>
           ))}
 
-          {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-4 py-6">
                 <button 
@@ -526,101 +476,10 @@ const VitrinPage = React.memo(function VitrinPage({ onBack, items }) {
   );
 });
 
-// --- 4. ADIM: OUTLET SAYFASI (SADELEŞTİRİLDİ ve FİLTRELENDİ) ---
-const OutletPage = React.memo(function OutletPage({ onBack, items }) {
-  const [selectedProduct, setSelectedProduct] = React.useState(null);
-  const [page, setPage] = React.useState(1);
-  const ITEMS_PER_PAGE = 10;
-  
-  // items App component'ten sadece 'Outlet' etiketli olanlar olarak geliyor.
-  const paginatedItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-
-  return (
-    <div className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
-       {/* Üst Bar */}
-       <div className="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between">
-          <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</button>
-          <h1 className="text-sm font-bold text-red-600 tracking-[0.2em] uppercase flex items-center gap-2">
-            <span>🔥</span> OUTLET FIRSATLARI
-          </h1>
-          <div className="w-8"></div>
-       </div>
-
-       {/* Liste */}
-       <div className="flex flex-col pb-24 px-4 md:px-6 pt-4">
-          {paginatedItems.map((urun, index) => (
-             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="product-card group bg-white mb-6 rounded-2xl shadow-sm overflow-hidden border border-red-100 active:scale-[0.99] transition-transform cursor-pointer relative">
-                <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
-                    FIRSAT
-                </div>
-
-                <div className="flex p-4 gap-4 items-center">
-                    <div className="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                       {/* 300px ve düşük kalite ile çağırılıyor (Performans) */}
-                       <img src={getOptimizedImageUrl(urun.resim, 300)} className="w-full h-full object-cover" alt={urun.baslik} loading="lazy" />
-                    </div>
-                    <div className="flex-1">
-                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{urun.kategori}</div>
-                        <h2 className="font-serif text-lg text-gray-900 mb-1 leading-tight">{urun.baslik}</h2>
-                        {urun.aciklama && <p className="text-[10px] text-gray-500 mb-2 line-clamp-1">{urun.aciklama}</p>}
-                        
-                        <div className="flex items-center justify-between mt-2">
-                            <div className="flex flex-col">
-                                <span className="text-lg font-bold text-red-600 font-mono tracking-tighter">{formatCurrency(urun.fiyat)}</span>
-                                {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
-                            </div>
-                            <button className="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition">
-                                İNCELE
-                            </button>
-                        </div>
-                    </div>
-                </div>
-             </div>
-          ))}
-          
-           {/* Pagination Controls */}
-           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 py-6">
-                <button 
-                    disabled={page === 1} 
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    className="bg-white border border-gray-200 px-4 py-2 rounded-full text-sm font-bold disabled:opacity-30 active:scale-95"
-                >
-                    ⬅️ Önceki
-                </button>
-                <span className="text-xs font-bold text-gray-400">{page} / {totalPages}</span>
-                <button 
-                    disabled={page === totalPages} 
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    className="bg-white border border-gray-200 px-4 py-2 rounded-full text-sm font-bold disabled:opacity-30 active:scale-95"
-                >
-                    Sonraki ➡️
-                </button>
-            </div>
-          )}
-
-          {items.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-32 text-gray-300">
-                <span className="text-4xl mb-4 opacity-30">🕸️</span>
-                <p className="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
-                <button onClick={onBack} className="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</button>
-            </div>
-          )}
-       </div>
-       <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
-    </div>
-  );
-});
-
-// --- MARKET DASHBOARD BİLEŞENİ ---
+// Market Dashboard
 function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen, pendingRemindersCount, setAdminOpen, setLoginOpen, P, ft, lastUpdate, s025, s05_22, s05_24, stability, supa, setUser, prevP }) {
-  
-  // 5. ADIM: html2canvas Lazy Load (Sadece ihtiyaç anında yükle)
   const downloadImage = async () => {
-    // Kütüphane yüklü mü kontrol et
     if (!window.html2canvas) {
-        // Dinamik script yükleme
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -641,7 +500,6 @@ function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen,
 
   return (
          <div className="min-h-screen pb-safe flex flex-col items-center bg-gray-50 fade-in">
-            {/* Header / Nav */}
             <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
               <div className="pointer-events-auto flex gap-2">
                 <button onClick={() => setView('welcome')} className="bg-white/80 backdrop-blur text-gray-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">🏠</button>
@@ -653,7 +511,6 @@ function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen,
                 <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📟</button>
                 <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📸</button>
                 
-                {/* CRM BUTTON WITH NOTIFICATION BADGE */}
                 {user && (
                     <button onClick={()=>setCustomerModalOpen(true)} className="relative w-10 h-10 bg-yellow-100/90 text-yellow-800 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95 border border-yellow-500">
                         👥
@@ -669,7 +526,6 @@ function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen,
               </div>
             </div>
 
-            {/* Price List Card */}
             <div id="capture-area" className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100 mb-20 mx-4">
               <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-500 to-yellow-200 opacity-60"></div>
               <div className="flex justify-center -mt-16 mb-4 relative z-10">
@@ -720,7 +576,7 @@ function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen,
   );
 }
 
-// --- LOGIN MODAL ---
+// Login Modal
 function LoginModal({ onClose, onLoginSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -748,7 +604,7 @@ function LoginModal({ onClose, onLoginSuccess }) {
   );
 }
 
-// --- MÜŞTERİ PANELİ (EKLENEN MODAL) ---
+// Customer Modal
 const availableTags = ["VIP", "Pazarlıkçı", "Sık Gelen", "Yeni", "Sorunlu", "Referanslı", "Yatırımcı"];
 
 function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, currentUser }) {
@@ -868,7 +724,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal modal-wide flex flex-row overflow-hidden bg-gray-50" onClick={e=>e.stopPropagation()}>
          
-         {/* SOL KOLON: LİSTE */}
          <div className={`flex-1 flex flex-col border-r border-gray-200 bg-white ${selectedCust ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-3 border-b flex items-center justify-between bg-gray-50">
                <h2 className="font-bold text-gray-700">Müşteriler</h2>
@@ -878,7 +733,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
                <input autoFocus placeholder="🔍 İsim veya Etiket..." value={search} onChange={e=>setSearch(e.target.value)} className="w-full bg-gray-100 p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-yellow-400" />
             </div>
             
-            {/* YENİ / DÜZENLEME FORMU */}
             {mode === 'add' ? (
                 <div className="p-4 overflow-y-auto flex-1 bg-yellow-50/30">
                     <div className="flex justify-between items-center mb-4">
@@ -889,7 +743,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
                         <input className="w-full p-2 border rounded text-sm" placeholder="Ad Soyad *" value={formData.full_name || ''} onChange={e=>setFormData({...formData, full_name:e.target.value})} />
                         <input className="w-full p-2 border rounded text-sm" placeholder="Telefon" type="tel" value={formData.phone || ''} onChange={e=>setFormData({...formData, phone:e.target.value})} />
                         
-                        {/* ETİKET SEÇİMİ */}
                         <div>
                             <label className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Etiketler</label>
                             <div className="flex flex-wrap gap-2">
@@ -924,7 +777,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
                             <div>
                                 <div className="font-bold text-sm text-gray-800">{c.full_name}</div>
                                 <div className="text-[10px] text-gray-500 mb-1">{c.phone || '-'}</div>
-                                {/* ETİKETLERİ LİSTEDE GÖSTER */}
                                 <div className="flex flex-wrap gap-1">
                                     {c.tags && c.tags.map(t => (
                                         <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">{t}</span>
@@ -938,7 +790,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
             )}
          </div>
 
-         {/* SAĞ KOLON: DETAY */}
          <div className={`flex-[2] flex flex-col bg-gray-50 ${!selectedCust ? 'hidden md:flex items-center justify-center' : 'flex'}`}>
             {!selectedCust ? (
                 <div className="text-center text-gray-300">
@@ -947,7 +798,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
                 </div>
             ) : (
                 <>
-                    {/* Header */}
                     <div className="bg-white p-4 border-b shadow-sm flex justify-between items-center sticky top-0 z-10">
                         <div className="flex items-center gap-3">
                             <button onClick={()=>setSelectedCust(null)} className="md:hidden text-gray-500 text-xl">⬅️</button>
@@ -977,7 +827,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
                         </div>
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 overflow-y-auto p-4">
                         {loadingDetails && <div className="text-center text-xs text-gray-400">Yükleniyor...</div>}
                         
@@ -1303,15 +1152,9 @@ function App() {
   const [currentVersion, setCurrentVersion] = React.useState(null);
   const [locationOpen, setLocationOpen] = React.useState(false);
   
-  // CRM Modals
   const [customerModalOpen, setCustomerModalOpen] = React.useState(false);
   const [customers, setCustomers] = React.useState([]);
   const [pendingRemindersCount, setPendingRemindersCount] = React.useState(0);
-
-  // 3. ADIM: Outlet ürünlerini ana state'ten filtrele (Performans)
-  const outletItems = React.useMemo(() => {
-    return vitrinItems.filter(item => item.etiket === 'Outlet');
-  }, [vitrinItems]);
 
   async function fetchData() {
       const { data: pData } = await supa.from("ham_fiyatlar").select("*").eq("id", 1).single();
@@ -1395,10 +1238,7 @@ function App() {
          <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
       )}
 
-      {view === 'outlet' && (
-         // 3. ADIM (DEVAMI): Sadece filtrelenmiş outletItems'ı gönderiyoruz
-         <OutletPage items={outletItems} onBack={() => setView('welcome')} />
-      )}
+      {/* Outlet artık React içinde render edilmiyor, ayrı sayfaya gidiyor */}
 
       {view === 'faq' && (
          <FAQPage onBack={() => setView('welcome')} />
