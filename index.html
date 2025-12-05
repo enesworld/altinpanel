@@ -10,12 +10,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#b45309">
 
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- 1. ADIM: React Production Moduna Geçiş (Daha hızlı ve hafif) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- html2canvas buradan kaldırıldı, lazy-load yapılacak -->
 
   <style>
     body { 
@@ -35,8 +36,8 @@
     /* Geniş Modal (CRM İçin) */
     .modal-wide { max-width: 900px; height: 85vh; }
 
-    /* Performans İçin */
-    .product-card { content-visibility: auto; contain-intrinsic-size: 300px; }
+    /* Performans İçin: content-visibility */
+    .product-card { content-visibility: auto; contain-intrinsic-size: 100px 300px; }
 
     @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
@@ -100,13 +101,12 @@ const formatCurrency = (val) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
 };
 
-// --- RESİM OPTİMİZASYON MOTORU (PERFORMANS İÇİN KRİTİK) ---
+// --- RESİM OPTİMİZASYON MOTORU ---
+// 2. ADIM: Kalite ve Boyut Optimizasyonu (Kod Tarafı)
 const getOptimizedImageUrl = (url, width = 500) => {
     if (!url || url.includes("placehold.co") || url.startsWith("blob:")) return url;
-    // Supabase Image Transformation (Eğer destekleniyorsa parametre ekler)
-    // Desteklenmiyorsa bile URL bozulmaz, orijinali döner.
-    // Resmin boyutunu küçültüp, kalitesini optimize eder.
-    return `${url}?width=${width}&resize=cover&quality=60&format=webp`;
+    // Outlet ve listeler için daha düşük kalite (%50) ve webp formatı
+    return `${url}?width=${width}&resize=cover&quality=50&format=webp`;
 };
 
 // --- YARDIMCI BİLEŞENLER ---
@@ -182,7 +182,7 @@ function ProductDetailModal({ product, onClose }) {
             <div className="bg-white rounded-3xl overflow-hidden max-w-md w-full m-4 shadow-2xl relative animate-soft-enter" onClick={e => e.stopPropagation()}>
                 <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur">✕</button>
                 <div className="relative aspect-square bg-gray-100">
-                    <img src={getOptimizedImageUrl(product.resim, 800) || "https://placehold.co/400x400?text=Resim+Yok"} className="w-full h-full object-cover" alt={product.baslik} />
+                    <img src={getOptimizedImageUrl(product.resim, 800)} className="w-full h-full object-cover" alt={product.baslik} />
                     {product.etiket === 'Outlet' && (
                         <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                             🔥 FIRSAT
@@ -262,8 +262,8 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
       
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-6 z-30 relative">
         <div 
-            onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')}
-            className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500 active:scale-95"
+           onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')}
+           className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500 active:scale-95"
         >
            <div className="absolute -inset-2 bg-white/20 rounded-full blur-xl animate-pulse"></div>
            <img 
@@ -288,9 +288,9 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
             <span className="text-3xl md:text-4xl drop-shadow-lg">📊</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
           </button>
           
-          {/* Vitrin Butonu - AKTİF */}
-          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '140px' }}>
-            <span className="text-3xl md:text-4xl">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
+          {/* Vitrin Butonu - HAZIRLANIYOR */}
+          <button disabled className="flex-1 min-w-[140px] bg-gray-200 text-gray-500 p-4 md:p-6 rounded-3xl shadow-none flex flex-col items-center justify-center gap-3 cursor-not-allowed border-2 border-gray-300" style={{ minHeight: '140px' }}>
+            <span className="text-3xl md:text-4xl opacity-50">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Hazırlanıyor</span>
           </button>
 
           {/* OUTLET BUTONU */}
@@ -526,13 +526,13 @@ const VitrinPage = React.memo(function VitrinPage({ onBack, items }) {
   );
 });
 
-// --- OUTLET SAYFASI (GÜNCELLENDİ: SAYFALAMA VE MEMO - HAFİFLETİLDİ) ---
+// --- 4. ADIM: OUTLET SAYFASI (SADELEŞTİRİLDİ ve FİLTRELENDİ) ---
 const OutletPage = React.memo(function OutletPage({ onBack, items }) {
   const [selectedProduct, setSelectedProduct] = React.useState(null);
   const [page, setPage] = React.useState(1);
   const ITEMS_PER_PAGE = 10;
   
-  // items zaten filtrelenmiş olarak geliyor (App component'ten)
+  // items App component'ten sadece 'Outlet' etiketli olanlar olarak geliyor.
   const paginatedItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
 
@@ -557,6 +557,7 @@ const OutletPage = React.memo(function OutletPage({ onBack, items }) {
 
                 <div className="flex p-4 gap-4 items-center">
                     <div className="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
+                       {/* 300px ve düşük kalite ile çağırılıyor (Performans) */}
                        <img src={getOptimizedImageUrl(urun.resim, 300)} className="w-full h-full object-cover" alt={urun.baslik} loading="lazy" />
                     </div>
                     <div className="flex-1">
@@ -613,7 +614,31 @@ const OutletPage = React.memo(function OutletPage({ onBack, items }) {
 });
 
 // --- MARKET DASHBOARD BİLEŞENİ ---
-function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen, pendingRemindersCount, setAdminOpen, setLoginOpen, P, ft, lastUpdate, downloadImage, s025, s05_22, s05_24, stability, supa, setUser, prevP }) {
+function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen, pendingRemindersCount, setAdminOpen, setLoginOpen, P, ft, lastUpdate, s025, s05_22, s05_24, stability, supa, setUser, prevP }) {
+  
+  // 5. ADIM: html2canvas Lazy Load (Sadece ihtiyaç anında yükle)
+  const downloadImage = async () => {
+    // Kütüphane yüklü mü kontrol et
+    if (!window.html2canvas) {
+        // Dinamik script yükleme
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    const el = document.getElementById("capture-area");
+    if(!el) return;
+    const canvas = await window.html2canvas(el, { scale: 3, backgroundColor: null, useCORS: true });
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `Fiyatlar_${new Date().toLocaleDateString()}.png`;
+    link.click();
+  }
+
   return (
          <div className="min-h-screen pb-safe flex flex-col items-center bg-gray-50 fade-in">
             {/* Header / Nav */}
@@ -1045,7 +1070,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const [form, setForm] = React.useState(draft);
   const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
   const [previewUrl, setPreviewUrl] = React.useState(null); 
-  const [editingId, setEditingId] = React.useState(null); // YENİ: DÜZENLEME MODU İÇİN ID
+  const [editingId, setEditingId] = React.useState(null); 
 
   const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
@@ -1091,23 +1116,20 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       if(!newProduct.baslik || !newProduct.fiyat) return alert("Başlık ve fiyat zorunludur.");
       
       const cleanPrice = newProduct.fiyat.toString().replace(/[^0-9]/g, '');
-      // ID ve created_at gibi sistem alanlarını temizle
       const { id, created_at, ...rest } = newProduct;
       const productToSave = { ...rest, fiyat: cleanPrice };
 
       if (editingId) {
-          // GÜNCELLEME
           const { error } = await supa.from('vitrin').update(productToSave).eq('id', editingId);
           if (error) return alert("Hata: " + error.message);
           alert("Ürün güncellendi!");
       } else {
-          // YENİ EKLEME
           const { error } = await supa.from('vitrin').insert(productToSave);
            if (error) return alert("Hata: " + error.message);
           alert("Ürün eklendi!");
       }
       
-      handleCancelEdit(); // Formu sıfırla
+      handleCancelEdit(); 
       refreshVitrin(); 
   };
 
@@ -1195,7 +1217,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 <select value={newProduct.kategori || 'Kolye'} onChange={e=>setNewProduct({...newProduct, kategori: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
                                     <option value="Kolye">Kolye</option>
                                     <option value="Bilezik">Bilezik</option>
-                                    <option value="Bileklik">Bileklik</option> {/* Yeni Kategori */}
+                                    <option value="Bileklik">Bileklik</option>
                                     <option value="Yüzük">Yüzük</option>
                                     <option value="Küpe">Küpe</option>
                                     <option value="Set">Set</option>
@@ -1272,7 +1294,7 @@ function App() {
   const [view, setView] = React.useState('welcome'); 
   const [prices, setPrices] = React.useState(null); 
   const [lastUpdate, setLastUpdate] = React.useState(null);
-  const [prevPrices, setPrevPrices] = React.useState(null); // FLASHLAMA İÇİN ÖNCEKİ FİYAT
+  const [prevPrices, setPrevPrices] = React.useState(null);
   const [user, setUser] = React.useState(null);
   const [vitrinItems, setVitrinItems] = React.useState([]);
   const [loginOpen, setLoginOpen] = React.useState(false);
@@ -1286,26 +1308,29 @@ function App() {
   const [customers, setCustomers] = React.useState([]);
   const [pendingRemindersCount, setPendingRemindersCount] = React.useState(0);
 
+  // 3. ADIM: Outlet ürünlerini ana state'ten filtrele (Performans)
+  const outletItems = React.useMemo(() => {
+    return vitrinItems.filter(item => item.etiket === 'Outlet');
+  }, [vitrinItems]);
+
   async function fetchData() {
       const { data: pData } = await supa.from("ham_fiyatlar").select("*").eq("id", 1).single();
       if (pData) { 
         setPrices(current => {
-            if(current) setPrevPrices(current); // Önceki fiyatı kaydet
+            if(current) setPrevPrices(current); 
             return pData; 
         });
         if(pData.versiyon) setCurrentVersion(pData.versiyon); 
       }
       setLastUpdate(new Date());
-      setStability(0); // Her güncellemede stabiliteyi sıfırla
+      setStability(0); 
   }
 
-  // Sayfa yüklendiğinde bir kez çalışacak ürün yükleme
   async function loadInitialProducts() {
       const { data: vData } = await supa.from("vitrin").select("*").order('id', { ascending: false });
       if(vData) setVitrinItems(vData);
   }
 
-  // Müşterileri ve Hatırlatmaları Çek
   async function fetchCustomersAndReminders() {
       if(!user) return;
       const { data } = await supa.from('customers').select('*').order('created_at', { ascending: false });
@@ -1341,16 +1366,6 @@ function App() {
       return () => clearInterval(timer);
   }, [currentVersion]);
 
-  const downloadImage = async () => {
-    const el = document.getElementById("capture-area");
-    if(!el) return;
-    const canvas = await html2canvas(el, { scale: 3, backgroundColor: null, useCORS: true });
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = `Fiyatlar_${new Date().toLocaleDateString()}.png`;
-    link.click();
-  }
-
   const handleSave = async (newData) => {
       await supa.from("ham_fiyatlar").update(newData).eq("id", 1);
       setPrices(newData);
@@ -1363,7 +1378,7 @@ function App() {
   const s025 = Math.round(g24 * 0.33); 
   const s05_22 = Math.round((P.gram_22 || 0) * 0.55); 
   const s05_24 = Math.round(g24 * 0.55);
-  const prevP = prevPrices || {}; // Önceki fiyatları dashboard'a gönder
+  const prevP = prevPrices || {}; 
 
   return (
     <>
@@ -1381,7 +1396,8 @@ function App() {
       )}
 
       {view === 'outlet' && (
-         <OutletPage items={vitrinItems} onBack={() => setView('welcome')} />
+         // 3. ADIM (DEVAMI): Sadece filtrelenmiş outletItems'ı gönderiyoruz
+         <OutletPage items={outletItems} onBack={() => setView('welcome')} />
       )}
 
       {view === 'faq' && (
@@ -1393,7 +1409,7 @@ function App() {
             setView={setView} setLocationOpen={setLocationOpen} user={user} 
             setCustomerModalOpen={setCustomerModalOpen} pendingRemindersCount={pendingRemindersCount} 
             setAdminOpen={setAdminOpen} setLoginOpen={setLoginOpen} P={P} ft={ft} 
-            lastUpdate={lastUpdate} downloadImage={downloadImage} s025={s025} 
+            lastUpdate={lastUpdate} s025={s025} 
             s05_22={s05_22} s05_24={s05_24} stability={stability} supa={supa} setUser={setUser}
             prevP={prevP}
          />
