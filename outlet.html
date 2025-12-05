@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Outlet Fırsatları - Bakırköy Kuyumcusu</title>
+    <meta name="theme-color" content="#fdfcf8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #fdfcf8; -webkit-tap-highlight-color: transparent; }
+        /* content-visibility: auto; tarayıcının ekran dışındaki öğeleri render etmesini engeller, performans artırır */
+        .product-card { content-visibility: auto; contain-intrinsic-size: 100px 160px; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Modal Stilleri */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .modal { transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .modal-backdrop.active .modal { transform: scale(1); }
+    </style>
+</head>
+<body class="text-gray-800 antialiased font-sans select-none fade-in">
+
+    <!-- Üst Bar -->
+    <div class="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between">
+        <a href="index.html" class="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</a>
+        <h1 class="text-sm font-bold text-red-600 tracking-[0.2em] uppercase flex items-center gap-2">
+            <span>🔥</span> OUTLET FIRSATLARI
+        </h1>
+        <div class="w-8"></div>
+    </div>
+
+    <!-- Ürün Listesi -->
+    <div id="product-list" class="flex flex-col pb-24 px-4 md:px-6 pt-4">
+        <!-- Yükleniyor... -->
+        <div class="text-center py-20 text-gray-400 text-sm animate-pulse">Fırsatlar yükleniyor...</div>
+    </div>
+
+    <!-- Detay Modal (Gizli Başlar) -->
+    <div id="detail-modal" class="modal-backdrop" onclick="closeModal()">
+        <div class="modal bg-white rounded-3xl overflow-hidden max-w-md w-full m-4 shadow-2xl relative" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-4 right-4 z-20 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur">✕</button>
+            <div class="relative aspect-square bg-gray-100">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <div class="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">🔥 FIRSAT</div>
+            </div>
+            <div class="p-6 text-center">
+                <h2 id="modal-title" class="text-2xl font-serif font-bold text-gray-900 mb-2"></h2>
+                <p id="modal-category" class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4"></p>
+                <div class="bg-orange-50 rounded-xl p-4 border border-orange-100 mb-4">
+                    <div id="modal-price" class="text-3xl font-bold text-[#b45309] font-mono tracking-tighter"></div>
+                    <div id="modal-gram" class="text-sm text-gray-500 font-bold mt-1"></div>
+                </div>
+                <p id="modal-desc" class="text-sm text-gray-600 leading-relaxed mb-6"></p>
+                <button id="whatsapp-btn" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 active:scale-95">
+                    <span>💬</span> WhatsApp ile İletişime Geç
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Supabase Yapılandırması
+    const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
+    const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
+    const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    // Yardımcı Fonksiyonlar
+    const formatCurrency = (val) => {
+        if (!val) return "";
+        const cleanVal = val.toString().replace(/[^0-9]/g, '');
+        if (!cleanVal) return "";
+        return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
+    };
+
+    const getOptimizedImageUrl = (url, width = 500) => {
+        if (!url || url.includes("placehold.co") || url.startsWith("blob:")) return url;
+        // Kaliteyi biraz daha düşürdük (50 -> 40) ve webp zorladık
+        return `${url}?width=${width}&resize=cover&quality=40&format=webp`;
+    };
+
+    // Verileri Çek ve Render Et
+    async function loadOutletItems() {
+        // PERFORMANS: Sadece gerekli alanları çek ve limiti 30'a düşür.
+        const { data, error } = await supa
+            .from("vitrin")
+            .select('id, baslik, fiyat, gram, resim, kategori, aciklama')
+            .eq('etiket', 'Outlet')
+            .order('id', { ascending: false })
+            .limit(30); 
+
+        const listEl = document.getElementById('product-list');
+        listEl.innerHTML = ''; 
+
+        if (error || !data || data.length === 0) {
+            listEl.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-32 text-gray-300">
+                    <span class="text-4xl mb-4 opacity-30">🕸️</span>
+                    <p class="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
+                    <a href="index.html" class="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</a>
+                </div>`;
+            return;
+        }
+
+        // PERFORMANS KRİTİK NOKTA: DocumentFragment kullanımı
+        // DOM'a tek tek eklemek yerine, hafızada biriktirip tek seferde basıyoruz.
+        // Bu, Tailwind CDN'in her eleman için tekrar tekrar çalışıp sayfayı dondurmasını engeller.
+        const fragment = document.createDocumentFragment();
+
+        data.forEach(item => {
+            const card = document.createElement('div');
+            // Class listesini tek satırda string olarak veriyoruz
+            card.className = "product-card group bg-white mb-6 rounded-2xl shadow-sm overflow-hidden border border-red-100 active:scale-[0.99] transition-transform cursor-pointer relative";
+            card.onclick = () => openModal(item);
+            
+            // Resim optimizasyonu için decoding="async" eklendi
+            card.innerHTML = `
+                <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">FIRSAT</div>
+                <div class="flex p-4 gap-4 items-center">
+                    <div class="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
+                       <img src="${getOptimizedImageUrl(item.resim, 200)}" class="w-full h-full object-cover" loading="lazy" decoding="async" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">${item.kategori || ''}</div>
+                        <h2 class="font-serif text-lg text-gray-900 mb-1 leading-tight">${item.baslik}</h2>
+                        ${item.aciklama ? `<p class="text-[10px] text-gray-500 mb-2 line-clamp-1">${item.aciklama}</p>` : ''}
+                        
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-col">
+                                <span class="text-lg font-bold text-red-600 font-mono tracking-tighter">${formatCurrency(item.fiyat)}</span>
+                                ${item.gram ? `<span class="text-[10px] text-gray-500 font-mono">⚖️ ${item.gram}</span>` : ''}
+                            </div>
+                            <button class="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition">İNCELE</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            fragment.appendChild(card); // Parçayı hafızaya ekle
+        });
+
+        listEl.appendChild(fragment); // DOM'a tek seferde bas (Donmayı önler)
+    }
+
+    // Modal İşlemleri
+    function openModal(item) {
+        document.getElementById('modal-img').src = getOptimizedImageUrl(item.resim, 800);
+        document.getElementById('modal-title').textContent = item.baslik;
+        document.getElementById('modal-category').textContent = item.kategori || '';
+        document.getElementById('modal-price').textContent = formatCurrency(item.fiyat);
+        document.getElementById('modal-gram').textContent = item.gram ? `⚖️ ${item.gram}` : '';
+        document.getElementById('modal-desc').textContent = item.aciklama || '';
+        
+        const wpBtn = document.getElementById('whatsapp-btn');
+        wpBtn.onclick = () => window.open(`https://wa.me/905382436870?text=Merhaba, şu ürün hakkında bilgi almak istiyorum: ${item.baslik}`, '_blank');
+
+        document.getElementById('detail-modal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('detail-modal').classList.remove('active');
+    }
+
+    // Başlat
+    loadOutletItems();
+
+</script>
+</body>
+</html>
