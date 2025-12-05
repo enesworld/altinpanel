@@ -29,7 +29,7 @@
     .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     .flash-down { color: #dc2626 !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
     
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; backdrop-filter: blur(8px); }
     .modal { background: white; padding: 0; width: 100%; max-width: 400px; border-radius: 24px; animation: pop .3s cubic-bezier(0.18, 0.89, 0.32, 1.28); overflow: hidden; display: flex; flex-direction: column; max-height: 90dvh; }
     
     /* Geniş Modal (CRM İçin) */
@@ -88,6 +88,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
+
+// Fiyat Formatlayıcı (46890 -> 46.890 ₺)
+const formatCurrency = (val) => {
+    if (!val) return "";
+    // Önce sadece sayıları al
+    const cleanVal = val.toString().replace(/[^0-9]/g, '');
+    if (!cleanVal) return "";
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
+};
 
 // --- YARDIMCI BİLEŞENLER ---
 const AnimatedValue = React.memo(({ value, prev }) => {
@@ -154,63 +163,49 @@ function LocationModal({ onClose }) {
   );
 }
 
-// --- OUTLET SAYFASI (GÜNCELLENDİ: GRAM EKLENDİ) ---
-function OutletPage({ onBack, items }) {
-  const outletItems = React.useMemo(() => {
-    return items.filter(i => i.etiket && i.etiket.toLowerCase() === 'outlet');
-  }, [items]);
-
-  return (
-    <div className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
-       {/* Üst Bar */}
-       <div className="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between">
-          <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</button>
-          <h1 className="text-sm font-bold text-red-600 tracking-[0.2em] uppercase flex items-center gap-2">
-            <span>🔥</span> OUTLET FIRSATLARI
-          </h1>
-          <div className="w-8"></div>
-       </div>
-
-       {/* Liste */}
-       <div className="flex flex-col pb-24 px-4 md:px-6 pt-4">
-          {outletItems.length > 0 ? outletItems.map((urun, index) => (
-             <div key={urun.id} className="group bg-white mb-6 rounded-[1.5rem] shadow-sm overflow-hidden border border-red-100 fade-in active:scale-[0.99] transition-transform relative" style={{animationDelay: `${index * 0.1}s`}}>
-                <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
-                    FIRSAT
-                </div>
-
-                <div className="flex p-4 gap-4 items-center">
-                    <div className="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover" alt={urun.baslik} />
-                    </div>
-                    <div className="flex-1">
-                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{urun.kategori}</div>
-                        <h2 className="font-serif text-lg text-gray-900 mb-1 leading-tight">{urun.baslik}</h2>
-                        {urun.aciklama && <p className="text-[10px] text-gray-500 mb-2 line-clamp-1">{urun.aciklama}</p>}
-                        
-                        <div className="flex items-center justify-between mt-2">
-                            <div className="flex flex-col">
-                                <span className="text-lg font-bold text-red-600 font-mono tracking-tighter">{urun.fiyat}</span>
-                                {/* GRAM BİLGİSİ EKLENDİ */}
-                                {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
-                            </div>
-                            <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition">
-                                WHATSAPP
-                            </button>
+// --- ÜRÜN DETAY MODALI (ZOOM) ---
+function ProductDetailModal({ product, onClose }) {
+    if (!product) return null;
+    return (
+        <div className="modal-backdrop" onClick={onClose}>
+            <div className="bg-white rounded-3xl overflow-hidden max-w-md w-full m-4 shadow-2xl relative animate-soft-enter" onClick={e => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur">✕</button>
+                <div className="relative aspect-square bg-gray-100">
+                    <img src={product.resim || "https://placehold.co/400x400?text=Resim+Yok"} className="w-full h-full object-cover" alt={product.baslik} />
+                    {product.etiket === 'Outlet' && (
+                        <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            🔥 FIRSAT
                         </div>
-                    </div>
+                    )}
                 </div>
-             </div>
-          )) : (
-            <div className="flex flex-col items-center justify-center py-32 text-gray-300">
-                <span className="text-4xl mb-4 opacity-30">🕸️</span>
-                <p className="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
-                <button onClick={onBack} className="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</button>
+                <div className="p-6 text-center">
+                    <h2 className="text-2xl font-serif font-bold text-gray-900 mb-2">{product.baslik}</h2>
+                    {product.kategori && <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{product.kategori}</p>}
+                    
+                    <div className="bg-orange-50 rounded-xl p-4 border border-orange-100 mb-4">
+                        <div className="text-3xl font-bold text-[#b45309] font-mono tracking-tighter">
+                            {formatCurrency(product.fiyat)}
+                        </div>
+                        {product.gram && (
+                            <div className="text-sm text-gray-500 font-bold mt-1">
+                                ⚖️ {product.gram}
+                            </div>
+                        )}
+                    </div>
+                    
+                    {product.aciklama && (
+                        <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                            {product.aciklama}
+                        </p>
+                    )}
+
+                    <button onClick={() => window.open(`https://wa.me/905320000000?text=Merhaba, şu ürün hakkında bilgi almak istiyorum: ${product.baslik}`, '_blank')} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 active:scale-95">
+                        <span>💬</span> WhatsApp ile Sipariş Ver
+                    </button>
+                </div>
             </div>
-          )}
-       </div>
-    </div>
-  );
+        </div>
+    );
 }
 
 // --- ANA SAYFA VE DİĞER MODÜLLER ---
@@ -362,6 +357,7 @@ function VitrinPage({ onBack, items }) {
   const [filterType, setFilterType] = React.useState(null); 
   const [selectedFilter, setSelectedFilter] = React.useState(null);
   const [priceRange, setPriceRange] = React.useState('all');
+  const [selectedProduct, setSelectedProduct] = React.useState(null);
 
   const filteredItems = React.useMemo(() => {
     let result = items;
@@ -421,6 +417,7 @@ function VitrinPage({ onBack, items }) {
   }
 
   return (
+    <>
     <div key="step2" className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
        <div className="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
@@ -436,7 +433,7 @@ function VitrinPage({ onBack, items }) {
        </div>
        <div className="flex flex-col pb-24 px-4 md:px-6 pt-2">
           {filteredItems.length > 0 ? filteredItems.map((urun, index) => (
-             <div key={urun.id} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in active:scale-[0.99] transition-transform" style={{animationDelay: `${index * 0.1}s`}}>
+             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in active:scale-[0.99] transition-transform cursor-pointer" style={{animationDelay: `${index * 0.1}s`}}>
                 <div className="pt-8 pb-2 flex justify-center">
                     <div className="w-48 h-48 relative rounded-full bg-[#faf9f6] overflow-hidden shadow-inner border border-white ring-1 ring-gray-100">
                        <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover hover:scale-110 transition duration-700 ease-in-out" alt={urun.baslik} />
@@ -446,10 +443,9 @@ function VitrinPage({ onBack, items }) {
                     <div className="text-[9px] font-bold text-yellow-600 uppercase tracking-widest mb-2">{urun.kategori || 'ÖZEL'} PARÇA</div>
                     <h2 className="font-serif text-xl text-gray-900 mb-2 leading-tight">{urun.baslik}</h2>
                     <div className="flex flex-col gap-2 items-center">
-                        <span className="text-lg font-medium text-gray-900 font-mono tracking-tighter">{urun.fiyat}</span>
-                        {/* GRAM BİLGİSİ (VİTRİN SAYFASINDA DA GÖZÜKSÜN) */}
+                        <span className="text-lg font-medium text-gray-900 font-mono tracking-tighter">{formatCurrency(urun.fiyat)}</span>
+                        {/* GRAM BİLGİSİ */}
                         {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
-                        <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600 border-b border-pink-200 pb-1 hover:text-pink-800 hover:border-pink-800 transition-all p-2">Instagram'dan Ayırt 💬</button>
                     </div>
                 </div>
              </div>
@@ -461,6 +457,69 @@ function VitrinPage({ onBack, items }) {
             </div>
           )}
        </div>
+    </div>
+    <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+    </>
+  );
+}
+
+// --- OUTLET SAYFASI (GÜNCELLENDİ: GRAM EKLENDİ VE ZOOM) ---
+function OutletPage({ onBack, items }) {
+  const [selectedProduct, setSelectedProduct] = React.useState(null);
+  const outletItems = React.useMemo(() => {
+    return items.filter(i => i.etiket && i.etiket.toLowerCase() === 'outlet');
+  }, [items]);
+
+  return (
+    <div className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
+       {/* Üst Bar */}
+       <div className="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between">
+          <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</button>
+          <h1 className="text-sm font-bold text-red-600 tracking-[0.2em] uppercase flex items-center gap-2">
+            <span>🔥</span> OUTLET FIRSATLARI
+          </h1>
+          <div className="w-8"></div>
+       </div>
+
+       {/* Liste */}
+       <div className="flex flex-col pb-24 px-4 md:px-6 pt-4">
+          {outletItems.length > 0 ? outletItems.map((urun, index) => (
+             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-6 rounded-[1.5rem] shadow-sm overflow-hidden border border-red-100 fade-in active:scale-[0.99] transition-transform relative cursor-pointer" style={{animationDelay: `${index * 0.1}s`}}>
+                <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
+                    FIRSAT
+                </div>
+
+                <div className="flex p-4 gap-4 items-center">
+                    <div className="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
+                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover" alt={urun.baslik} />
+                    </div>
+                    <div className="flex-1">
+                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{urun.kategori}</div>
+                        <h2 className="font-serif text-lg text-gray-900 mb-1 leading-tight">{urun.baslik}</h2>
+                        {urun.aciklama && <p className="text-[10px] text-gray-500 mb-2 line-clamp-1">{urun.aciklama}</p>}
+                        
+                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex flex-col">
+                                <span className="text-lg font-bold text-red-600 font-mono tracking-tighter">{formatCurrency(urun.fiyat)}</span>
+                                {/* GRAM BİLGİSİ EKLENDİ */}
+                                {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
+                            </div>
+                            <button className="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition">
+                                İNCELE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+             </div>
+          )) : (
+            <div className="flex flex-col items-center justify-center py-32 text-gray-300">
+                <span className="text-4xl mb-4 opacity-30">🕸️</span>
+                <p className="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
+                <button onClick={onBack} className="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</button>
+            </div>
+          )}
+       </div>
+       <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
     </div>
   );
 }
@@ -814,6 +873,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const [uploading, setUploading] = React.useState(false);
   const [form, setForm] = React.useState(draft);
   const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
+  const [previewUrl, setPreviewUrl] = React.useState(null); // YENİ: YEREL ÖNİZLEME İÇİN
 
   const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
@@ -821,20 +881,43 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     try {
       const file = event.target.files[0];
       if (!file) return;
+      
+      // YENİ: Telefondan seçilen resmi hemen göster
+      const localUrl = URL.createObjectURL(file);
+      setPreviewUrl(localUrl);
+
       setUploading(true);
-      const fileName = `vitrin_${Date.now()}`;
+      
+      // Dosya adını güvenli hale getir ve uzantıyı koru
+      const fileExt = file.name.split('.').pop();
+      const fileName = `vitrin_${Date.now()}.${fileExt}`;
+      
       const { data, error } = await supa.storage.from('resimler').upload(fileName, file); 
       if (error) throw error;
+      
       const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
       setNewProduct({ ...newProduct, resim: publicUrl });
-    } catch (error) { alert('Hata: ' + error.message); } finally { setUploading(false); }
+      
+    } catch (error) { 
+        alert('Hata: ' + error.message); 
+    } finally { 
+        setUploading(false); 
+    }
   };
 
   const handleAddProduct = async () => {
       if(!newProduct.baslik || !newProduct.fiyat) return alert("Başlık ve fiyat zorunludur.");
-      await supa.from('vitrin').insert(newProduct);
+      
+      // Fiyatı temizle ve kaydet (Sadece rakam)
+      const cleanPrice = newProduct.fiyat.toString().replace(/[^0-9]/g, '');
+      const productToSave = { ...newProduct, fiyat: cleanPrice };
+
+      await supa.from('vitrin').insert(productToSave);
+      
       setNewProduct({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
-      refreshVitrin(); alert("Ürün eklendi!");
+      setPreviewUrl(null);
+      refreshVitrin(); 
+      alert("Ürün eklendi!");
   };
 
   const handleDeleteProduct = async (id) => {
@@ -894,7 +977,23 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
                         <h4 className="text-xs font-bold text-gray-700 mb-3">➕ YENİ ÜRÜN EKLE</h4>
                         <input type="text" placeholder="Ürün Adı" value={newProduct.baslik} onChange={e=>setNewProduct({...newProduct, baslik: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
-                        <input type="text" placeholder="Fiyat (Örn: 14.500 ₺)" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
+                        
+                        {/* FİYAT GİRİŞİ: Otomatik Formatlanır */}
+                        <div className="relative mb-2">
+                            <input 
+                                type="text" 
+                                placeholder="Fiyat (Örn: 46890)" 
+                                value={newProduct.fiyat} 
+                                onChange={e => {
+                                    // Sadece sayı girmesine izin ver
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    setNewProduct({...newProduct, fiyat: val});
+                                }}
+                                className="w-full p-2 border rounded text-xs font-mono" 
+                            />
+                            {newProduct.fiyat && <div className="absolute right-2 top-2 text-xs text-gray-400 font-bold">{formatCurrency(newProduct.fiyat)}</div>}
+                        </div>
+
                         <input type="text" placeholder="Gram (Örn: 3.50 gr)" value={newProduct.gram} onChange={e=>setNewProduct({...newProduct, gram: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
                         
                         <div className="grid grid-cols-2 gap-2 mb-2">
@@ -926,7 +1025,23 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 </select>
                              </div>
                         </div>
-                        <div className="flex items-center gap-2 mb-2"><input type="file" onChange={handleFileUpload} className="text-xs w-full" />{uploading && <span className="text-xs text-blue-500">...</span>}</div>
+                        
+                        {/* RESİM YÜKLEME ALANI (GÜNCELLENDİ) */}
+                        <div className="flex items-center gap-2 mb-2 p-2 border border-dashed rounded bg-gray-50">
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleFileUpload} 
+                                className="text-xs w-full" 
+                            />
+                            {uploading && <span className="text-xs text-blue-500 font-bold animate-pulse">Yükleniyor...</span>}
+                        </div>
+                        {previewUrl && (
+                            <div className="mb-2 w-20 h-20 rounded overflow-hidden border">
+                                <img src={previewUrl} className="w-full h-full object-cover" />
+                            </div>
+                        )}
+
                         <button onClick={handleAddProduct} className="w-full bg-green-600 text-white py-2 rounded text-xs font-bold hover:bg-green-700">Listeye Ekle</button>
                     </div>
                     <div className="space-y-2">
@@ -936,7 +1051,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 <div className="flex-1">
                                     <div className="text-xs font-bold">{item.baslik}</div>
                                     <div className="text-[9px] text-gray-400">{item.kategori} • {item.etiket}</div>
-                                    {item.gram && <div className="text-[9px] text-gray-500 font-mono">⚖️ {item.gram}</div>}
+                                    <div className="text-[10px] font-mono text-green-600 font-bold">{formatCurrency(item.fiyat)}</div>
                                 </div>
                                 <button type="button" onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
                             </div>
