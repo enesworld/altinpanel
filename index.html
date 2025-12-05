@@ -35,6 +35,9 @@
     /* Geniş Modal (CRM İçin) */
     .modal-wide { max-width: 900px; height: 85vh; }
 
+    /* Performans İçin */
+    .product-card { content-visibility: auto; contain-intrinsic-size: 300px; }
+
     @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
     .marquee-container { display: flex; overflow: hidden; white-space: nowrap; width: 100%; }
@@ -95,6 +98,15 @@ const formatCurrency = (val) => {
     const cleanVal = val.toString().replace(/[^0-9]/g, '');
     if (!cleanVal) return "";
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
+};
+
+// --- RESİM OPTİMİZASYON MOTORU (PERFORMANS İÇİN KRİTİK) ---
+const getOptimizedImageUrl = (url, width = 500) => {
+    if (!url || url.includes("placehold.co") || url.startsWith("blob:")) return url;
+    // Supabase Image Transformation (Eğer destekleniyorsa parametre ekler)
+    // Desteklenmiyorsa bile URL bozulmaz, orijinali döner.
+    // Resmin boyutunu küçültüp, kalitesini optimize eder.
+    return `${url}?width=${width}&resize=cover&quality=60&format=webp`;
 };
 
 // --- YARDIMCI BİLEŞENLER ---
@@ -170,7 +182,7 @@ function ProductDetailModal({ product, onClose }) {
             <div className="bg-white rounded-3xl overflow-hidden max-w-md w-full m-4 shadow-2xl relative animate-soft-enter" onClick={e => e.stopPropagation()}>
                 <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur">✕</button>
                 <div className="relative aspect-square bg-gray-100">
-                    <img src={product.resim || "https://placehold.co/400x400?text=Resim+Yok"} className="w-full h-full object-cover" alt={product.baslik} loading="lazy" />
+                    <img src={getOptimizedImageUrl(product.resim, 800) || "https://placehold.co/400x400?text=Resim+Yok"} className="w-full h-full object-cover" alt={product.baslik} />
                     {product.etiket === 'Outlet' && (
                         <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                             🔥 FIRSAT
@@ -462,10 +474,10 @@ const VitrinPage = React.memo(function VitrinPage({ onBack, items }) {
        </div>
        <div className="flex flex-col pb-24 px-4 md:px-6 pt-2">
           {paginatedItems.map((urun, index) => (
-             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in active:scale-[0.99] transition-transform cursor-pointer" style={{animationDelay: `${index * 0.05}s`}}>
+             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="product-card group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 active:scale-[0.99] transition-transform cursor-pointer">
                 <div className="pt-8 pb-2 flex justify-center">
                     <div className="w-48 h-48 relative rounded-full bg-[#faf9f6] overflow-hidden shadow-inner border border-white ring-1 ring-gray-100">
-                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover hover:scale-110 transition duration-700 ease-in-out" alt={urun.baslik} loading="lazy" />
+                       <img src={getOptimizedImageUrl(urun.resim)} className="w-full h-full object-cover hover:scale-110 transition duration-700 ease-in-out" alt={urun.baslik} loading="lazy" />
                     </div>
                 </div>
                 <div className="p-6 text-center">
@@ -538,14 +550,14 @@ const OutletPage = React.memo(function OutletPage({ onBack, items }) {
        {/* Liste */}
        <div className="flex flex-col pb-24 px-4 md:px-6 pt-4">
           {paginatedItems.map((urun, index) => (
-             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-6 rounded-2xl shadow-sm overflow-hidden border border-red-100 active:scale-[0.99] transition-transform cursor-pointer relative">
+             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="product-card group bg-white mb-6 rounded-2xl shadow-sm overflow-hidden border border-red-100 active:scale-[0.99] transition-transform cursor-pointer relative">
                 <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
                     FIRSAT
                 </div>
 
                 <div className="flex p-4 gap-4 items-center">
                     <div className="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover" alt={urun.baslik} loading="lazy" />
+                       <img src={getOptimizedImageUrl(urun.resim, 300)} className="w-full h-full object-cover" alt={urun.baslik} loading="lazy" />
                     </div>
                     <div className="flex-1">
                         <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{urun.kategori}</div>
