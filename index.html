@@ -154,6 +154,63 @@ function LocationModal({ onClose }) {
   );
 }
 
+// --- OUTLET SAYFASI (YENİ) ---
+function OutletPage({ onBack, items }) {
+  // Sadece 'Outlet' etiketli ürünleri filtrele (büyük/küçük harf duyarsız)
+  const outletItems = React.useMemo(() => {
+    return items.filter(i => i.etiket && i.etiket.toLowerCase() === 'outlet');
+  }, [items]);
+
+  return (
+    <div className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
+       {/* Üst Bar */}
+       <div className="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between">
+          <button onClick={onBack} className="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</button>
+          <h1 className="text-sm font-bold text-red-600 tracking-[0.2em] uppercase flex items-center gap-2">
+            <span>🔥</span> OUTLET FIRSATLARI
+          </h1>
+          <div className="w-8"></div>
+       </div>
+
+       {/* Liste */}
+       <div className="flex flex-col pb-24 px-4 md:px-6 pt-4">
+          {outletItems.length > 0 ? outletItems.map((urun, index) => (
+             <div key={urun.id} className="group bg-white mb-6 rounded-[1.5rem] shadow-sm overflow-hidden border border-red-100 fade-in active:scale-[0.99] transition-transform relative" style={{animationDelay: `${index * 0.1}s`}}>
+                {/* İndirim Rozeti */}
+                <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
+                    FIRSAT
+                </div>
+
+                <div className="flex p-4 gap-4 items-center">
+                    <div className="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
+                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover" alt={urun.baslik} />
+                    </div>
+                    <div className="flex-1">
+                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{urun.kategori}</div>
+                        <h2 className="font-serif text-lg text-gray-900 mb-1 leading-tight">{urun.baslik}</h2>
+                        {urun.aciklama && <p className="text-[10px] text-gray-500 mb-2 line-clamp-1">{urun.aciklama}</p>}
+                        
+                        <div className="flex items-center justify-between mt-2">
+                            <span className="text-lg font-bold text-red-600 font-mono tracking-tighter">{urun.fiyat}</span>
+                            <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition">
+                                WHATSAPP
+                            </button>
+                        </div>
+                    </div>
+                </div>
+             </div>
+          )) : (
+            <div className="flex flex-col items-center justify-center py-32 text-gray-300">
+                <span className="text-4xl mb-4 opacity-30">🕸️</span>
+                <p className="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
+                <button onClick={onBack} className="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</button>
+            </div>
+          )}
+       </div>
+    </div>
+  );
+}
+
 // --- ANA SAYFA VE DİĞER MODÜLLER ---
 
 function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
@@ -219,12 +276,26 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
         </p>
         
         <div className="flex flex-wrap gap-4 w-full justify-center">
+          {/* Market Butonu */}
           <button onClick={() => onSelect('market')} className="flex-1 min-w-[140px] bg-white/10 backdrop-blur-xl text-white border-2 border-white/60 p-4 md:p-6 rounded-3xl shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:border-white" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-lg">📊</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
           </button>
-          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '140px' }}>
-            <span className="text-3xl md:text-4xl">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
+          
+          {/* Vitrin Butonu - DEVRE DIŞI / TADİLATTA MODU */}
+          <button className="relative flex-1 min-w-[140px] bg-gray-100 text-gray-400 p-4 md:p-6 rounded-3xl shadow-inner border border-gray-200 flex flex-col items-center justify-center gap-3 cursor-not-allowed overflow-hidden" style={{ minHeight: '140px' }}>
+            <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow-lg transform -rotate-6 tracking-widest border-2 border-white/50">⚠️ TADİLATTA</span>
+            </div>
+            <span className="text-3xl md:text-4xl opacity-50 grayscale">✨</span>
+            <span className="font-bold text-sm md:text-lg leading-tight tracking-wide opacity-50">Vitrin &<br/>Fırsatlar</span>
           </button>
+
+          {/* YENİ OUTLET BUTONU */}
+          <button onClick={() => onSelect('outlet')} className="flex-1 min-w-[140px] bg-gradient-to-br from-red-600 to-rose-700 text-white border-2 border-red-400 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-red-500 hover:to-rose-600 ring-2 ring-red-200/50" style={{ minHeight: '140px' }}>
+            <span className="text-3xl md:text-4xl drop-shadow-md animate-pulse">🔥</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Outlet &<br/>Fırsatlar</span>
+          </button>
+
+          {/* SSS Butonu */}
           <button onClick={() => onSelect('faq')} className="flex-1 min-w-[140px] bg-gradient-to-br from-yellow-500 to-amber-500 text-white border-2 border-yellow-300 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-yellow-400 hover:to-amber-400" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-md">🤔</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">En Çok Merak<br/>Ettikleriniz</span>
           </button>
@@ -386,6 +457,34 @@ function VitrinPage({ onBack, items }) {
             </div>
           )}
        </div>
+    </div>
+  );
+}
+
+// --- LOGIN MODAL ---
+function LoginModal({ onClose, onLoginSuccess }) {
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+  const handleSubmit = (e) => { e.preventDefault(); login(); };
+  async function login() {
+    const { data, error } = await supa.auth.signInWithPassword({ email, password });
+    if (error) setError("Hatalı giriş!"); else onLoginSuccess(data.user);
+  }
+  return (
+    <div className="modal-backdrop">
+      <div className="modal p-8 bg-gradient-to-br from-yellow-900/90 to-amber-800/90 backdrop-blur-xl border border-yellow-500/30 shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden">
+        <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center">Yönetici Girişi</h3>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <input className="w-full p-3 rounded-xl bg-black/20 text-white" type="email" placeholder="E-posta Adresi" value={email} onChange={e=>setEmail(e.target.value)} />
+          <input className="w-full p-3 rounded-xl bg-black/20 text-white" type="password" placeholder="Şifre" value={password} onChange={e=>setPassword(e.target.value)} />
+          {error && <div className="text-red-300 text-xs font-bold text-center">{error}</div>}
+          <div className="flex gap-3 mt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-white/60">Vazgeç</button>
+            <button type="submit" className="flex-1 py-3 rounded-xl bg-yellow-600 text-white font-bold shadow-lg">Giriş Yap</button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -702,114 +801,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
   );
 }
 
-// --- ANA DASHBOARD BİLEŞENİ (FİYAT EKRANI) ---
-function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen, pendingRemindersCount, setAdminOpen, setLoginOpen, P, ft, lastUpdate, downloadImage, s025, s05_22, s05_24, stability, supa, setUser }) {
-  return (
-         <div className="min-h-screen pb-safe flex flex-col items-center bg-gray-50 fade-in">
-            <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
-              <div className="pointer-events-auto flex gap-2">
-                <button onClick={() => setView('welcome')} className="bg-white/80 backdrop-blur text-gray-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">🏠</button>
-                <button onClick={() => setLocationOpen(true)} className="bg-white/80 backdrop-blur text-blue-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📍</button>
-                {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold h-10 flex items-center active:scale-95">Çıkış</button>}
-              </div>
-              <div className="flex gap-3 pointer-events-auto">
-                <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📜</button>
-                <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📟</button>
-                <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📸</button>
-                
-                {/* CRM BUTTON WITH NOTIFICATION BADGE */}
-                {user && (
-                    <button onClick={()=>setCustomerModalOpen(true)} className="relative w-10 h-10 bg-yellow-100/90 text-yellow-800 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95 border border-yellow-500">
-                        👥
-                        {pendingRemindersCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse border border-white">
-                                {pendingRemindersCount}
-                            </span>
-                        )}
-                    </button>
-                )}
-                
-                <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">⚙️</button>
-              </div>
-            </div>
-
-            <div id="capture-area" className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100 mb-20 mx-4">
-              <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-500 to-yellow-200 opacity-60"></div>
-              <div className="flex justify-center -mt-16 mb-4 relative z-10">
-                 <a href="https://www.instagram.com/bakirkoykuyumcusu/" target="_blank">
-                   <img src="bk.jpeg" className="h-28 w-28 rounded-full border-[6px] border-white shadow-xl object-cover bg-white" alt="logo" crossOrigin="anonymous" />
-                 </a>
-              </div>
-              <div className="text-center mb-8">
-                <h1 className="text-3xl md:text-4xl font-serif font-bold text-yellow-800 tracking-tight drop-shadow-sm">Bakırköy Kuyumcusu</h1>
-                <div className="text-xs font-bold tracking-[0.3em] text-yellow-600 mt-2 uppercase opacity-80">{new Date().toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'})}</div>
-              </div>
-              
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 shadow-inner border border-white/60">
-                <Row title="Çeyrek Altın" buy={P.ceyrek_alis || 0} sell={P.ceyrek_satis || 0} />
-                <Row title="Ata Altın" buy={P.ata_alis || 0} sell={P.ata_satis || 0} />
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <Box title="22 Ayar Gram" value={P.gram_22 || 0} />
-                  <Box title="24 Ayar Gram" value={P.gram_24 || 0} />
-                </div>
-                <div className="grid grid-cols-3 gap-3 mt-4">
-                  <SmallBox title="0.25g (24K)" value={s025} />
-                  <SmallBox title="0.50g (22K)" value={s05_22} />
-                  <SmallBox title="0.50g (24K)" value={s05_24} />
-                </div>
-                <div className="mt-6 pt-4 border-t border-dashed border-gray-200 flex justify-between items-center text-[10px] text-gray-400 font-mono">
-                  <span>Saat: {ft(lastUpdate)}</span>
-                  <span className="tracking-widest font-bold text-gray-300">BAKIRKOYKUYUMCUSU</span>
-                </div>
-              </div>
-              <div className="mt-8 text-center text-yellow-800/40 font-serif italic text-sm">"Güvenin ve Kalitenin Adresi"</div>
-            </div>
-            
-            {stability > 30 && <div className="fixed bottom-12 left-0 w-full text-center pointer-events-none"><div className="inline-block bg-black/50 backdrop-blur text-white px-3 py-1 rounded-full text-xs animate-pulse">● Fiyatlar güncel</div></div>}
-
-            {P.duyuru && (
-              <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl pb-safe">
-                  <div className="marquee-container">
-                      <div className="marquee-content">
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
-                      </div>
-                  </div>
-              </div>
-            )}
-         </div>
-  );
-}
-
-function LoginModal({ onClose, onLoginSuccess }) {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
-  const handleSubmit = (e) => { e.preventDefault(); login(); };
-  async function login() {
-    const { data, error } = await supa.auth.signInWithPassword({ email, password });
-    if (error) setError("Hatalı giriş!"); else onLoginSuccess(data.user);
-  }
-  return (
-    <div className="modal-backdrop">
-      <div className="modal p-8 bg-gradient-to-br from-yellow-900/90 to-amber-800/90 backdrop-blur-xl border border-yellow-500/30 shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden">
-        <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center">Yönetici Girişi</h3>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input className="w-full p-3 rounded-xl bg-black/20 text-white" type="email" placeholder="E-posta Adresi" value={email} onChange={e=>setEmail(e.target.value)} />
-          <input className="w-full p-3 rounded-xl bg-black/20 text-white" type="password" placeholder="Şifre" value={password} onChange={e=>setPassword(e.target.value)} />
-          {error && <div className="text-red-300 text-xs font-bold text-center">{error}</div>}
-          <div className="flex gap-3 mt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl text-white/60">Vazgeç</button>
-            <button type="submit" className="flex-1 py-3 rounded-xl bg-yellow-600 text-white font-bold shadow-lg">Giriş Yap</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose, onSave }) {
   if (!open) return null;
   if (!draft) return <div className="modal-backdrop"><div className="modal p-6 text-center">Veriler Yükleniyor...</div></div>;
@@ -918,6 +909,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne İçin?</label>
                                 <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
                                     <option value="Genel">Genel</option>
+                                    <option value="Outlet">🔥 Outlet</option> {/* OUTLET EKLENDİ */}
                                     <option value="Kendim İçin">Kendim İçin 🙋‍♀️</option>
                                     <option value="Yılbaşı">Yılbaşı 🎄</option>
                                     <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
@@ -962,7 +954,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
 }
 
 function App() {
-  const [view, setView] = React.useState('welcome'); // welcome, market, showcase, faq
+  const [view, setView] = React.useState('welcome'); // welcome, market, showcase, faq, outlet
   const [prices, setPrices] = React.useState(null); 
   const [lastUpdate, setLastUpdate] = React.useState(null);
   const [user, setUser] = React.useState(null);
@@ -1058,6 +1050,10 @@ function App() {
 
       {view === 'showcase' && (
          <VitrinPage items={vitrinItems} onBack={() => setView('welcome')} />
+      )}
+
+      {view === 'outlet' && (
+         <OutletPage items={vitrinItems} onBack={() => setView('welcome')} />
       )}
 
       {view === 'faq' && (
