@@ -154,9 +154,8 @@ function LocationModal({ onClose }) {
   );
 }
 
-// --- OUTLET SAYFASI (YENİ) ---
+// --- OUTLET SAYFASI (GÜNCELLENDİ: GRAM EKLENDİ) ---
 function OutletPage({ onBack, items }) {
-  // Sadece 'Outlet' etiketli ürünleri filtrele (büyük/küçük harf duyarsız)
   const outletItems = React.useMemo(() => {
     return items.filter(i => i.etiket && i.etiket.toLowerCase() === 'outlet');
   }, [items]);
@@ -176,7 +175,6 @@ function OutletPage({ onBack, items }) {
        <div className="flex flex-col pb-24 px-4 md:px-6 pt-4">
           {outletItems.length > 0 ? outletItems.map((urun, index) => (
              <div key={urun.id} className="group bg-white mb-6 rounded-[1.5rem] shadow-sm overflow-hidden border border-red-100 fade-in active:scale-[0.99] transition-transform relative" style={{animationDelay: `${index * 0.1}s`}}>
-                {/* İndirim Rozeti */}
                 <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
                     FIRSAT
                 </div>
@@ -191,7 +189,11 @@ function OutletPage({ onBack, items }) {
                         {urun.aciklama && <p className="text-[10px] text-gray-500 mb-2 line-clamp-1">{urun.aciklama}</p>}
                         
                         <div className="flex items-center justify-between mt-2">
-                            <span className="text-lg font-bold text-red-600 font-mono tracking-tighter">{urun.fiyat}</span>
+                            <div className="flex flex-col">
+                                <span className="text-lg font-bold text-red-600 font-mono tracking-tighter">{urun.fiyat}</span>
+                                {/* GRAM BİLGİSİ EKLENDİ */}
+                                {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
+                            </div>
                             <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition">
                                 WHATSAPP
                             </button>
@@ -445,6 +447,8 @@ function VitrinPage({ onBack, items }) {
                     <h2 className="font-serif text-xl text-gray-900 mb-2 leading-tight">{urun.baslik}</h2>
                     <div className="flex flex-col gap-2 items-center">
                         <span className="text-lg font-medium text-gray-900 font-mono tracking-tighter">{urun.fiyat}</span>
+                        {/* GRAM BİLGİSİ (VİTRİN SAYFASINDA DA GÖZÜKSÜN) */}
+                        {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
                         <button onClick={() => window.open(`https://ig.me/m/bakirkoykuyumcusu`, '_blank')} className="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600 border-b border-pink-200 pb-1 hover:text-pink-800 hover:border-pink-800 transition-all p-2">Instagram'dan Ayırt 💬</button>
                     </div>
                 </div>
@@ -809,7 +813,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const [refreshing, setRefreshing] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
   const [form, setForm] = React.useState(draft);
-  const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
+  const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
 
   const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
@@ -829,7 +833,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const handleAddProduct = async () => {
       if(!newProduct.baslik || !newProduct.fiyat) return alert("Başlık ve fiyat zorunludur.");
       await supa.from('vitrin').insert(newProduct);
-      setNewProduct({ baslik: '', fiyat: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
+      setNewProduct({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
       refreshVitrin(); alert("Ürün eklendi!");
   };
 
@@ -891,6 +895,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                         <h4 className="text-xs font-bold text-gray-700 mb-3">➕ YENİ ÜRÜN EKLE</h4>
                         <input type="text" placeholder="Ürün Adı" value={newProduct.baslik} onChange={e=>setNewProduct({...newProduct, baslik: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
                         <input type="text" placeholder="Fiyat (Örn: 14.500 ₺)" value={newProduct.fiyat} onChange={e=>setNewProduct({...newProduct, fiyat: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
+                        <input type="text" placeholder="Gram (Örn: 3.50 gr)" value={newProduct.gram} onChange={e=>setNewProduct({...newProduct, gram: e.target.value})} className="w-full p-2 border rounded text-xs mb-2" />
                         
                         <div className="grid grid-cols-2 gap-2 mb-2">
                              <div>
@@ -909,7 +914,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 <label className="text-[9px] text-gray-400 font-bold uppercase block mb-1">Ne İçin?</label>
                                 <select value={newProduct.etiket} onChange={e=>setNewProduct({...newProduct, etiket: e.target.value})} className="w-full p-2 border rounded text-xs bg-white">
                                     <option value="Genel">Genel</option>
-                                    <option value="Outlet">🔥 Outlet</option> {/* OUTLET EKLENDİ */}
+                                    <option value="Outlet">🔥 Outlet</option>
                                     <option value="Kendim İçin">Kendim İçin 🙋‍♀️</option>
                                     <option value="Yılbaşı">Yılbaşı 🎄</option>
                                     <option value="Sevgililer Günü">Sevgililer Günü ❤️</option>
@@ -931,6 +936,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 <div className="flex-1">
                                     <div className="text-xs font-bold">{item.baslik}</div>
                                     <div className="text-[9px] text-gray-400">{item.kategori} • {item.etiket}</div>
+                                    {item.gram && <div className="text-[9px] text-gray-500 font-mono">⚖️ {item.gram}</div>}
                                 </div>
                                 <button type="button" onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
                             </div>
@@ -954,7 +960,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
 }
 
 function App() {
-  const [view, setView] = React.useState('welcome'); // welcome, market, showcase, faq, outlet
+  const [view, setView] = React.useState('welcome'); 
   const [prices, setPrices] = React.useState(null); 
   const [lastUpdate, setLastUpdate] = React.useState(null);
   const [user, setUser] = React.useState(null);
@@ -1038,7 +1044,6 @@ function App() {
 
   return (
     <>
-      {/* 1. GÖRÜNÜM YÖNETİMİ */}
       {view === 'welcome' && (
          <WelcomeScreen 
            onSelect={setView} 
