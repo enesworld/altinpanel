@@ -89,10 +89,9 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 const fp = (v) => v?.toLocaleString("tr-TR") ?? "-";
 const ft = (t) => t ? t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-";
 
-// Fiyat Formatlayıcı (46890 -> 46.890 ₺)
+// Fiyat Formatlayıcı
 const formatCurrency = (val) => {
     if (!val) return "";
-    // Önce sadece sayıları al
     const cleanVal = val.toString().replace(/[^0-9]/g, '');
     if (!cleanVal) return "";
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
@@ -163,7 +162,7 @@ function LocationModal({ onClose }) {
   );
 }
 
-// --- ÜRÜN DETAY MODALI (ZOOM) ---
+// --- ÜRÜN DETAY MODALI ---
 function ProductDetailModal({ product, onClose }) {
     if (!product) return null;
     return (
@@ -171,7 +170,7 @@ function ProductDetailModal({ product, onClose }) {
             <div className="bg-white rounded-3xl overflow-hidden max-w-md w-full m-4 shadow-2xl relative animate-soft-enter" onClick={e => e.stopPropagation()}>
                 <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur">✕</button>
                 <div className="relative aspect-square bg-gray-100">
-                    <img src={product.resim || "https://placehold.co/400x400?text=Resim+Yok"} className="w-full h-full object-cover" alt={product.baslik} />
+                    <img src={product.resim || "https://placehold.co/400x400?text=Resim+Yok"} className="w-full h-full object-cover" alt={product.baslik} loading="lazy" />
                     {product.etiket === 'Outlet' && (
                         <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                             🔥 FIRSAT
@@ -208,8 +207,7 @@ function ProductDetailModal({ product, onClose }) {
     );
 }
 
-// --- ANA SAYFA VE DİĞER MODÜLLER ---
-
+// --- ANA SAYFA ---
 function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
   const snowflakes = Array.from({ length: 30 }).map((_, i) => {
     const style = { 
@@ -278,16 +276,12 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
             <span className="text-3xl md:text-4xl drop-shadow-lg">📊</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Perakende<br/>Fiyatları</span>
           </button>
           
-          {/* Vitrin Butonu - DEVRE DIŞI / TADİLATTA MODU */}
-          <button className="relative flex-1 min-w-[140px] bg-gray-100 text-gray-400 p-4 md:p-6 rounded-3xl shadow-inner border border-gray-200 flex flex-col items-center justify-center gap-3 cursor-not-allowed overflow-hidden" style={{ minHeight: '140px' }}>
-            <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded shadow-lg transform -rotate-6 tracking-widest border-2 border-white/50">⚠️ TADİLATTA</span>
-            </div>
-            <span className="text-3xl md:text-4xl opacity-50 grayscale">✨</span>
-            <span className="font-bold text-sm md:text-lg leading-tight tracking-wide opacity-50">Vitrin &<br/>Fırsatlar</span>
+          {/* Vitrin Butonu - AKTİF */}
+          <button onClick={() => onSelect('showcase')} className="flex-1 min-w-[140px] bg-white text-yellow-900 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:bg-yellow-50 border-b-8 border-yellow-900/10" style={{ minHeight: '140px' }}>
+            <span className="text-3xl md:text-4xl">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Vitrin &<br/>Fırsatlar</span>
           </button>
 
-          {/* YENİ OUTLET BUTONU */}
+          {/* OUTLET BUTONU */}
           <button onClick={() => onSelect('outlet')} className="flex-1 min-w-[140px] bg-gradient-to-br from-red-600 to-rose-700 text-white border-2 border-red-400 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-red-500 hover:to-rose-600 ring-2 ring-red-200/50" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-md animate-pulse">🔥</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Outlet &<br/>Fırsatlar</span>
           </button>
@@ -316,10 +310,34 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
 
 function FAQPage({ onBack }) {
   const questions = [
-    { q: "Altın bozdurulurken neden değer kaybediyor?", a: "Altın takılarda bir 'işçilik' maliyeti bulunur. Bozdurma işleminde bu işçilik bedeli fiyattan düşülür..." },
-    { q: "Özel sipariş alıyor musunuz?", a: "Evet, hayalinizdeki tasarımı atölyemizde gerçeğe dönüştürüyoruz..." },
-    { q: "Kredi kartı geçerli mi, taksit var mı?", a: "Mağazamızda tüm banka kredi kartları geçerlidir. Altın ve mücevherde yasal taksit sınırları uygulanır." },
-    { q: "Ürünlerin garantisi var mı?", a: "Tüm ürünlerimiz Bakırköy Kuyumcusu garantisi altındadır." }
+    { 
+      q: "Altın bozdurulurken neden değer kaybediyor?", 
+      a: "Altın takılarda bir 'işçilik' maliyeti bulunur. Bozdurma işleminde bu işçilik bedeli fiyattan düşülür. Ayrıca yatırım araçlarında (çeyrek, gram vb.) güncel piyasa koşullarına göre uygulanan alış-satış makası nedeniyle fiyat farkı oluşmaktadır." 
+    },
+    { 
+      q: "Özel sipariş alıyor musunuz?", 
+      a: "Evet, hayalinizdeki tasarımı atölyemizde gerçeğe dönüştürüyoruz. Ancak modelin detaylarını netleştirmek, doğru ölçü almak ve çizimi sizinle kesinleştirmek için mağazamızı ziyaret etmeniz gerekmektedir." 
+    },
+    { 
+      q: "Kredi kartı geçerli mi, taksit var mı?", 
+      a: "Mağazamızda tüm banka kredi kartları geçerlidir. Taksit sayısı ise güncel BDDK yönetmeliği gereği altın ve mücevher alışverişlerinde şu an için 3 taksit ile sınırlandırılmıştır." 
+    },
+    { 
+      q: "Ürünlerin garantisi var mı?", 
+      a: "Tüm ürünlerimiz Bakırköy Kuyumcusu garantisi altındadır. Kullanıcı kaynaklı hasarlarda (kopma, ezilme vb.) eğer tamir mümkünse atölyemizde ücretsiz veya maliyetine destek oluyoruz." 
+    },
+    { 
+      q: "Eski altınlarımı yenisiyle değiştirebilir miyim?", 
+      a: "Elbette! Eski altınlarınızı güncel kur üzerinden, şeffaf bir şekilde hesaplıyoruz. Yeni alacağınız ürünlerde ise 'değişim indirimi' uygulayarak size en uygun fiyatı sunuyoruz." 
+    },
+    { 
+      q: "Neden her kuyumcuda fiyatlar farklı?", 
+      a: "Altın fiyatı standart olsa da 'işçilik' sanattır. Bizim ürünlerimiz yüksek kalite standartlarında, dayanıklı ve özel işçilikle üretilir. İşçilik kalitesi, tasarım farkı ve kullanılan kilit sistemleri bile fiyatı etkiler." 
+    },
+    { 
+      q: "İnternet ile mağaza arasında neden fiyat farkı var?", 
+      a: "İnternetteki ürünler genellikle fotoğrafta göründüğünden daha hafif veya ince üretilmiş olabilir. Mağazamızda ise ürünü elinize alır, ağırlığını hisseder ve kalitesinden %100 emin olursunuz." 
+    }
   ];
   const [openIndex, setOpenIndex] = React.useState(null);
 
@@ -352,12 +370,15 @@ function FAQPage({ onBack }) {
   );
 }
 
-function VitrinPage({ onBack, items }) {
+// PERFORMANS VE PAGINATION İÇİN OPTİMİZE EDİLMİŞ SAYFALAR
+const VitrinPage = React.memo(function VitrinPage({ onBack, items }) {
   const [step, setStep] = React.useState(0);
   const [filterType, setFilterType] = React.useState(null); 
   const [selectedFilter, setSelectedFilter] = React.useState(null);
   const [priceRange, setPriceRange] = React.useState('all');
   const [selectedProduct, setSelectedProduct] = React.useState(null);
+  const [page, setPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   const filteredItems = React.useMemo(() => {
     let result = items;
@@ -377,6 +398,14 @@ function VitrinPage({ onBack, items }) {
     }
     return result;
   }, [items, selectedFilter, filterType, priceRange]);
+
+  // Filtre değişince sayfayı başa sar
+  React.useEffect(() => {
+    setPage(1);
+  }, [selectedFilter, priceRange]);
+
+  const paginatedItems = filteredItems.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
 
   if (step === 0) {
     return (
@@ -399,7 +428,7 @@ function VitrinPage({ onBack, items }) {
   if (step === 1) {
     const options = filterType === 'tag' 
       ? ["Kendim İçin", "Yılbaşı", "Sevgililer Günü", "Anneler Günü", "Düğün/Nişan", "Doğum Günü", "İçimden Geldi", "Diğer"]
-      : ["Kolye", "Bilezik", "Bileklik", "Yüzük", "Küpe", "Set", "Saat", "Diğer"]; // Bileklik Eklendi
+      : ["Kolye", "Bilezik", "Bileklik", "Yüzük", "Küpe", "Set", "Saat", "Diğer"];
     const title = filterType === 'tag' ? "Hangi Özel Gün?" : "Hangi Kategori?";
     return (
       <div key="step1" className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in relative overflow-hidden">
@@ -432,11 +461,11 @@ function VitrinPage({ onBack, items }) {
           </div>
        </div>
        <div className="flex flex-col pb-24 px-4 md:px-6 pt-2">
-          {filteredItems.length > 0 ? filteredItems.map((urun, index) => (
-             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in active:scale-[0.99] transition-transform cursor-pointer" style={{animationDelay: `${index * 0.1}s`}}>
+          {paginatedItems.map((urun, index) => (
+             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-8 rounded-[2rem] shadow-[0_5px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-50 fade-in active:scale-[0.99] transition-transform cursor-pointer" style={{animationDelay: `${index * 0.05}s`}}>
                 <div className="pt-8 pb-2 flex justify-center">
                     <div className="w-48 h-48 relative rounded-full bg-[#faf9f6] overflow-hidden shadow-inner border border-white ring-1 ring-gray-100">
-                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover hover:scale-110 transition duration-700 ease-in-out" alt={urun.baslik} />
+                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover hover:scale-110 transition duration-700 ease-in-out" alt={urun.baslik} loading="lazy" />
                     </div>
                 </div>
                 <div className="p-6 text-center">
@@ -444,12 +473,34 @@ function VitrinPage({ onBack, items }) {
                     <h2 className="font-serif text-xl text-gray-900 mb-2 leading-tight">{urun.baslik}</h2>
                     <div className="flex flex-col gap-2 items-center">
                         <span className="text-lg font-medium text-gray-900 font-mono tracking-tighter">{formatCurrency(urun.fiyat)}</span>
-                        {/* GRAM BİLGİSİ */}
                         {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
                     </div>
                 </div>
              </div>
-          )) : (
+          ))}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 py-6">
+                <button 
+                    disabled={page === 1} 
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="bg-white border border-gray-200 px-4 py-2 rounded-full text-sm font-bold disabled:opacity-30 active:scale-95"
+                >
+                    ⬅️ Önceki
+                </button>
+                <span className="text-xs font-bold text-gray-400">{page} / {totalPages}</span>
+                <button 
+                    disabled={page === totalPages} 
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    className="bg-white border border-gray-200 px-4 py-2 rounded-full text-sm font-bold disabled:opacity-30 active:scale-95"
+                >
+                    Sonraki ➡️
+                </button>
+            </div>
+          )}
+
+          {filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 text-gray-300">
                 <span className="text-4xl mb-4 opacity-20">🏷️</span>
                 <p className="font-serif italic text-sm">Bu kriterlere uygun ürün yok.</p>
@@ -461,14 +512,17 @@ function VitrinPage({ onBack, items }) {
     <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
     </>
   );
-}
+});
 
-// --- OUTLET SAYFASI (GÜNCELLENDİ: GRAM EKLENDİ VE ZOOM) ---
-function OutletPage({ onBack, items }) {
+// --- OUTLET SAYFASI (GÜNCELLENDİ: SAYFALAMA VE MEMO - HAFİFLETİLDİ) ---
+const OutletPage = React.memo(function OutletPage({ onBack, items }) {
   const [selectedProduct, setSelectedProduct] = React.useState(null);
-  const outletItems = React.useMemo(() => {
-    return items.filter(i => i.etiket && i.etiket.toLowerCase() === 'outlet');
-  }, [items]);
+  const [page, setPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
+  // items zaten filtrelenmiş olarak geliyor (App component'ten)
+  const paginatedItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-[#fdfcf8] flex flex-col animate-soft-enter relative">
@@ -483,15 +537,15 @@ function OutletPage({ onBack, items }) {
 
        {/* Liste */}
        <div className="flex flex-col pb-24 px-4 md:px-6 pt-4">
-          {outletItems.length > 0 ? outletItems.map((urun, index) => (
-             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-6 rounded-[1.5rem] shadow-sm overflow-hidden border border-red-100 fade-in active:scale-[0.99] transition-transform relative cursor-pointer" style={{animationDelay: `${index * 0.1}s`}}>
+          {paginatedItems.map((urun, index) => (
+             <div key={urun.id} onClick={() => setSelectedProduct(urun)} className="group bg-white mb-6 rounded-2xl shadow-sm overflow-hidden border border-red-100 active:scale-[0.99] transition-transform cursor-pointer relative">
                 <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
                     FIRSAT
                 </div>
 
                 <div className="flex p-4 gap-4 items-center">
                     <div className="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover" alt={urun.baslik} />
+                       <img src={urun.resim || "https://placehold.co/200x200?text=..."} className="w-full h-full object-cover" alt={urun.baslik} loading="lazy" />
                     </div>
                     <div className="flex-1">
                         <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{urun.kategori}</div>
@@ -501,7 +555,6 @@ function OutletPage({ onBack, items }) {
                         <div className="flex items-center justify-between mt-2">
                             <div className="flex flex-col">
                                 <span className="text-lg font-bold text-red-600 font-mono tracking-tighter">{formatCurrency(urun.fiyat)}</span>
-                                {/* GRAM BİLGİSİ EKLENDİ */}
                                 {urun.gram && <span className="text-[10px] text-gray-500 font-mono">⚖️ {urun.gram}</span>}
                             </div>
                             <button className="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-100 transition">
@@ -511,7 +564,30 @@ function OutletPage({ onBack, items }) {
                     </div>
                 </div>
              </div>
-          )) : (
+          ))}
+          
+           {/* Pagination Controls */}
+           {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 py-6">
+                <button 
+                    disabled={page === 1} 
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="bg-white border border-gray-200 px-4 py-2 rounded-full text-sm font-bold disabled:opacity-30 active:scale-95"
+                >
+                    ⬅️ Önceki
+                </button>
+                <span className="text-xs font-bold text-gray-400">{page} / {totalPages}</span>
+                <button 
+                    disabled={page === totalPages} 
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    className="bg-white border border-gray-200 px-4 py-2 rounded-full text-sm font-bold disabled:opacity-30 active:scale-95"
+                >
+                    Sonraki ➡️
+                </button>
+            </div>
+          )}
+
+          {items.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 text-gray-300">
                 <span className="text-4xl mb-4 opacity-30">🕸️</span>
                 <p className="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
@@ -521,6 +597,89 @@ function OutletPage({ onBack, items }) {
        </div>
        <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
     </div>
+  );
+});
+
+// --- MARKET DASHBOARD BİLEŞENİ ---
+function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen, pendingRemindersCount, setAdminOpen, setLoginOpen, P, ft, lastUpdate, downloadImage, s025, s05_22, s05_24, stability, supa, setUser, prevP }) {
+  return (
+         <div className="min-h-screen pb-safe flex flex-col items-center bg-gray-50 fade-in">
+            {/* Header / Nav */}
+            <div className="fixed top-0 left-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
+              <div className="pointer-events-auto flex gap-2">
+                <button onClick={() => setView('welcome')} className="bg-white/80 backdrop-blur text-gray-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">🏠</button>
+                <button onClick={() => setLocationOpen(true)} className="bg-white/80 backdrop-blur text-blue-600 w-10 h-10 rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📍</button>
+                {user && <button onClick={async()=>{await supa.auth.signOut(); setUser(null);}} className="bg-white/80 backdrop-blur text-red-600 px-3 py-1 rounded-full shadow text-xs font-bold h-10 flex items-center active:scale-95">Çıkış</button>}
+              </div>
+              <div className="flex gap-3 pointer-events-auto">
+                <button onClick={() => window.open('ham.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📜</button>
+                <button onClick={() => window.open('profit.html', '_blank')} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📟</button>
+                <button onClick={downloadImage} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">📸</button>
+                
+                {/* CRM BUTTON WITH NOTIFICATION BADGE */}
+                {user && (
+                    <button onClick={()=>setCustomerModalOpen(true)} className="relative w-10 h-10 bg-yellow-100/90 text-yellow-800 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95 border border-yellow-500">
+                        👥
+                        {pendingRemindersCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse border border-white">
+                                {pendingRemindersCount}
+                            </span>
+                        )}
+                    </button>
+                )}
+                
+                <button onClick={()=>(user?setAdminOpen(true):setLoginOpen(true))} className="w-10 h-10 bg-white/80 backdrop-blur rounded-full shadow flex items-center justify-center text-xl hover:scale-110 transition active:scale-95">⚙️</button>
+              </div>
+            </div>
+
+            {/* Price List Card */}
+            <div id="capture-area" className="mt-20 relative w-full max-w-xl p-8 bg-gradient-to-br from-[#fff7ed] via-[#fff] to-[#fef3c7] rounded-[2rem] shadow-2xl border border-orange-100 mb-20 mx-4">
+              <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-200 via-yellow-500 to-yellow-200 opacity-60"></div>
+              <div className="flex justify-center -mt-16 mb-4 relative z-10">
+                 <a href="https://www.instagram.com/bakirkoykuyumcusu/" target="_blank">
+                   <img src="bk.jpeg" className="h-28 w-28 rounded-full border-[6px] border-white shadow-xl object-cover bg-white" alt="logo" crossOrigin="anonymous" />
+                 </a>
+              </div>
+              <div className="text-center mb-8">
+                <h1 className="text-3xl md:text-4xl font-serif font-bold text-yellow-800 tracking-tight drop-shadow-sm">Bakırköy Kuyumcusu</h1>
+                <div className="text-xs font-bold tracking-[0.3em] text-yellow-600 mt-2 uppercase opacity-80">{new Date().toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'})}</div>
+              </div>
+              
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 shadow-inner border border-white/60">
+                <Row title="Çeyrek Altın" buy={P.ceyrek_alis || 0} sell={P.ceyrek_satis || 0} prevBuy={prevP?.ceyrek_alis} prevSell={prevP?.ceyrek_satis} />
+                <Row title="Ata Altın" buy={P.ata_alis || 0} sell={P.ata_satis || 0} prevBuy={prevP?.ata_alis} prevSell={prevP?.ata_satis} />
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <Box title="22 Ayar Gram" value={P.gram_22 || 0} prev={prevP?.gram_22} />
+                  <Box title="24 Ayar Gram" value={P.gram_24 || 0} prev={prevP?.gram_24} />
+                </div>
+                <div className="grid grid-cols-3 gap-3 mt-4">
+                  <SmallBox title="0.25g (24K)" value={s025} />
+                  <SmallBox title="0.50g (22K)" value={s05_22} />
+                  <SmallBox title="0.50g (24K)" value={s05_24} />
+                </div>
+                <div className="mt-6 pt-4 border-t border-dashed border-gray-200 flex justify-between items-center text-[10px] text-gray-400 font-mono">
+                  <span>Saat: {ft(lastUpdate)}</span>
+                  <span className="tracking-widest font-bold text-gray-300">BAKIRKOYKUYUMCUSU</span>
+                </div>
+              </div>
+              <div className="mt-8 text-center text-yellow-800/40 font-serif italic text-sm">"Güvenin ve Kalitenin Adresi"</div>
+            </div>
+            
+            {stability > 30 && <div className="fixed bottom-12 left-0 w-full text-center pointer-events-none"><div className="inline-block bg-black/50 backdrop-blur text-white px-3 py-1 rounded-full text-xs animate-pulse">● Fiyatlar güncel</div></div>}
+
+            {P.duyuru && (
+              <div className="fixed bottom-0 left-0 w-full bg-gray-900 text-yellow-500 py-2 z-40 overflow-hidden border-t border-yellow-600 shadow-2xl pb-safe">
+                  <div className="marquee-container">
+                      <div className="marquee-content">
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase px-8">{P.duyuru} •</span>
+                      </div>
+                  </div>
+              </div>
+            )}
+         </div>
   );
 }
 
@@ -1101,6 +1260,7 @@ function App() {
   const [view, setView] = React.useState('welcome'); 
   const [prices, setPrices] = React.useState(null); 
   const [lastUpdate, setLastUpdate] = React.useState(null);
+  const [prevPrices, setPrevPrices] = React.useState(null); // FLASHLAMA İÇİN ÖNCEKİ FİYAT
   const [user, setUser] = React.useState(null);
   const [vitrinItems, setVitrinItems] = React.useState([]);
   const [loginOpen, setLoginOpen] = React.useState(false);
@@ -1116,10 +1276,21 @@ function App() {
 
   async function fetchData() {
       const { data: pData } = await supa.from("ham_fiyatlar").select("*").eq("id", 1).single();
-      if (pData) { setPrices(pData); if(pData.versiyon) setCurrentVersion(pData.versiyon); }
+      if (pData) { 
+        setPrices(current => {
+            if(current) setPrevPrices(current); // Önceki fiyatı kaydet
+            return pData; 
+        });
+        if(pData.versiyon) setCurrentVersion(pData.versiyon); 
+      }
+      setLastUpdate(new Date());
+      setStability(0); // Her güncellemede stabiliteyi sıfırla
+  }
+
+  // Sayfa yüklendiğinde bir kez çalışacak ürün yükleme
+  async function loadInitialProducts() {
       const { data: vData } = await supa.from("vitrin").select("*").order('id', { ascending: false });
       if(vData) setVitrinItems(vData);
-      setLastUpdate(new Date());
   }
 
   // Müşterileri ve Hatırlatmaları Çek
@@ -1138,6 +1309,7 @@ function App() {
 
   React.useEffect(() => { 
       fetchData(); 
+      loadInitialProducts(); 
       const interval = setInterval(fetchData, 3000);
       const stab = setInterval(() => setStability(s => s + 1), 1000);
       return () => { clearInterval(interval); clearInterval(stab); };
@@ -1179,6 +1351,7 @@ function App() {
   const s025 = Math.round(g24 * 0.33); 
   const s05_22 = Math.round((P.gram_22 || 0) * 0.55); 
   const s05_24 = Math.round(g24 * 0.55);
+  const prevP = prevPrices || {}; // Önceki fiyatları dashboard'a gönder
 
   return (
     <>
@@ -1210,17 +1383,17 @@ function App() {
             setAdminOpen={setAdminOpen} setLoginOpen={setLoginOpen} P={P} ft={ft} 
             lastUpdate={lastUpdate} downloadImage={downloadImage} s025={s025} 
             s05_22={s05_22} s05_24={s05_24} stability={stability} supa={supa} setUser={setUser}
+            prevP={prevP}
          />
       )}
 
-      {/* 2. GLOBAL MODALLAR (HER YERDEN ERİŞİLEBİLİR) */}
       {loginOpen && <LoginModal onClose={()=>setLoginOpen(false)} onLoginSuccess={(u)=>{setUser(u); setLoginOpen(false); setAdminOpen(true);}} />}
       
       {adminOpen && prices && (
           <AdminModal 
             open={adminOpen} 
             draft={prices} setDraft={setPrices} 
-            vitrinItems={vitrinItems} refreshVitrin={fetchData}
+            vitrinItems={vitrinItems} refreshVitrin={loadInitialProducts}
             onClose={()=>setAdminOpen(false)} 
             onSave={handleSave} 
           />
