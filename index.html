@@ -1124,7 +1124,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
   };
 
-  // YENİ: Toplu Fiyat Güncelleme Fonksiyonu
+  // YENİ: Toplu Fiyat Güncelleme Fonksiyonu (Düzeltildi: Kesin Tamsayı + Küsürat Yuvarlama)
   const handleBulkUpdate = async () => {
       if (!bulkRate || bulkRate == 0) return alert("Lütfen bir oran giriniz (Örn: 10).");
       
@@ -1143,11 +1143,17 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
 
           // 2. Yeni fiyatları hesapla (ÖZEL YUVARLAMA KURALI İLE)
           const updates = allItems.map(item => {
-              // Veritabanındaki fiyatı sayıya çevir
-              const currentPrice = parseFloat(item.fiyat.toString().replace(/[^0-9.-]+/g,""));
+              // Fiyatı temizle ve sayıya çevir (Güvenli parse)
+              let dbPrice = item.fiyat;
+              if (typeof dbPrice === 'string') {
+                  // Sadece rakamları ve noktayı al (nokta ondalık ayraç olabilir)
+                  // Eğer nokta binlik ayracı ise replace ile kaldırmalıyız.
+                  // Genelde '1.500' -> 1500 olarak saklanıyorsa replace(/[^0-9]/g, "") daha güvenli.
+                  dbPrice = parseFloat(dbPrice.toString().replace(/[^0-9.]/g, "")); 
+              }
               
               // Ham yeni fiyatı hesapla
-              let rawPrice = currentPrice * (1 + rate / 100);
+              let rawPrice = dbPrice * (1 + rate / 100);
               let newPrice = Math.round(rawPrice); // Önce en yakın tamsayıya yuvarla
 
               // İstenen Özel Kural:
