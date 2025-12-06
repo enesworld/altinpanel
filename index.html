@@ -937,7 +937,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
 
   const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
-  // --- RESIZE YARDIMCI FONKSİYON ---
+  // --- RESIZE YARDIMCI FONKSİYON (GÜNCELLENMİŞ: JPEG + Agresif Sıkıştırma) ---
   const resizeImage = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -949,13 +949,23 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
         
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1200; 
+          const MAX_WIDTH = 900;   // Daha küçük tut
+          const MAX_HEIGHT = 900;  // Dikey fotolarda da sınır
+
           let width = img.width;
           let height = img.height;
 
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
+          // Oranı bozmadan küçült
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
           }
 
           canvas.width = width;
@@ -964,13 +974,16 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
+          // Blob'a çevir (JPEG formatında, %60 kalite)
           canvas.toBlob((blob) => {
             if (blob) {
+                // Boyutu konsolda görmek için:
+                console.log('Sıkıştırılmış boyut (MB):', (blob.size / (1024*1024)).toFixed(2));
                 resolve(blob);
             } else {
                 reject(new Error('Resim işlenirken hata oluştu.'));
             }
-          }, 'image/webp', 0.7);
+          }, 'image/jpeg', 0.6);
         };
         img.onerror = (err) => reject(new Error('Resim yüklenemedi.'));
       };
@@ -978,7 +991,7 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     });
   };
 
-  // --- OPTİMİZE EDİLMİŞ UPLOAD ---
+  // --- OPTİMİZE EDİLMİŞ UPLOAD (GÜNCELLENMİŞ: JPEG) ---
   const handleFileUpload = async (event) => {
     try {
       const file = event.target.files[0];
@@ -987,19 +1000,28 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       setUploading(true);
 
       const compressedBlob = await resizeImage(file);
+      
+      // Önizleme (sıkıştırılmış hal üzerinden)
       const localPreviewUrl = URL.createObjectURL(compressedBlob);
       setPreviewUrl(localPreviewUrl);
 
-      const fileName = `vitrin_${Date.now()}.webp`;
+      const fileName = `vitrin_${Date.now()}.jpg`;
       
-      const { data, error } = await supa.storage.from('resimler').upload(fileName, compressedBlob, {
-          contentType: 'image/webp',
+      const { data, error } = await supa.storage
+        .from('resimler')
+        .upload(fileName, compressedBlob, {
+          contentType: 'image/jpeg',
           upsert: false
-      }); 
+        }); 
       
       if (error) throw error;
       
-      const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
+      const { data: publicData } = supa.storage
+        .from('resimler')
+        .getPublicUrl(fileName);
+        
+      const publicUrl = publicData.publicUrl;
+      
       setNewProduct({ ...newProduct, resim: publicUrl });
       
     } catch (error) { 
