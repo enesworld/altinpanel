@@ -9,31 +9,53 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #fdfcf8; -webkit-tap-highlight-color: transparent; }
-        /* Ekran dışı render optimizasyonu */
         .product-card { content-visibility: auto; contain-intrinsic-size: 100px 160px; }
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Modal Stilleri */
         .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-backdrop.active { opacity: 1; pointer-events: auto; }
         .modal { transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
         .modal-backdrop.active .modal { transform: scale(1); }
+
+        /* Yatay Scroll Gizleme */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="text-gray-800 antialiased font-sans select-none fade-in">
+<body class="text-gray-800 antialiased font-sans select-none fade-in bg-[#fdfcf8]">
 
-    <!-- Üst Bar -->
-    <div class="p-4 md:p-6 sticky top-0 z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 flex items-center justify-between">
-        <a href="index.html" class="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</a>
-        <h1 class="text-sm font-bold text-red-600 tracking-[0.2em] uppercase flex items-center gap-2">
-            <span>🔥</span> OUTLET FIRSATLARI
-        </h1>
-        <div class="w-8"></div>
+    <!-- Üst Bar (Sticky) -->
+    <div class="fixed top-0 left-0 w-full z-50 bg-[#fdfcf8]/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div class="p-4 flex items-center justify-between">
+            <a href="index.html" class="text-xl text-gray-400 hover:text-black transition transform active:scale-90 p-2">⬅️</a>
+            <h1 class="text-sm font-bold text-red-600 tracking-[0.2em] uppercase flex items-center gap-2">
+                <span>🔥</span> OUTLET FIRSATLARI
+            </h1>
+            <div class="w-8"></div>
+        </div>
+
+        <!-- Filtre ve Sıralama Alanı -->
+        <div class="px-4 pb-3 space-y-3">
+            <!-- Kategoriler (Yatay Scroll) -->
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1" id="category-filters">
+                <!-- JS ile doldurulacak -->
+            </div>
+            
+            <!-- Sıralama Dropdown -->
+            <select id="sort-select" onchange="setSort(this.value)" class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-lg p-2.5 focus:ring-red-500 focus:border-red-500 outline-none">
+                <option value="newest">✨ En Yeniler</option>
+                <option value="price_asc">💰 Fiyat: Düşükten Yükseğe</option>
+                <option value="price_desc">💎 Fiyat: Yüksekten Düşüğe</option>
+            </select>
+        </div>
     </div>
 
+    <!-- Boşluk (Sticky Header İçin) -->
+    <div class="h-40"></div>
+
     <!-- Ürün Listesi Konteyneri -->
-    <div id="product-list" class="flex flex-col px-4 md:px-6 pt-4 min-h-[50vh]">
+    <div id="product-list" class="flex flex-col px-4 md:px-6 pt-2 min-h-[50vh]">
         <!-- JS ile doldurulacak -->
     </div>
 
@@ -46,7 +68,7 @@
         <div id="end-message" class="hidden text-xs text-gray-400 uppercase tracking-widest mt-4">Tüm ürünler görüntülendi</div>
     </div>
 
-    <!-- Detay Modal (Başlangıçta Gizli) -->
+    <!-- Detay Modal -->
     <div id="detail-modal" class="modal-backdrop" onclick="closeModal()">
         <div class="modal bg-white rounded-3xl overflow-hidden max-w-md w-full m-4 shadow-2xl relative" onclick="event.stopPropagation()">
             <button onclick="closeModal()" class="absolute top-4 right-4 z-20 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur">✕</button>
@@ -79,8 +101,52 @@
     const ITEMS_PER_PAGE = 10;
     let isLoading = false;
     let hasMore = true;
+    
+    // Filtre Stateleri
+    let currentCategory = 'Tümü';
+    let currentSort = 'newest';
 
-    // --- 2. YARDIMCI FONKSİYONLAR ---
+    const CATEGORIES = ['Tümü', 'Kolye', 'Bilezik', 'Bileklik', 'Yüzük', 'Küpe', 'Set', 'Saat', 'Diğer'];
+
+    // --- 2. BAŞLANGIÇ AYARLARI ---
+    function initFilters() {
+        const container = document.getElementById('category-filters');
+        let html = '';
+        CATEGORIES.forEach(cat => {
+            const isActive = cat === currentCategory;
+            const cls = isActive 
+                ? "bg-red-600 text-white border-red-600 shadow-md" 
+                : "bg-white text-gray-600 border-gray-200 hover:border-red-300";
+            
+            html += `<button onclick="setCategory('${cat}')" class="${cls} px-4 py-2 rounded-full text-xs font-bold border transition whitespace-nowrap active:scale-95">${cat}</button>`;
+        });
+        container.innerHTML = html;
+    }
+
+    // --- 3. FİLTRE & SIRALAMA MANTIĞI ---
+    function setCategory(cat) {
+        if (currentCategory === cat) return;
+        currentCategory = cat;
+        resetAndLoad();
+        initFilters(); // Buton stillerini güncelle
+    }
+
+    function setSort(sortVal) {
+        if (currentSort === sortVal) return;
+        currentSort = sortVal;
+        resetAndLoad();
+    }
+
+    function resetAndLoad() {
+        currentPage = 0;
+        hasMore = true;
+        document.getElementById('product-list').innerHTML = '';
+        document.getElementById('end-message').classList.add('hidden');
+        document.getElementById('load-more-btn').classList.add('hidden');
+        loadOutletItems();
+    }
+
+    // --- 4. YARDIMCI FONKSİYONLAR ---
     const formatCurrency = (val) => {
         if (!val) return "";
         const cleanVal = val.toString().replace(/[^0-9]/g, '');
@@ -88,38 +154,46 @@
         return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
     };
 
-    // Görsel URL Oluşturucu (Thumbnail vs Full)
     const getOptimizedImageUrl = (url, width = 300, quality = 60) => {
         if (!url || url.includes("placehold.co") || url.startsWith("blob:")) return url || "https://placehold.co/300x300?text=Resim+Yok";
-        // Supabase Transform
         return `${url}?width=${width}&resize=cover&quality=${quality}&format=webp`;
     };
 
-    // --- 3. VERİ ÇEKME & RENDER ---
+    // --- 5. VERİ ÇEKME & RENDER ---
     async function loadOutletItems() {
         if (isLoading || !hasMore) return;
         
         isLoading = true;
-        
-        // UI Güncelle
-        const spinner = document.getElementById('loading-spinner');
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        spinner.classList.remove('hidden');
-        loadMoreBtn.classList.add('hidden');
+        document.getElementById('loading-spinner').classList.remove('hidden');
+        document.getElementById('load-more-btn').classList.add('hidden');
 
-        // Sayfalama Hesabı
         const from = currentPage * ITEMS_PER_PAGE;
         const to = from + ITEMS_PER_PAGE - 1;
 
-        // OPTİMİZE SORGU: Range + Select
-        const { data, error } = await supa
+        // --- SORGUSUNU OLUŞTUR ---
+        let query = supa
             .from("vitrin")
-            .select('id, baslik, fiyat, gram, resim, kategori, aciklama') // Sadece gerekli kolonlar
-            .eq('etiket', 'Outlet')
-            .order('id', { ascending: false })
-            .range(from, to);
+            .select('id, baslik, fiyat, gram, resim, kategori, aciklama')
+            .eq('etiket', 'Outlet');
 
-        spinner.classList.add('hidden');
+        // Kategori Filtresi
+        if (currentCategory !== 'Tümü') {
+            query = query.eq('kategori', currentCategory);
+        }
+
+        // Sıralama
+        if (currentSort === 'newest') {
+            query = query.order('id', { ascending: false });
+        } else if (currentSort === 'price_asc') {
+            query = query.order('fiyat', { ascending: true });
+        } else if (currentSort === 'price_desc') {
+            query = query.order('fiyat', { ascending: false });
+        }
+
+        // Sayfalama
+        const { data, error } = await query.range(from, to);
+
+        document.getElementById('loading-spinner').classList.add('hidden');
         isLoading = false;
 
         if (error) {
@@ -135,8 +209,8 @@
                 listEl.innerHTML = `
                     <div class="flex flex-col items-center justify-center py-20 text-gray-300">
                         <span class="text-4xl mb-4 opacity-30">🕸️</span>
-                        <p class="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
-                        <a href="index.html" class="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</a>
+                        <p class="font-serif italic text-sm text-center">Bu kriterde ürün bulunamadı.</p>
+                        <button onclick="setCategory('Tümü')" class="mt-4 text-red-500 text-xs font-bold underline">Tümünü Göster</button>
                     </div>`;
             } else {
                 document.getElementById('end-message').classList.remove('hidden');
@@ -144,16 +218,13 @@
             return;
         }
 
-        // DocumentFragment ile Tek Seferde DOM Manipülasyonu (Donmayı önler)
         const fragment = document.createDocumentFragment();
 
         data.forEach(item => {
             const card = document.createElement('div');
-            // Tailwind classları
             card.className = "product-card group bg-white mb-6 rounded-2xl shadow-sm overflow-hidden border border-red-100 active:scale-[0.99] transition-transform cursor-pointer relative";
             card.onclick = () => openModal(item);
             
-            // HTML İçeriği (Thumbnail: 300px)
             card.innerHTML = `
                 <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">FIRSAT</div>
                 <div class="flex p-4 gap-4 items-center">
@@ -179,22 +250,18 @@
         });
 
         listEl.appendChild(fragment);
-        
-        // Pagination Yönetimi
         currentPage++;
         
-        // Eğer gelen veri sayısı, sayfa başına istenen sayıdan azsa, başka veri yoktur.
         if (data.length < ITEMS_PER_PAGE) {
             hasMore = false;
             document.getElementById('end-message').classList.remove('hidden');
         } else {
-            loadMoreBtn.classList.remove('hidden');
+            document.getElementById('load-more-btn').classList.remove('hidden');
         }
     }
 
-    // --- 4. MODAL İŞLEMLERİ ---
+    // --- 6. MODAL İŞLEMLERİ ---
     function openModal(item) {
-        // Modal için yüksek kalite (900px)
         document.getElementById('modal-img').src = getOptimizedImageUrl(item.resim, 900, 75);
         document.getElementById('modal-title').textContent = item.baslik;
         document.getElementById('modal-category').textContent = item.kategori || '';
@@ -212,7 +279,8 @@
         document.getElementById('detail-modal').classList.remove('active');
     }
 
-    // Başlangıç Yüklemesi
+    // Başlat
+    initFilters();
     window.onload = loadOutletItems;
 
 </script>
