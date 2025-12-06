@@ -930,7 +930,10 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const [form, setForm] = React.useState(draft);
   const [newProduct, setNewProduct] = React.useState({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
   const [previewUrl, setPreviewUrl] = React.useState(null); 
-  const [editingId, setEditingId] = React.useState(null); 
+  const [editingId, setEditingId] = React.useState(null);
+  
+  // YENİ: Eski resim URL'sini tutmak için state
+  const [oldImageUrl, setOldImageUrl] = React.useState(null);
 
   const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
@@ -1008,16 +1011,25 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     }
   };
 
+  // YENİ: URL'den dosya yolunu çıkaran yardımcı fonksiyon
+  const getPathFromUrl = (url) => {
+    if (!url) return null;
+    const parts = url.split('/storage/v1/object/public/resimler/');
+    return parts[1] || null;
+  };
+
   const handleEditClick = (item) => {
       setNewProduct({ ...item });
       setPreviewUrl(item.resim);
       setEditingId(item.id);
+      setOldImageUrl(item.resim); // YENİ: Eski URL'yi kaydet
   };
 
   const handleCancelEdit = () => {
       setNewProduct({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
       setPreviewUrl(null);
       setEditingId(null);
+      setOldImageUrl(null); // YENİ: State'i temizle
   }
 
   const handleSaveProduct = async () => {
@@ -1027,15 +1039,27 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       const { id, created_at, ...rest } = newProduct;
       const productToSave = { ...rest, fiyat: cleanPrice };
 
+      let error;
+
       if (editingId) {
-          const { error } = await supa.from('vitrin').update(productToSave).eq('id', editingId);
-          if (error) return alert("Hata: " + error.message);
-          alert("Ürün güncellendi!");
+          const res = await supa.from('vitrin').update(productToSave).eq('id', editingId);
+          error = res.error;
       } else {
-          const { error } = await supa.from('vitrin').insert(productToSave);
-           if (error) return alert("Hata: " + error.message);
-          alert("Ürün eklendi!");
+          const res = await supa.from('vitrin').insert(productToSave);
+          error = res.error;
       }
+
+      if (error) return alert("Hata: " + error.message);
+
+      // YENİ: Eski resmi silme mantığı
+      if (editingId && oldImageUrl && oldImageUrl !== newProduct.resim) {
+        const path = getPathFromUrl(oldImageUrl);
+        if (path) {
+          await supa.storage.from('resimler').remove([path]);
+        }
+      }
+      
+      alert(editingId ? "Ürün güncellendi!" : "Ürün eklendi!");
       
       handleCancelEdit(); 
       refreshVitrin(); 
