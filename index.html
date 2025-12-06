@@ -934,6 +934,8 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   
   // YENİ: Eski resim URL'sini tutmak için state
   const [oldImageUrl, setOldImageUrl] = React.useState(null);
+  // YENİ: Toplu güncelleme oranı için state
+  const [bulkRate, setBulkRate] = React.useState("");
 
   const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
@@ -1122,6 +1124,52 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
   };
 
+  // YENİ: Toplu Fiyat Güncelleme Fonksiyonu
+  const handleBulkUpdate = async () => {
+      if (!bulkRate || bulkRate == 0) return alert("Lütfen bir oran giriniz (Örn: 10).");
+      
+      const rate = Number(bulkRate);
+      const isIncrease = rate > 0;
+      const confirmMsg = `DİKKAT! Tüm vitrin ürünlerinin fiyatını %${Math.abs(rate)} oranında ${isIncrease ? 'ARTIRMAK' : 'AZALTMAK'} istediğinize emin misiniz?`;
+      
+      if (!confirm(confirmMsg)) return;
+      
+      setRefreshing(true);
+      
+      try {
+          // 1. Tüm ürünleri çek
+          const { data: allItems, error: fetchError } = await supa.from('vitrin').select('*');
+          if(fetchError) throw fetchError;
+
+          // 2. Yeni fiyatları hesapla
+          const updates = allItems.map(item => {
+              // Veritabanındaki fiyatı sayıya çevir
+              const currentPrice = parseFloat(item.fiyat.toString().replace(/[^0-9.-]+/g,""));
+              // Yeni fiyatı hesapla (Yuvarlama yaparak)
+              const newPrice = Math.round(currentPrice * (1 + rate / 100));
+              
+              // Sadece id ve fiyat bilgisini döndür (ve diğer zorunlu alanlar varsa)
+              return { 
+                  ...item, // Tüm alanları koru ki upsert hata vermesin
+                  fiyat: newPrice 
+              };
+          });
+
+          // 3. Upsert ile toplu güncelle (ID'ler çakıştığı için update yapar)
+          const { error: updateError } = await supa.from('vitrin').upsert(updates);
+          if(updateError) throw updateError;
+
+          alert(`İşlem başarılı! ${updates.length} ürün güncellendi.`);
+          setBulkRate(""); // Inputu temizle
+          refreshVitrin(); // Listeyi yenile
+
+      } catch(e) {
+          alert("Hata oluştu: " + e.message);
+      } finally {
+          setRefreshing(false);
+      }
+  };
+
   return (
     <div className="modal-backdrop">
       <div className="modal h-[90dvh]">
@@ -1161,6 +1209,32 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
             )}
             {tab === 'vitrin' && (
                 <div>
+                    {/* YENİ: TOPLU GÜNCELLEME ALANI */}
+                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-6 shadow-sm">
+                        <h4 className="text-xs font-bold text-yellow-800 mb-2 flex items-center gap-2">
+                            <span>⚡</span> TOPLU FİYAT GÜNCELLEME
+                        </h4>
+                        <div className="flex gap-2">
+                            <input 
+                                type="number" 
+                                placeholder="%" 
+                                value={bulkRate} 
+                                onChange={e => setBulkRate(e.target.value)} 
+                                className="w-20 p-2 border rounded-lg text-sm text-center font-bold outline-none focus:ring-2 focus:ring-yellow-400" 
+                            />
+                            <button 
+                                onClick={handleBulkUpdate} 
+                                disabled={refreshing}
+                                className="flex-1 bg-yellow-600 text-white rounded-lg text-xs font-bold hover:bg-yellow-700 disabled:opacity-50 transition active:scale-95 shadow"
+                            >
+                                {refreshing ? "İşleniyor..." : "Tüm Fiyatlara Uygula"}
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-yellow-700/70 mt-2 leading-tight">
+                            Örn: <b>10</b> yazarsan %10 zam yapar. <b>-5</b> yazarsan %5 indirim yapar.
+                        </p>
+                    </div>
+
                     <div className={`bg-gray-50 p-4 rounded-xl border mb-6 ${editingId ? 'border-blue-300 ring-2 ring-blue-100' : 'border-gray-200'}`}>
                         <div className="flex justify-between items-center mb-3">
                             <h4 className="text-xs font-bold text-gray-700">{editingId ? '✏️ ÜRÜN DÜZENLE' : '➕ YENİ ÜRÜN EKLE'}</h4>
