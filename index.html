@@ -1065,10 +1065,30 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       refreshVitrin(); 
   };
 
-  const handleDeleteProduct = async (id) => {
-      if(!confirm("Silmek istiyor musunuz?")) return;
-      const { error } = await supa.from('vitrin').delete().eq('id', id);
-      if (!error) refreshVitrin();
+  // GÜNCELLENDİ: Hem DB'den hem de Storage'dan silme işlemi
+  const handleDeleteProduct = async (item) => {
+      if (!confirm("Bu ürünü VE fotoğrafını silmek istiyor musunuz?")) return;
+
+      // önce DB'den sil
+      const { error } = await supa.from('vitrin').delete().eq('id', item.id);
+      
+      if (error) {
+        alert("Silinemedi: " + error.message);
+        return;
+      }
+
+      // sonra storage'tan fotoğrafı sil
+      const path = getPathFromUrl(item.resim);
+      if (path) {
+          await supa.storage.from('resimler').remove([path]);
+      }
+      
+      // eğer o anda edit modundaysan, state'i de temizle
+      if (editingId === item.id) {
+        handleCancelEdit();
+      }
+
+      refreshVitrin();
   };
 
   const forceRefreshAll = async () => {
@@ -1200,7 +1220,14 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <button type="button" onClick={()=>handleEditClick(item)} className="text-blue-500 hover:bg-blue-50 p-1 rounded text-xs border border-blue-100">✏️</button>
-                                    <button type="button" onClick={()=>handleDeleteProduct(item.id)} className="text-red-500 hover:bg-red-50 p-1 rounded text-xs border border-red-100">🗑️</button>
+                                    {/* GÜNCELLENDİ: item.id yerine item objesi gönderiliyor */}
+                                    <button 
+                                        type="button" 
+                                        onClick={() => handleDeleteProduct(item)} 
+                                        className="text-red-500 hover:bg-red-50 p-1 rounded text-xs border border-red-100"
+                                    >
+                                        🗑️
+                                    </button>
                                 </div>
                             </div>
                         ))}
