@@ -9,10 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #fdfcf8; -webkit-tap-highlight-color: transparent; }
-        /* content-visibility: auto; tarayıcının ekran dışındaki öğeleri render etmesini engeller, performans artırır */
+        /* Ekran dışı render optimizasyonu */
         .product-card { content-visibility: auto; contain-intrinsic-size: 100px 160px; }
         .fade-in { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         /* Modal Stilleri */
         .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 1rem; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-backdrop.active { opacity: 1; pointer-events: auto; }
@@ -31,13 +32,21 @@
         <div class="w-8"></div>
     </div>
 
-    <!-- Ürün Listesi -->
-    <div id="product-list" class="flex flex-col pb-24 px-4 md:px-6 pt-4">
-        <!-- Yükleniyor... -->
-        <div class="text-center py-20 text-gray-400 text-sm animate-pulse">Fırsatlar yükleniyor...</div>
+    <!-- Ürün Listesi Konteyneri -->
+    <div id="product-list" class="flex flex-col px-4 md:px-6 pt-4 min-h-[50vh]">
+        <!-- JS ile doldurulacak -->
     </div>
 
-    <!-- Detay Modal (Gizli Başlar) -->
+    <!-- Yükleme / Daha Fazla Butonu Alanı -->
+    <div id="loader-area" class="text-center py-8 pb-24">
+        <div id="loading-spinner" class="hidden text-gray-400 text-sm animate-pulse">Yükleniyor...</div>
+        <button id="load-more-btn" onclick="loadOutletItems()" class="hidden bg-white border border-gray-300 text-gray-600 px-6 py-3 rounded-full font-bold text-sm shadow-sm hover:bg-gray-50 active:scale-95 transition">
+            Daha Fazla Göster 👇
+        </button>
+        <div id="end-message" class="hidden text-xs text-gray-400 uppercase tracking-widest mt-4">Tüm ürünler görüntülendi</div>
+    </div>
+
+    <!-- Detay Modal (Başlangıçta Gizli) -->
     <div id="detail-modal" class="modal-backdrop" onclick="closeModal()">
         <div class="modal bg-white rounded-3xl overflow-hidden max-w-md w-full m-4 shadow-2xl relative" onclick="event.stopPropagation()">
             <button onclick="closeModal()" class="absolute top-4 right-4 z-20 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur">✕</button>
@@ -61,12 +70,17 @@
     </div>
 
 <script>
-    // Supabase Yapılandırması
+    // --- 1. AYARLAR & STATE ---
     const SUPA_URL = "https://vbohhfiyrldqwosoukxx.supabase.co";
     const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZib2hoZml5cmxkcXdvc291a3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MTQ1MTcsImV4cCI6MjA3OTI5MDUxN30.98w7JG6inltrNrW587Au1nSXsA5bKqhW3dBfUqbnNkg";
     const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-    // Yardımcı Fonksiyonlar
+    let currentPage = 0;
+    const ITEMS_PER_PAGE = 10;
+    let isLoading = false;
+    let hasMore = true;
+
+    // --- 2. YARDIMCI FONKSİYONLAR ---
     const formatCurrency = (val) => {
         if (!val) return "";
         const cleanVal = val.toString().replace(/[^0-9]/g, '');
@@ -74,52 +88,77 @@
         return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cleanVal);
     };
 
-    const getOptimizedImageUrl = (url, width = 500) => {
-        if (!url || url.includes("placehold.co") || url.startsWith("blob:")) return url;
-        // Kaliteyi biraz daha düşürdük (50 -> 40) ve webp zorladık
-        return `${url}?width=${width}&resize=cover&quality=40&format=webp`;
+    // Görsel URL Oluşturucu (Thumbnail vs Full)
+    const getOptimizedImageUrl = (url, width = 300, quality = 60) => {
+        if (!url || url.includes("placehold.co") || url.startsWith("blob:")) return url || "https://placehold.co/300x300?text=Resim+Yok";
+        // Supabase Transform
+        return `${url}?width=${width}&resize=cover&quality=${quality}&format=webp`;
     };
 
-    // Verileri Çek ve Render Et
+    // --- 3. VERİ ÇEKME & RENDER ---
     async function loadOutletItems() {
-        // PERFORMANS: Sadece gerekli alanları çek ve limiti 30'a düşür.
+        if (isLoading || !hasMore) return;
+        
+        isLoading = true;
+        
+        // UI Güncelle
+        const spinner = document.getElementById('loading-spinner');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        spinner.classList.remove('hidden');
+        loadMoreBtn.classList.add('hidden');
+
+        // Sayfalama Hesabı
+        const from = currentPage * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+
+        // OPTİMİZE SORGU: Range + Select
         const { data, error } = await supa
             .from("vitrin")
-            .select('id, baslik, fiyat, gram, resim, kategori, aciklama')
+            .select('id, baslik, fiyat, gram, resim, kategori, aciklama') // Sadece gerekli kolonlar
             .eq('etiket', 'Outlet')
             .order('id', { ascending: false })
-            .limit(30); 
+            .range(from, to);
 
-        const listEl = document.getElementById('product-list');
-        listEl.innerHTML = ''; 
+        spinner.classList.add('hidden');
+        isLoading = false;
 
-        if (error || !data || data.length === 0) {
-            listEl.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-32 text-gray-300">
-                    <span class="text-4xl mb-4 opacity-30">🕸️</span>
-                    <p class="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
-                    <a href="index.html" class="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</a>
-                </div>`;
+        if (error) {
+            console.error("Hata:", error);
             return;
         }
 
-        // PERFORMANS KRİTİK NOKTA: DocumentFragment kullanımı
-        // DOM'a tek tek eklemek yerine, hafızada biriktirip tek seferde basıyoruz.
-        // Bu, Tailwind CDN'in her eleman için tekrar tekrar çalışıp sayfayı dondurmasını engeller.
+        const listEl = document.getElementById('product-list');
+
+        if (!data || data.length === 0) {
+            hasMore = false;
+            if (currentPage === 0) {
+                listEl.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-gray-300">
+                        <span class="text-4xl mb-4 opacity-30">🕸️</span>
+                        <p class="font-serif italic text-sm text-center">Şu an outlet reyonumuz boş.<br/>Yakında yeni fırsatlar eklenecek.</p>
+                        <a href="index.html" class="mt-6 text-red-500 text-xs font-bold underline">Ana Sayfaya Dön</a>
+                    </div>`;
+            } else {
+                document.getElementById('end-message').classList.remove('hidden');
+            }
+            return;
+        }
+
+        // DocumentFragment ile Tek Seferde DOM Manipülasyonu (Donmayı önler)
         const fragment = document.createDocumentFragment();
 
         data.forEach(item => {
             const card = document.createElement('div');
-            // Class listesini tek satırda string olarak veriyoruz
+            // Tailwind classları
             card.className = "product-card group bg-white mb-6 rounded-2xl shadow-sm overflow-hidden border border-red-100 active:scale-[0.99] transition-transform cursor-pointer relative";
             card.onclick = () => openModal(item);
             
-            // Resim optimizasyonu için decoding="async" eklendi
+            // HTML İçeriği (Thumbnail: 300px)
             card.innerHTML = `
                 <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">FIRSAT</div>
                 <div class="flex p-4 gap-4 items-center">
                     <div class="w-24 h-24 relative rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                       <img src="${getOptimizedImageUrl(item.resim, 200)}" class="w-full h-full object-cover" loading="lazy" decoding="async" />
+                       <img src="${getOptimizedImageUrl(item.resim, 300, 60)}" class="w-full h-full object-cover" loading="lazy" decoding="async" alt="${item.baslik}" />
                     </div>
                     <div class="flex-1">
                         <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">${item.kategori || ''}</div>
@@ -136,15 +175,27 @@
                     </div>
                 </div>
             `;
-            fragment.appendChild(card); // Parçayı hafızaya ekle
+            fragment.appendChild(card);
         });
 
-        listEl.appendChild(fragment); // DOM'a tek seferde bas (Donmayı önler)
+        listEl.appendChild(fragment);
+        
+        // Pagination Yönetimi
+        currentPage++;
+        
+        // Eğer gelen veri sayısı, sayfa başına istenen sayıdan azsa, başka veri yoktur.
+        if (data.length < ITEMS_PER_PAGE) {
+            hasMore = false;
+            document.getElementById('end-message').classList.remove('hidden');
+        } else {
+            loadMoreBtn.classList.remove('hidden');
+        }
     }
 
-    // Modal İşlemleri
+    // --- 4. MODAL İŞLEMLERİ ---
     function openModal(item) {
-        document.getElementById('modal-img').src = getOptimizedImageUrl(item.resim, 800);
+        // Modal için yüksek kalite (900px)
+        document.getElementById('modal-img').src = getOptimizedImageUrl(item.resim, 900, 75);
         document.getElementById('modal-title').textContent = item.baslik;
         document.getElementById('modal-category').textContent = item.kategori || '';
         document.getElementById('modal-price').textContent = formatCurrency(item.fiyat);
@@ -161,8 +212,8 @@
         document.getElementById('detail-modal').classList.remove('active');
     }
 
-    // Başlat
-    loadOutletItems();
+    // Başlangıç Yüklemesi
+    window.onload = loadOutletItems;
 
 </script>
 </body>
