@@ -1141,21 +1141,40 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
           const { data: allItems, error: fetchError } = await supa.from('vitrin').select('*');
           if(fetchError) throw fetchError;
 
-          // 2. Yeni fiyatları hesapla
+          // 2. Yeni fiyatları hesapla (ÖZEL YUVARLAMA KURALI İLE)
           const updates = allItems.map(item => {
               // Veritabanındaki fiyatı sayıya çevir
               const currentPrice = parseFloat(item.fiyat.toString().replace(/[^0-9.-]+/g,""));
-              // Yeni fiyatı hesapla (Yuvarlama yaparak)
-              const newPrice = Math.round(currentPrice * (1 + rate / 100));
               
-              // Sadece id ve fiyat bilgisini döndür (ve diğer zorunlu alanlar varsa)
+              // Ham yeni fiyatı hesapla
+              let rawPrice = currentPrice * (1 + rate / 100);
+              let newPrice = Math.round(rawPrice); // Önce en yakın tamsayıya yuvarla
+
+              // İstenen Özel Kural:
+              // 0,1,2,3,4 -> Aşağı 0'a yuvarla (Örn: 83 -> 80)
+              // 5         -> Olduğu gibi kalsın (Örn: 85 -> 85)
+              // 6,7,8,9   -> Yukarı 0'a yuvarla (Örn: 86 -> 90)
+              
+              const lastDigit = newPrice % 10;
+
+              if (lastDigit === 5) {
+                  // 5 ise dokunma, aynen kalsın
+              } else if (lastDigit < 5) {
+                  // 5'ten küçükse birler basamağını çıkar (Aşağı yuvarla)
+                  newPrice = newPrice - lastDigit;
+              } else {
+                  // 5'ten büyükse 10'a tamamla (Yukarı yuvarla)
+                  newPrice = newPrice + (10 - lastDigit);
+              }
+              
+              // Sadece id ve fiyat bilgisini döndür
               return { 
-                  ...item, // Tüm alanları koru ki upsert hata vermesin
+                  ...item, // Tüm alanları koru
                   fiyat: newPrice 
               };
           });
 
-          // 3. Upsert ile toplu güncelle (ID'ler çakıştığı için update yapar)
+          // 3. Upsert ile toplu güncelle
           const { error: updateError } = await supa.from('vitrin').upsert(updates);
           if(updateError) throw updateError;
 
