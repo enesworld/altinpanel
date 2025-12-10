@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ruh Taşı Analizi - Bakırköy Kuyumcusu</title>
+    <meta name="theme-color" content="#2e1065"> <!-- Koyu Mor tema -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        body { 
+            background: radial-gradient(circle at top, #4c1d95, #1e1b4b, #0f172a);
+            background-attachment: fixed;
+            font-family: 'Quicksand', sans-serif;
+            color: white;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        h1, h2, h3, .mystic-font { font-family: 'Cinzel', serif; }
+
+        /* Glassmorphism Kart (Sorular İçin) */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Seçenek Butonları */
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .option-btn:active { transform: scale(0.98); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Sonuç Kartı Animasyonu */
+        .stone-float { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+    <!-- Üst Bar -->
+    <div class="fixed top-0 left-0 w-full z-50 glass-card border-b-0 rounded-none shadow-lg">
+        <div class="p-4 flex items-center justify-between max-w-lg mx-auto">
+            <a href="index.html" class="text-2xl text-purple-200 hover:text-white transition transform active:scale-90 p-2">⬅️</a>
+            <h1 class="text-sm font-bold text-purple-100 tracking-[0.3em] uppercase flex items-center gap-2 mystic-font">
+                ✨ RUH TAŞI
+            </h1>
+            <div class="w-8"></div>
+        </div>
+        <div class="h-1 w-full bg-black/20">
+            <div id="progress" class="h-full bg-purple-500 w-[10%] transition-all duration-500 ease-out"></div>
+        </div>
+    </div>
+
+    <!-- Ana İçerik -->
+    <div class="flex-1 flex flex-col items-center justify-center p-6 pt-24 max-w-lg mx-auto w-full relative z-10">
+        
+        <!-- SORU KARTI -->
+        <div id="question-container" class="w-full">
+            <div id="question-card" class="glass-card rounded-[2rem] p-8 min-h-[450px] flex flex-col justify-center text-center animate__animated animate__fadeIn relative overflow-hidden">
+                <span id="q-number" class="text-[10px] font-bold text-purple-300 uppercase tracking-[0.2em] mb-6 block border border-purple-500/30 rounded-full py-1 px-3 w-max mx-auto bg-purple-900/30">SORU 1/7</span>
+                <h2 id="q-text" class="text-2xl md:text-3xl font-bold text-white mb-8 leading-tight mystic-font drop-shadow-lg">Cilt alt tonunuz nedir?</h2>
+                <div id="options-list" class="flex flex-col gap-3 relative z-10">
+                    <!-- Seçenekler JS ile gelecek -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SONUÇ KARTI (Başlangıçta Gizli & Yenilendi) -->
+        <div id="result-container" class="hidden w-full">
+            <div class="bg-white rounded-[2rem] overflow-hidden shadow-2xl animate__animated animate__zoomIn text-gray-800">
+                
+                <!-- 1. Bölüm: Taşın Rengine Bürünmüş Başlık Alanı -->
+                <div id="result-header" class="relative h-64 flex flex-col items-center justify-center text-white overflow-hidden">
+                    <div class="absolute inset-0 bg-black/10 z-0"></div> <!-- Hafif karartma -->
+                    
+                    <div class="stone-float relative z-10 mb-4">
+                        <div id="stone-visual" class="w-28 h-28 rounded-full shadow-2xl flex items-center justify-center text-6xl border-4 border-white/20 bg-white/10 backdrop-blur-md">
+                            💎
+                        </div>
+                    </div>
+                    
+                    <h2 id="res-main-stone" class="text-4xl font-bold mystic-font relative z-10 drop-shadow-md">SAFİR</h2>
+                    <p id="res-energy" class="text-xs font-bold uppercase tracking-widest opacity-90 relative z-10 mt-1">BİLGELİK & ASALET</p>
+                </div>
+
+                <!-- 2. Bölüm: Sade Bilgi Alanı -->
+                <div class="p-8 -mt-6 bg-white rounded-t-[2rem] relative z-20">
+                    
+                    <p id="res-desc" class="text-sm text-gray-600 leading-relaxed text-center mb-8 font-medium">
+                        <!-- Açıklama buraya -->
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-gray-50 p-4 rounded-2xl text-center border border-gray-100">
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Metal</span>
+                            <span id="res-metal" class="text-sm font-bold text-gray-800 mystic-font">Beyaz Altın</span>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-2xl text-center border border-gray-100">
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Alternatif</span>
+                            <span id="res-alts" class="text-sm font-bold text-gray-800 mystic-font">Topaz</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-8 px-4">
+                        <span class="text-2xl block mb-2">💡</span>
+                        <p id="res-style-tip" class="text-xs text-gray-500 italic font-semibold">
+                            <!-- Stil önerisi -->
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <button id="whatsapp-btn" onclick="sendWhatsapp()" class="w-full text-white py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                            <span>💬</span> Bu Taşa Uygun Modelleri Gör
+                        </button>
+                        <button onclick="location.reload()" class="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold hover:bg-gray-200 transition text-xs tracking-wider uppercase">
+                            🔄 Tekrar Test Et
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    // --- SORULAR ---
+    const questions = [
+        {
+            id: 'undertone',
+            text: "Cilt alt tonunuzu nasıl tanımlarsınız?",
+            note: "(Bilek damarlarınız mavi ise soğuk, yeşil ise sıcak)",
+            options: [
+                { text: "Soğuk (Mavi damar)", value: "cold", icon: "❄️" },
+                { text: "Sıcak (Yeşil damar)", value: "warm", icon: "☀️" },
+                { text: "Nötr (Karışık)", value: "neutral", icon: "⚖️" }
+            ]
+        },
+        {
+            id: 'hair',
+            text: "Saç renginiz hangi tona daha yakın?",
+            options: [
+                { text: "Sarı / Açık", value: "light", icon: "👱‍♀️" },
+                { text: "Kahve / Kumral", value: "medium", icon: "🏽" },
+                { text: "Siyah / Koyu", value: "dark", icon: "🖤" },
+                { text: "Kızıl / Bakır", value: "red", icon: "👩‍🦰" },
+                { text: "Gri / Beyaz", value: "grey", icon: "👵" }
+            ]
+        },
+        {
+            id: 'eye',
+            text: "Gözlerinizin rengi?",
+            options: [
+                { text: "Mavi / Gri", value: "blue", icon: "🧿" },
+                { text: "Yeşil / Ela", value: "green", icon: "💚" },
+                { text: "Kahverengi / Bal", value: "brown", icon: "👁️" },
+                { text: "Siyah / Koyu", value: "black", icon: "🌑" }
+            ]
+        },
+        {
+            id: 'skin',
+            text: "Ten renginiz?",
+            options: [
+                { text: "Açık / Beyaz", value: "fair", icon: "☁️" },
+                { text: "Buğday", value: "wheat", icon: "🌾" },
+                { text: "Esmer / Bronz", value: "dark", icon: "🍫" }
+            ]
+        },
+        {
+            id: 'style',
+            text: "Hangi stil sizi yansıtıyor?",
+            options: [
+                { text: "Minimalist (Sade)", value: "minimal", icon: "🌿" },
+                { text: "Gösterişli (Dikkat çekici)", value: "glam", icon: "✨" },
+                { text: "Vintage (Nostaljik)", value: "vintage", icon: "🕰️" },
+                { text: "Modern (Yenilikçi)", value: "modern", icon: "🚀" }
+            ]
+        },
+        {
+            id: 'zodiac',
+            text: "Hangi element grubundansınız?",
+            options: [
+                { text: "Ateş (Koç, Aslan, Yay)", value: "fire", icon: "🔥" },
+                { text: "Toprak (Boğa, Başak, Oğlak)", value: "earth", icon: "🌍" },
+                { text: "Hava (İkizler, Terazi, Kova)", value: "air", icon: "💨" },
+                { text: "Su (Yengeç, Akrep, Balık)", value: "water", icon: "💧" }
+            ]
+        },
+        {
+            id: 'energy',
+            text: "Takıda aradığınız enerji?",
+            options: [
+                { text: "Zarafet & Masumiyet", value: "grace", icon: "🦢" },
+                { text: "Güç & Özgüven", value: "power", icon: "🦁" },
+                { text: "Gizem & Derinlik", value: "mystery", icon: "🌙" },
+                { text: "Romantizm & Aşk", value: "romance", icon: "🌹" },
+                { text: "Lüks & Işıltı", value: "luxury", icon: "👑" }
+            ]
+        }
+    ];
+
+    // --- VERİTABANI (RENKLER GÜNCELLENDİ) ---
+    // Tailwind gradient sınıfları kullanılarak her taşa özel renk tanımlandı
+    const STONES = {
+        'Safir': { bg: 'bg-gradient-to-br from-blue-700 to-indigo-900', btn: 'bg-blue-700 hover:bg-blue-800', metal: 'Beyaz Altın', energy: 'Zarafet' },
+        'Yakut': { bg: 'bg-gradient-to-br from-red-600 to-rose-900', btn: 'bg-red-600 hover:bg-red-700', metal: 'Sarı Altın', energy: 'Güç' },
+        'Zümrüt': { bg: 'bg-gradient-to-br from-emerald-600 to-green-900', btn: 'bg-emerald-600 hover:bg-emerald-700', metal: 'Sarı Altın', energy: 'Lüks' },
+        'Pırlanta': { bg: 'bg-gradient-to-br from-slate-400 to-slate-700', btn: 'bg-slate-600 hover:bg-slate-700', metal: 'Beyaz Altın', energy: 'Lüks' },
+        'Ametist': { bg: 'bg-gradient-to-br from-purple-600 to-fuchsia-900', btn: 'bg-purple-600 hover:bg-purple-700', metal: 'Rose Gold', energy: 'Gizem' },
+        'İnci': { bg: 'bg-gradient-to-br from-orange-200 to-orange-400', btn: 'bg-orange-400 hover:bg-orange-500', metal: 'Sarı Altın', energy: 'Zarafet' }, // Daha belirgin bir renk seçildi
+        'Sitrin': { bg: 'bg-gradient-to-br from-amber-400 to-yellow-700', btn: 'bg-amber-500 hover:bg-amber-600', metal: 'Sarı Altın', energy: 'Güç' },
+        'Onyx': { bg: 'bg-gradient-to-br from-gray-800 to-black', btn: 'bg-gray-800 hover:bg-black', metal: 'Sarı Altın', energy: 'Güç' },
+        'Pembe Kuvars': { bg: 'bg-gradient-to-br from-pink-400 to-rose-600', btn: 'bg-pink-500 hover:bg-pink-600', metal: 'Rose Gold', energy: 'Romantizm' },
+        'Aquamarin': { bg: 'bg-gradient-to-br from-cyan-400 to-blue-600', btn: 'bg-cyan-500 hover:bg-cyan-600', metal: 'Beyaz Altın', energy: 'Zarafet' }
+    };
+
+    let currentStep = 0;
+    const userAnswers = {};
+
+    function renderQuestion() {
+        const q = questions[currentStep];
+        const card = document.getElementById('question-card');
+        const list = document.getElementById('options-list');
+        const progress = document.getElementById('progress');
+
+        const percent = ((currentStep + 1) / questions.length) * 100;
+        progress.style.width = `${percent}%`;
+
+        card.classList.remove('animate__fadeIn');
+        void card.offsetWidth; 
+        card.classList.add('animate__fadeIn');
+
+        document.getElementById('q-number').innerText = `SORU ${currentStep + 1}/${questions.length}`;
+        document.getElementById('q-text').innerText = q.text;
+        
+        if(q.note) {
+            let noteEl = document.getElementById('q-note');
+            if(!noteEl) {
+                noteEl = document.createElement('p');
+                noteEl.id = 'q-note';
+                noteEl.className = 'text-xs text-purple-300/70 font-normal mb-6 -mt-4 italic';
+                document.getElementById('q-text').after(noteEl);
+            }
+            noteEl.innerText = q.note;
+        } else {
+            const noteEl = document.getElementById('q-note');
+            if(noteEl) noteEl.remove();
+        }
+
+        list.innerHTML = '';
+        q.options.forEach((opt) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn group w-full p-4 rounded-2xl text-left font-semibold text-white/90 flex items-center gap-4 relative overflow-hidden mb-1";
+            btn.innerHTML = `
+                <span class="text-2xl filter drop-shadow-md">${opt.icon}</span>
+                <span class="relative z-10">${opt.text}</span>
+            `;
+            btn.onclick = () => handleAnswer(q.id, opt.value);
+            list.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(key, value) {
+        userAnswers[key] = value;
+        if (currentStep < questions.length - 1) {
+            currentStep++;
+            renderQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function calculateResult() {
+        // ... (Hesaplama mantığı aynı) ...
+        let metal = "Sarı Altın";
+        if (userAnswers.undertone === 'cold') metal = "Beyaz Altın";
+        else if (userAnswers.undertone === 'neutral') metal = "Rose Gold";
+
+        let scores = { 'Safir': 0, 'Yakut': 0, 'Zümrüt': 0, 'Pırlanta': 0, 'Ametist': 0, 'İnci': 0, 'Sitrin': 0, 'Onyx': 0, 'Pembe Kuvars': 0, 'Aquamarin': 0 };
+
+        const energy = userAnswers.energy;
+        if (energy === 'grace') { scores['İnci'] += 5; scores['Aquamarin'] += 4; scores['Pırlanta'] += 3; }
+        if (energy === 'power') { scores['Yakut'] += 5; scores['Onyx'] += 4; scores['Safir'] += 3; }
+        if (energy === 'mystery') { scores['Ametist'] += 5; scores['Safir'] += 3; scores['Onyx'] += 3; }
+        if (energy === 'romance') { scores['Pembe Kuvars'] += 5; scores['Zümrüt'] += 3; scores['Yakut'] += 2; }
+        if (energy === 'luxury') { scores['Pırlanta'] += 5; scores['Zümrüt'] += 4; scores['Safir'] += 4; }
+
+        const zodiac = userAnswers.zodiac;
+        if (zodiac === 'fire') { scores['Yakut'] += 3; scores['Sitrin'] += 2; }
+        if (zodiac === 'earth') { scores['Zümrüt'] += 3; scores['Onyx'] += 2; }
+        if (zodiac === 'air') { scores['Pırlanta'] += 3; scores['Ametist'] += 2; }
+        if (zodiac === 'water') { scores['İnci'] += 3; scores['Aquamarin'] += 3; scores['Safir'] += 2; }
+
+        const style = userAnswers.style;
+        if (style === 'minimal') { scores['Pırlanta'] += 2; scores['Pembe Kuvars'] += 2; }
+        if (style === 'glam') { scores['Yakut'] += 2; scores['Zümrüt'] += 2; }
+        if (style === 'vintage') { scores['İnci'] += 3; scores['Zümrüt'] += 1; }
+        if (style === 'modern') { scores['Safir'] += 2; scores['Onyx'] += 2; }
+
+        const sortedStones = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+        const mainStone = sortedStones[0];
+        
+        const desc = `Sizin <b>${userAnswers.undertone === 'cold' ? 'soğuk' : 'sıcak'}</b> auranız ve <b>${userAnswers.style === 'minimal' ? 'sade' : userAnswers.style === 'glam' ? 'iddialı' : 'özgün'}</b> stiliniz, <b>${mainStone}</b> taşının kadim enerjisiyle rezonans içinde.`;
+
+        let styleTip = "";
+        if (mainStone === 'İnci' || mainStone === 'Pırlanta') styleTip = "Günlük stilinizde 'yok gibi' bir şıklık yaratmak için ideal.";
+        else if (mainStone === 'Yakut' || mainStone === 'Zümrüt') styleTip = "Siyah veya beyaz kombinlerde tek odak noktası olarak kullanın.";
+        else styleTip = "Katmanlı kolyeler veya çoklu yüzüklerle bohem bir hava katın.";
+
+        return {
+            main: mainStone,
+            alt: `${sortedStones[1]}, ${sortedStones[2]}`,
+            metal: metal,
+            desc: desc,
+            styleTip: styleTip,
+            styleData: STONES[mainStone], // Renk verileri buradan gelecek
+            stoneTag: STONES[mainStone].energy
+        };
+    }
+
+    function showResult() {
+        const result = calculateResult();
+        const styleData = result.styleData;
+
+        document.getElementById('question-container').classList.add('hidden');
+        document.getElementById('result-container').classList.remove('hidden');
+        document.querySelector('.h-1.w-full').classList.add('hidden');
+
+        document.getElementById('res-main-stone').innerText = result.main.toUpperCase();
+        document.getElementById('res-energy').innerText = result.stoneTag;
+        document.getElementById('res-desc').innerHTML = result.desc;
+        document.getElementById('res-metal').innerText = result.metal;
+        document.getElementById('res-alts').innerText = result.alt;
+        document.getElementById('res-style-tip').innerText = `"${result.styleTip}"`;
+
+        // 1. Header Arkaplanını Değiştir (Dinamik Renk)
+        const headerEl = document.getElementById('result-header');
+        headerEl.className = `relative h-64 flex flex-col items-center justify-center text-white overflow-hidden ${styleData.bg}`;
+
+        // 2. WhatsApp Butonunu Değiştir (Dinamik Renk)
+        const btnEl = document.getElementById('whatsapp-btn');
+        btnEl.className = `w-full text-white py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 ${styleData.btn}`;
+    }
+
+    function sendWhatsapp() {
+        const stone = document.getElementById('res-main-stone').innerText;
+        window.open(`https://wa.me/905382436870?text=Merhaba, Ruh Taşı analizimde ruh taşım: *${stone}* çıktı. Buna uygun, benim için özel modellerinizi görebilir miyim?`, '_blank');
+    }
+
+    window.onload = renderQuestion;
+
+</script>
+</body>
+</html>
