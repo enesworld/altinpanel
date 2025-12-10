@@ -17,6 +17,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- YENİ: Mistik Font (Playfair Display) -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+
   <style>
     body { 
         background: #b45309; 
@@ -24,6 +27,9 @@
         -webkit-tap-highlight-color: transparent;
     }
     
+    /* Mistik Font Sınıfı */
+    .font-mystic { font-family: 'Playfair Display', serif; font-style: italic; }
+
     input, select, textarea { font-size: 16px !important; }
 
     .flash-up { color: #16a34a !important; transform: scale(1.1); font-weight: 800; transition: all .3s ease; }
@@ -73,6 +79,45 @@
         50% { box-shadow: 0 0 25px #fca5a5; transform: scale(1.02); }
     }
     .animate-neon { animation: neonFlash 1.5s infinite ease-in-out; }
+
+    /* SABİT GÜÇLÜ GLOW EFEKTİ */
+    .glow-static {
+        box-shadow: 0 0 30px rgba(168, 85, 247, 0.8), 0 0 60px rgba(147, 51, 234, 0.4), inset 0 0 30px rgba(88, 28, 135, 0.6);
+        border-color: #e9d5ff;
+    }
+
+    @keyframes floatingItem {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-8px) rotate(5deg); }
+    }
+    .animate-float { animation: floatingItem 5s ease-in-out infinite; }
+
+    @keyframes starTwinkle {
+        0%, 100% { opacity: 0.4; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.2); }
+    }
+    .star { position: absolute; background: white; border-radius: 50%; animation: starTwinkle 3s infinite ease-in-out; box-shadow: 0 0 8px white; }
+
+    /* CAM PARLAMA (HOVER) EFEKTİ */
+    .hover-glass-shine::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+        transform: skewX(-25deg);
+        transition: none;
+        z-index: 20;
+        pointer-events: none;
+    }
+    .hover-glass-shine:hover::before {
+        animation: glassShine 0.8s ease-in-out;
+    }
+    @keyframes glassShine {
+        100% { left: 200%; }
+    }
 
   </style>
 </head>
@@ -268,7 +313,22 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
             <span className="text-3xl md:text-4xl opacity-50">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Hazırlanıyor</span>
           </button>
 
-          {/* OUTLET BUTONU: Doğrudan Yeni Sayfaya Yönlendirir (Hızlı) */}
+          <button onClick={() => window.location.href = 'ruh-tasi.html'} className="flex-1 min-w-[140px] relative overflow-hidden rounded-3xl border-2 p-4 md:p-6 shadow-2xl transition-all active:scale-95 flex flex-col items-center justify-center gap-2 glow-static hover-glass-shine group" style={{ minHeight: '140px', background: 'radial-gradient(circle at center, #581c87 0%, #1e1b4b 100%)' }}>
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                <div className="star w-1 h-1 top-3 left-4" style={{animationDelay: '0.2s'}}></div>
+                <div className="star w-1.5 h-1.5 top-8 right-4" style={{animationDelay: '0.5s'}}></div>
+                <div className="star w-1 h-1 bottom-4 left-6" style={{animationDelay: '1.2s'}}></div>
+                <div className="star w-0.5 h-0.5 bottom-8 right-10" style={{animationDelay: '2.5s'}}></div>
+                <div className="star w-1 h-1 top-1/2 left-2" style={{animationDelay: '1.8s'}}></div>
+            </div>
+            <div className="absolute inset-0 bg-purple-500/20 opacity-50 group-hover:opacity-80 transition-opacity duration-500"></div>
+            <span className="text-4xl md:text-5xl drop-shadow-[0_0_25px_rgba(255,255,255,0.9)] animate-float z-10">🔮</span>
+            <div className="z-10 text-center">
+                <span className="font-mystic font-bold text-xl leading-none tracking-wider text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Ruh Taşı</span>
+                <span className="block text-[10px] text-purple-100 font-sans font-bold tracking-[0.3em] mt-1 uppercase opacity-90">Analizi</span>
+            </div>
+          </button>
+
           <button onClick={() => window.location.href = 'outlet.html'} className="flex-1 min-w-[140px] bg-gradient-to-br from-red-600 to-rose-700 text-white border-2 border-red-400 p-4 md:p-6 rounded-3xl shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3 hover:from-red-500 hover:to-rose-600 ring-2 ring-red-200/50" style={{ minHeight: '140px' }}>
             <span className="text-3xl md:text-4xl drop-shadow-md animate-pulse">🔥</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide drop-shadow-md">Outlet &<br/>Fırsatlar</span>
           </button>
@@ -576,9 +636,7 @@ function MarketDashboard({ setView, setLocationOpen, user, setCustomerModalOpen,
   );
 }
 
-// --- MISSING COMPONENTS START ---
-
-// Login Modal (Eksik olan bileşen eklendi)
+// Login Modal
 function LoginModal({ onClose, onLoginSuccess }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -606,7 +664,7 @@ function LoginModal({ onClose, onLoginSuccess }) {
   );
 }
 
-// Customer Modal (Eksik olan bileşen eklendi)
+// Customer Modal
 const availableTags = ["VIP", "Pazarlıkçı", "Sık Gelen", "Yeni", "Sorunlu", "Referanslı", "Yatırımcı"];
 
 function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, currentUser }) {
@@ -726,7 +784,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal modal-wide flex flex-row overflow-hidden bg-gray-50" onClick={e=>e.stopPropagation()}>
          
-         {/* SOL KOLON: LİSTE */}
          <div className={`flex-1 flex flex-col border-r border-gray-200 bg-white ${selectedCust ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-3 border-b flex items-center justify-between bg-gray-50">
                <h2 className="font-bold text-gray-700">Müşteriler</h2>
@@ -918,8 +975,6 @@ function CustomerModal({ onClose, customers, fetchCustomers, fetchReminders, cur
   );
 }
 
-// --- MISSING COMPONENTS END ---
-
 function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose, onSave }) {
   if (!open) return null;
   if (!draft) return <div className="modal-backdrop"><div className="modal p-6 text-center">Veriler Yükleniyor...</div></div>;
@@ -932,14 +987,11 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
   const [previewUrl, setPreviewUrl] = React.useState(null); 
   const [editingId, setEditingId] = React.useState(null);
   
-  // YENİ: Eski resim URL'sini tutmak için state
   const [oldImageUrl, setOldImageUrl] = React.useState(null);
-  // YENİ: Toplu güncelleme oranı için state
   const [bulkRate, setBulkRate] = React.useState("");
 
   const handleChange = (key, val) => { setForm({ ...form, [key]: Number(val) || val }); };
 
-  // --- RESIZE YARDIMCI FONKSİYON (GÜNCELLENMİŞ: JPEG + Agresif Sıkıştırma) ---
   const resizeImage = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -951,23 +1003,13 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
         
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 900;   // Daha küçük tut
-          const MAX_HEIGHT = 900;  // Dikey fotolarda da sınır
-
+          const MAX_WIDTH = 1200; 
           let width = img.width;
           let height = img.height;
 
-          // Oranı bozmadan küçült
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
           }
 
           canvas.width = width;
@@ -976,16 +1018,13 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Blob'a çevir (JPEG formatında, %60 kalite)
           canvas.toBlob((blob) => {
             if (blob) {
-                // Boyutu konsolda görmek için:
-                console.log('Sıkıştırılmış boyut (MB):', (blob.size / (1024*1024)).toFixed(2));
                 resolve(blob);
             } else {
                 reject(new Error('Resim işlenirken hata oluştu.'));
             }
-          }, 'image/jpeg', 0.6);
+          }, 'image/webp', 0.7);
         };
         img.onerror = (err) => reject(new Error('Resim yüklenemedi.'));
       };
@@ -993,7 +1032,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     });
   };
 
-  // --- OPTİMİZE EDİLMİŞ UPLOAD (GÜNCELLENMİŞ: JPEG) ---
   const handleFileUpload = async (event) => {
     try {
       const file = event.target.files[0];
@@ -1002,28 +1040,19 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       setUploading(true);
 
       const compressedBlob = await resizeImage(file);
-      
-      // Önizleme (sıkıştırılmış hal üzerinden)
       const localPreviewUrl = URL.createObjectURL(compressedBlob);
       setPreviewUrl(localPreviewUrl);
 
-      const fileName = `vitrin_${Date.now()}.jpg`;
+      const fileName = `vitrin_${Date.now()}.webp`;
       
-      const { data, error } = await supa.storage
-        .from('resimler')
-        .upload(fileName, compressedBlob, {
-          contentType: 'image/jpeg',
+      const { data, error } = await supa.storage.from('resimler').upload(fileName, compressedBlob, {
+          contentType: 'image/webp',
           upsert: false
-        }); 
+      }); 
       
       if (error) throw error;
       
-      const { data: publicData } = supa.storage
-        .from('resimler')
-        .getPublicUrl(fileName);
-        
-      const publicUrl = publicData.publicUrl;
-      
+      const { data: { publicUrl } } = supa.storage.from('resimler').getPublicUrl(fileName);
       setNewProduct({ ...newProduct, resim: publicUrl });
       
     } catch (error) { 
@@ -1035,7 +1064,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     }
   };
 
-  // YENİ: URL'den dosya yolunu çıkaran yardımcı fonksiyon
   const getPathFromUrl = (url) => {
     if (!url) return null;
     const parts = url.split('/storage/v1/object/public/resimler/');
@@ -1046,14 +1074,14 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       setNewProduct({ ...item });
       setPreviewUrl(item.resim);
       setEditingId(item.id);
-      setOldImageUrl(item.resim); // YENİ: Eski URL'yi kaydet
+      setOldImageUrl(item.resim);
   };
 
   const handleCancelEdit = () => {
       setNewProduct({ baslik: '', fiyat: '', gram: '', resim: '', kategori: 'Kolye', etiket: 'Genel', aciklama: '' });
       setPreviewUrl(null);
       setEditingId(null);
-      setOldImageUrl(null); // YENİ: State'i temizle
+      setOldImageUrl(null);
   }
 
   const handleSaveProduct = async () => {
@@ -1075,7 +1103,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
 
       if (error) return alert("Hata: " + error.message);
 
-      // YENİ: Eski resmi silme mantığı
       if (editingId && oldImageUrl && oldImageUrl !== newProduct.resim) {
         const path = getPathFromUrl(oldImageUrl);
         if (path) {
@@ -1089,11 +1116,9 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       refreshVitrin(); 
   };
 
-  // GÜNCELLENDİ: Hem DB'den hem de Storage'dan silme işlemi
   const handleDeleteProduct = async (item) => {
       if (!confirm("Bu ürünü VE fotoğrafını silmek istiyor musunuz?")) return;
 
-      // önce DB'den sil
       const { error } = await supa.from('vitrin').delete().eq('id', item.id);
       
       if (error) {
@@ -1101,13 +1126,11 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
         return;
       }
 
-      // sonra storage'tan fotoğrafı sil
       const path = getPathFromUrl(item.resim);
       if (path) {
           await supa.storage.from('resimler').remove([path]);
       }
       
-      // eğer o anda edit modundaysan, state'i de temizle
       if (editingId === item.id) {
         handleCancelEdit();
       }
@@ -1124,7 +1147,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
     } catch (e) { alert("Hata: " + e.message); } finally { setRefreshing(false); }
   };
 
-  // YENİ: Toplu Fiyat Güncelleme Fonksiyonu (Düzeltildi: Kesin Tamsayı + Küsürat Yuvarlama)
   const handleBulkUpdate = async () => {
       if (!bulkRate || bulkRate == 0) return alert("Lütfen bir oran giriniz (Örn: 10).");
       
@@ -1137,56 +1159,39 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
       setRefreshing(true);
       
       try {
-          // 1. Tüm ürünleri çek
           const { data: allItems, error: fetchError } = await supa.from('vitrin').select('*');
           if(fetchError) throw fetchError;
 
-          // 2. Yeni fiyatları hesapla (ÖZEL YUVARLAMA KURALI İLE)
           const updates = allItems.map(item => {
-              // Fiyatı temizle ve sayıya çevir (Güvenli parse)
               let dbPrice = item.fiyat;
               if (typeof dbPrice === 'string') {
-                  // Sadece rakamları ve noktayı al (nokta ondalık ayraç olabilir)
-                  // Eğer nokta binlik ayracı ise replace ile kaldırmalıyız.
-                  // Genelde '1.500' -> 1500 olarak saklanıyorsa replace(/[^0-9]/g, "") daha güvenli.
                   dbPrice = parseFloat(dbPrice.toString().replace(/[^0-9.]/g, "")); 
               }
               
-              // Ham yeni fiyatı hesapla
               let rawPrice = dbPrice * (1 + rate / 100);
-              let newPrice = Math.round(rawPrice); // Önce en yakın tamsayıya yuvarla
+              let newPrice = Math.round(rawPrice); 
 
-              // İstenen Özel Kural:
-              // 0,1,2,3,4 -> Aşağı 0'a yuvarla (Örn: 83 -> 80)
-              // 5         -> Olduğu gibi kalsın (Örn: 85 -> 85)
-              // 6,7,8,9   -> Yukarı 0'a yuvarla (Örn: 86 -> 90)
-              
               const lastDigit = newPrice % 10;
 
               if (lastDigit === 5) {
-                  // 5 ise dokunma, aynen kalsın
               } else if (lastDigit < 5) {
-                  // 5'ten küçükse birler basamağını çıkar (Aşağı yuvarla)
                   newPrice = newPrice - lastDigit;
               } else {
-                  // 5'ten büyükse 10'a tamamla (Yukarı yuvarla)
                   newPrice = newPrice + (10 - lastDigit);
               }
               
-              // Sadece id ve fiyat bilgisini döndür
               return { 
-                  ...item, // Tüm alanları koru
+                  ...item, 
                   fiyat: newPrice 
               };
           });
 
-          // 3. Upsert ile toplu güncelle
           const { error: updateError } = await supa.from('vitrin').upsert(updates);
           if(updateError) throw updateError;
 
           alert(`İşlem başarılı! ${updates.length} ürün güncellendi.`);
-          setBulkRate(""); // Inputu temizle
-          refreshVitrin(); // Listeyi yenile
+          setBulkRate(""); 
+          refreshVitrin(); 
 
       } catch(e) {
           alert("Hata oluştu: " + e.message);
@@ -1234,7 +1239,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
             )}
             {tab === 'vitrin' && (
                 <div>
-                    {/* YENİ: TOPLU GÜNCELLEME ALANI */}
                     <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-6 shadow-sm">
                         <h4 className="text-xs font-bold text-yellow-800 mb-2 flex items-center gap-2">
                             <span>⚡</span> TOPLU FİYAT GÜNCELLEME
@@ -1341,7 +1345,6 @@ function AdminModal({ open, draft, setDraft, vitrinItems, refreshVitrin, onClose
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <button type="button" onClick={()=>handleEditClick(item)} className="text-blue-500 hover:bg-blue-50 p-1 rounded text-xs border border-blue-100">✏️</button>
-                                    {/* GÜNCELLENDİ: item.id yerine item objesi gönderiliyor */}
                                     <button 
                                         type="button" 
                                         onClick={() => handleDeleteProduct(item)} 
