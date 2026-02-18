@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobil Kuyumcu Raporu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e3799; /* Koyu Mavi */
+            --success: #27ae60; /* Whatsapp Yeşili */
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #333;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; padding: 15px; padding-bottom: 80px; }
+
+        /* --- BAŞLIK VE AYARLAR --- */
+        .header-card {
+            background: var(--card-bg); padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px;
+        }
+        .app-title { margin: 0 0 10px 0; font-size: 18px; color: var(--primary); font-weight: 800; text-align: center; }
+        
+        .input-group { margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 12px; font-weight: bold; color: #7f8c8d; margin-bottom: 5px; }
+        .full-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; -webkit-appearance: none; }
+        
+        .date-row { display: flex; gap: 10px; }
+        .date-row div { flex: 1; }
+
+        .btn-action {
+            width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; margin-top: 5px; cursor: pointer;
+        }
+
+        /* --- GÜNLÜK GİRİŞ LİSTESİ --- */
+        #list-container { display: none; }
+        .day-card {
+            background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #ccc;
+        }
+        .day-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; color: #444; }
+        
+        .inputs-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+        .badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; color: white; width: 60px; text-align: center; font-weight: bold; }
+        .b-14 { background: #c0392b; }
+        .b-22 { background: #2980b9; }
+
+        .num-input { flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 6px; font-size: 16px; background: #fafafa; }
+        .num-input:focus { background: #fff; border-color: var(--primary); outline: none; }
+
+        /* --- SABİT ALT BUTON --- */
+        .fab-container {
+            position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 99;
+        }
+        .btn-whatsapp {
+            width: 100%; background: var(--success); color: white; border: none; padding: 16px; border-radius: 50px; 
+            font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-whatsapp:active { transform: scale(0.98); }
+
+        /* --- GİZLİ RAPOR KAĞIDI (RESİM İÇİN) --- */
+        #preview-hidden { 
+            position: absolute; top: -9999px; left: -9999px; width: 800px; /* Sabit genişlik önemli */
+        }
+        
+        /* Rapor Tasarımı (Resim Olacak Kısım) */
+        #report-paper {
+            width: 800px; background: white; padding: 40px; color: #333; font-family: 'Segoe UI', sans-serif;
+        }
+        .rp-store { text-align: center; font-size: 36px; color: var(--primary); font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 1px; }
+        .rp-sub { text-align: center; color: #7f8c8d; font-size: 18px; margin-bottom: 30px; }
+        .rp-grid { display: flex; gap: 30px; }
+        .rp-col { flex: 1; }
+        .rp-head { font-size: 20px; font-weight: bold; border-bottom: 3px solid #eee; padding-bottom: 10px; margin-bottom: 10px; text-align: center; }
+        .rp-head.h14 { color: #c0392b; border-color: #c0392b; }
+        .rp-head.h22 { color: #2980b9; border-color: #2980b9; }
+        .rp-table { width: 100%; border-collapse: collapse; font-size: 16px; }
+        .rp-table td { padding: 12px 5px; border-bottom: 1px solid #eee; text-align: right; }
+        .rp-table td:first-child { text-align: left; font-weight: 600; color: #555; }
+        
+        .rp-summary { margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        .rp-s-row { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 5px; }
+        .rp-total { background: #333; color: white; text-align: center; padding: 10px; font-size: 24px; font-weight: bold; margin-top: 10px; border-radius: 6px; }
+        .bg14 { background: #c0392b; }
+        .bg22 { background: #2980b9; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header-card">
+        <h1 class="app-title">📊 Satış Raporu</h1>
+        <div class="input-group">
+            <label>Mağaza Adı</label>
+            <input type="text" id="store-name" class="full-input" placeholder="Örn: BAKIRKÖY ALTIN">
+        </div>
+        <div class="date-row">
+            <div class="input-group">
+                <label>Başlangıç</label>
+                <input type="date" id="start-date" class="full-input">
+            </div>
+            <div class="input-group">
+                <label>Bitiş</label>
+                <input type="date" id="end-date" class="full-input">
+            </div>
+        </div>
+        <button class="btn-action" onclick="createList()">Listeyi Getir</button>
+    </div>
+
+    <div id="list-container">
+        </div>
+    
+    <div style="height: 60px;"></div>
+
+    <div class="fab-container" id="fab-btn" style="display:none;">
+        <button class="btn-whatsapp" onclick="shareReport()">
+            <span>🚀 Raporu WhatsApp'a Gönder</span>
+        </button>
+    </div>
+
+    <div id="preview-hidden">
+        <div id="report-paper">
+            <h1 class="rp-store" id="rp-store-name">MAĞAZA ADI</h1>
+            <div class="rp-sub" id="rp-date-range">Haftalık Rapor</div>
+            
+            <div class="rp-grid">
+                <div class="rp-col">
+                    <div class="rp-head h14">14 Ayar Satışlar</div>
+                    <table class="rp-table">
+                        <tbody id="rp-body-14"></tbody>
+                    </table>
+                    <div class="rp-summary">
+                        <div class="rp-s-row"><span>Toplam Gr:</span> <b id="rp-sum-gr-14">0.00</b></div>
+                        <div class="rp-s-row"><span>Toplam TL:</span> <b id="rp-sum-tl-14">0</b></div>
+                        <div class="rp-total bg14">ORT: <span id="rp-avg-14">0</span> TL</div>
+                    </div>
+                </div>
+                <div class="rp-col">
+                    <div class="rp-head h22">22 Ayar Satışlar</div>
+                    <table class="rp-table">
+                        <tbody id="rp-body-22"></tbody>
+                    </table>
+                    <div class="rp-summary">
+                        <div class="rp-s-row"><span>Toplam Gr:</span> <b id="rp-sum-gr-22">0.00</b></div>
+                        <div class="rp-s-row"><span>Toplam TL:</span> <b id="rp-sum-tl-22">0</b></div>
+                        <div class="rp-total bg22">ORT: <span id="rp-avg-22">0</span> TL</div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right; color: #999; margin-top: 20px; font-size: 12px;">Otomatik Oluşturulma: <span id="rp-now"></span></div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const today = new Date();
+            const lastWeek = new Date();
+            lastWeek.setDate(today.getDate() - 6);
+            document.getElementById('end-date').valueAsDate = today;
+            document.getElementById('start-date').valueAsDate = lastWeek;
+        };
+
+        function createList() {
+            const start = new Date(document.getElementById('start-date').value);
+            const end = new Date(document.getElementById('end-date').value);
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            
+            let loop = new Date(start);
+            while(loop <= end) {
+                if(loop.getDay() !== 0) { // Pazar hariç
+                    const dateStr = loop.getDate().toString().padStart(2,'0') + '/' + (loop.getMonth()+1).toString().padStart(2,'0');
+                    const dayName = loop.toLocaleDateString('tr-TR', { weekday: 'long' });
+                    
+                    const card = document.createElement('div');
+                    card.className = 'day-card';
+                    card.innerHTML = `
+                        <div class="day-title"><span>${dayName}</span> <span>${dateStr}</span></div>
+                        
+                        <div class="inputs-row">
+                            <span class="badge b-14">14 K</span>
+                            <input type="number" inputmode="decimal" class="num-input g-14" placeholder="Gram" data-date="${dateStr}">
+                            <input type="number" inputmode="decimal" class="num-input t-14" placeholder="Tutar (TL)">
+                        </div>
+
+                        <div class="inputs-row">
+                            <span class="badge b-22">22 K</span>
+                            <input type="number" inputmode="decimal" class="num-input g-22" placeholder="Gram" data-date="${dateStr}">
+                            <input type="number" inputmode="decimal" class="num-input t-22" placeholder="Tutar (TL)">
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+                loop.setDate(loop.getDate() + 1);
+            }
+            container.style.display = 'block';
+            document.getElementById('fab-btn').style.display = 'block';
+        }
+
+        async function shareReport() {
+            const btn = document.querySelector('.btn-whatsapp');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Hazırlanıyor...';
+            
+            // 1. Verileri Rapora İşle
+            fillReportData();
+            
+            // 2. Resmi Oluştur
+            const canvas = await html2canvas(document.getElementById('report-paper'), { scale: 2 });
+            
+            // 3. Blob'a çevir
+            canvas.toBlob(async (blob) => {
+                const file = new File([blob], "satis_raporu.png", { type: "image/png" });
+                
+                // 4. Paylaşım Yap (Web Share API)
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Haftalık Satış Raporu',
+                            text: 'Bu haftaki satış raporu ektedir.'
+                        });
+                        btn.innerHTML = '✅ Gönderildi';
+                    } catch (error) {
+                        console.log('Paylaşım iptal', error);
+                        btn.innerHTML = originalText;
+                    }
+                } else {
+                    // PC veya desteklemeyen tarayıcı ise indir
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL();
+                    link.download = 'satis_raporu.png';
+                    link.click();
+                    alert('Resim indirildi. WhatsApp\'tan galeriden seçip atabilirsin.');
+                    btn.innerHTML = originalText;
+                }
+                
+                setTimeout(() => { btn.innerHTML = originalText; }, 3000);
+            });
+        }
+
+        function fillReportData() {
+            // Başlıklar
+            const store = document.getElementById('store-name').value || "MAĞAZA ADI";
+            document.getElementById('rp-store-name').innerText = store;
+            document.getElementById('rp-now').innerText = new Date().toLocaleDateString('tr-TR');
+            
+            const s = new Date(document.getElementById('start-date').value);
+            const e = new Date(document.getElementById('end-date').value);
+            const opts = { day: 'numeric', month: 'long' };
+            document.getElementById('rp-date-range').innerText = `Dönem: ${s.toLocaleDateString('tr-TR', opts)} - ${e.toLocaleDateString('tr-TR', opts)}`;
+
+            // Tabloyu Doldur
+            processData('14');
+            processData('22');
+        }
+
+        function processData(type) {
+            const grams = document.querySelectorAll(`.g-${type}`);
+            const prices = document.querySelectorAll(`.t-${type}`);
+            const tbody = document.getElementById(`rp-body-${type}`);
+            
+            let totalGr = 0, totalTl = 0;
+            tbody.innerHTML = '';
+
+            grams.forEach((inp, i) => {
+                const g = parseFloat(inp.value) || 0;
+                const t = parseFloat(prices[i].value) || 0;
+                const date = inp.getAttribute('data-date');
+                
+                let html = `<tr><td>${date}</td>`;
+                if(g > 0) {
+                    html += `<td>${g.toFixed(2)} gr</td><td>${t.toLocaleString('tr-TR')} TL</td></tr>`;
+                    totalGr += g;
+                    totalTl += t;
+                } else {
+                    html += `<td colspan="2" style="text-align:center; color:#ccc;">-</td></tr>`;
+                }
+                tbody.innerHTML += html;
+            });
+
+            const avg = totalGr > 0 ? (totalTl / totalGr) : 0;
+            document.getElementById(`rp-sum-gr-${type}`).innerText = totalGr.toFixed(2) + " gr";
+            document.getElementById(`rp-sum-tl-${type}`).innerText = totalTl.toLocaleString('tr-TR');
+            document.getElementById(`rp-avg-${type}`).innerText = Math.round(avg).toLocaleString('tr-TR');
+        }
+    </script>
+</body>
+</html>
