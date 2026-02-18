@@ -48,9 +48,6 @@
     .fade-in { animation: fadeIn 0.5s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    .snowflake { position: absolute; background-color: white; border-radius: 50%; top: -10px; box-shadow: 0 0 5px rgba(255,255,255,0.8); animation: fall linear infinite; }
-    @keyframes fall { 0% { transform: translateY(-10vh) translateX(0px); opacity: 0.8; } 100% { transform: translateY(110vh) translateX(20px); opacity: 0; } }
-    
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -60,18 +57,6 @@
     }
     .animate-soft-enter { animation: softFocus 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     
-    .sparkle {
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-      box-shadow: 0 0 10px 2px rgba(255, 223, 0, 0.4);
-      animation: sparkleAnim 3s infinite ease-in-out;
-    }
-    @keyframes sparkleAnim {
-      0%, 100% { opacity: 0; transform: scale(0); }
-      50% { opacity: 1; transform: scale(1); }
-    }
-
     @keyframes neonFlash {
         0%, 100% { box-shadow: 0 0 10px #ef4444; transform: scale(1); }
         50% { box-shadow: 0 0 25px #fca5a5; transform: scale(1.02); }
@@ -253,39 +238,11 @@ function ProductDetailModal({ product, onClose }) {
 }
 
 function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
-  const snowflakes = Array.from({ length: 30 }).map((_, i) => {
-    const style = { 
-      left: `${Math.random() * 100}%`, 
-      width: `${Math.random() * 4 + 2}px`, 
-      height: `${Math.random() * 4 + 2}px`, 
-      animationDuration: `${Math.random() * 10 + 10}s`, 
-      animationDelay: `${Math.random() * 5}s`, 
-      opacity: Math.random() * 0.3 + 0.1 
-    };
-    return <div key={`snow-${i}`} className="snowflake" style={style} />;
-  });
-
-  const sparkles = Array.from({ length: 15 }).map((_, i) => {
-    const style = {
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      width: `${Math.random() * 3 + 1}px`,
-      height: `${Math.random() * 3 + 1}px`,
-      animationDuration: `${Math.random() * 2 + 2}s`,
-      animationDelay: `${Math.random() * 2}s`
-    };
-    return <div key={`sparkle-${i}`} className="sparkle" style={style} />;
-  });
-
+  
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#7f1d1d] via-[#b45309] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#b45309] via-[#d97706] to-[#92400e] p-6 fade-in text-center relative overflow-hidden">
       
       <button onClick={onLogin} className="absolute top-6 right-6 z-50 text-white/20 hover:text-white/90 transition-all p-3 rounded-full hover:bg-white/10">🔒</button>
-
-      <div className="absolute inset-0 pointer-events-none z-10">
-        {snowflakes}
-        {sparkles}
-      </div>
       
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col items-center justify-center p-6 z-30 relative">
         <div onClick={() => window.open('https://www.instagram.com/bakirkoykuyumcusu/', '_blank')} className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform duration-500 active:scale-95">
@@ -294,20 +251,16 @@ function WelcomeScreen({ onSelect, onLogin, onLocation, announcement }) {
         </div>
 
         <div className="relative">
-            <span className="absolute -top-6 -left-6 text-4xl transform -rotate-12 drop-shadow-lg filter animate-pulse">🎅</span>
             <h1 className="text-3xl md:text-5xl font-serif font-bold mb-4 tracking-tight drop-shadow-lg text-white text-center">Bakırköy Kuyumcusu</h1>
         </div>
 
         <p className="text-yellow-100 text-xs md:text-sm mb-12 uppercase tracking-[0.2em] md:tracking-[0.3em] opacity-90 flex items-center gap-2">
-           <span>❄️</span> Mutlu Yıllar & Hoşgeldiniz <span>❄️</span>
+           <span>✨</span> Hoşgeldiniz <span>✨</span>
         </p>
         
         <div className="flex flex-wrap gap-4 w-full justify-center">
           
-          <button disabled className="flex-1 min-w-[140px] bg-gray-200 text-gray-500 p-4 md:p-6 rounded-3xl shadow-none flex flex-col items-center justify-center gap-3 cursor-not-allowed border-2 border-gray-300" style={{ minHeight: '140px' }}>
-            <span className="text-3xl md:text-4xl opacity-50">✨</span><span className="font-bold text-sm md:text-lg leading-tight tracking-wide">Hazırlanıyor</span>
-          </button>
-
+          
           <button onClick={() => window.location.href = 'ruh-tasi.html'} className="flex-1 min-w-[140px] relative overflow-hidden rounded-3xl border-2 p-4 md:p-6 shadow-2xl transition-all active:scale-95 flex flex-col items-center justify-center gap-2 glow-static hover-glass-shine group" style={{ minHeight: '140px', background: 'radial-gradient(circle at center, #581c87 0%, #1e1b4b 100%)' }}>
             <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
                 <div className="star w-1 h-1 top-3 left-4" style={{animationDelay: '0.2s'}}></div>
