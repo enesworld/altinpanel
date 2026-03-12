@@ -1,0 +1,32 @@
+name: Haberleri Guncelle
+
+on:
+  schedule:
+    - cron: '0 */3 * * *' # Her 3 saatte bir çalışır
+  workflow_dispatch: # Manuel çalıştırmak için buton ekler
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodlari cek
+        uses: actions/checkout@v2
+
+      - name: Python Kur
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Kutuphaneleri Yukle
+        run: pip install feedparser
+
+      - name: Botu Calistir
+        run: python haber_botu.py
+
+      - name: Degisiklikleri Kaydet
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add index.html
+          git commit -m "Haberler otomatik güncellendi" || exit 0
+          git push
