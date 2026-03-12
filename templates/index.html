@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bakırköy Özel Haber Paneli</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 40px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: auto; }
+        .tara-btn { 
+            display: block; width: 100%; padding: 15px; background: #2c3e50; 
+            color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 18px;
+        }
+        .haber-kart { 
+            background: white; padding: 20px; margin-top: 15px; border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .haber-baslik { text-decoration: none; color: #2980b9; font-weight: bold; font-size: 1.1em; }
+        .haber-tarih { display: block; margin-top: 8px; font-size: 0.85em; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form action="/haber-ozel-tara/tara" method="get">
+            <button type="submit" class="tara-btn">Bakırköy Haberlerini Tara</button>
+        </form>
+
+        {% if haberler is not none %}
+            <p style="text-align: center; color: #7f8c8d;">{{ taranan_sayisi }} haber içinden {{ haberler|length }} sonuç bulundu.</p>
+            {% for haber in haberler %}
+                <div class="haber-kart">
+                    <a href="{{ haber.link }}" target="_blank" class="haber-baslik">{{ haber.baslik }}</a>
+                    <span class="haber-tarih">🕒 {{ haber.tarih }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</body>
+</html>
