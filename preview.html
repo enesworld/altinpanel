@@ -1,328 +1,494 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tamir / İnceleme Servis Fişi - WhatsApp PDF</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-YcsIPGdhPK4P/uRWm5DWH4ItBR4ibDT1Q4vUPWwYexTDiVPmJRfKZnyydGRWAdJ4wzOhWj0tBXzQecO3dE5lg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<style>
-  * { box-sizing: border-box; }
-  :root { --border:#222; --soft:#666; --bg:#f4f4f4; }
-  body {
-    margin:0;
-    background:var(--bg);
-    font-family: Arial, Helvetica, sans-serif;
-    color:#111;
-  }
-  .toolbar {
-    max-width:210mm;
-    margin:12px auto;
-    display:flex;
-    gap:8px;
-    justify-content:flex-end;
-  }
-  button {
-    border:0;
-    border-radius:8px;
-    padding:10px 14px;
-    background:#111;
-    color:white;
-    font-weight:700;
-    cursor:pointer;
-  }
-  button.secondary { background:#666; }
-  button.whatsapp { background:#128C7E; }
-  .status-msg {
-    max-width:210mm;
-    margin:-4px auto 10px;
-    font-size:12px;
-    color:#333;
-    text-align:right;
-    min-height:16px;
-  }
-  .sheet {
-    width:210mm;
-    min-height:297mm;
-    margin:0 auto 16px;
-    background:white;
-    padding:10mm;
-    box-shadow:0 4px 18px rgba(0,0,0,.15);
-  }
-  .top {
-    display:grid;
-    grid-template-columns:42mm 1fr 48mm;
-    gap:5mm;
-    align-items:start;
-    margin-bottom:5mm;
-  }
-  .photo {
-    height:38mm;
-    border:1.5px dashed #777;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    position:relative;
-    overflow:hidden;
-    font-size:10pt;
-    color:#555;
-    background:#fafafa;
-  }
-  .photo img { width:100%; height:100%; object-fit:cover; display:none; }
-  .photo input { position:absolute; inset:0; opacity:0; cursor:pointer; }
-  h1 { margin:0 0 2mm; font-size:20pt; letter-spacing:.2px; }
-  .subtitle { font-size:10pt; color:#333; margin-bottom:4mm; }
-  .firm-row { display:grid; grid-template-columns: 1fr 1fr; gap:3mm; }
-  .mini-table { border:1px solid var(--border); }
-  .mini-row { display:grid; grid-template-columns:18mm 1fr; border-bottom:1px solid var(--border); min-height:9mm; }
-  .mini-row:last-child { border-bottom:0; }
-  .mini-label { background:#f1f1f1; border-right:1px solid var(--border); padding:2mm; font-weight:700; font-size:9pt; }
-  .mini-cell { padding:2mm; font-size:10pt; }
-  .section { border:1.2px solid var(--border); margin-bottom:4mm; }
-  .section-title { background:#eee; border-bottom:1.2px solid var(--border); padding:2mm 2.5mm; font-weight:800; font-size:10.5pt; }
-  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); }
-  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); }
-  .field { border-right:1px solid #999; border-bottom:1px solid #999; min-height:14mm; padding:2mm; }
-  .field:nth-child(4n) { border-right:0; }
-  .grid-3 .field:nth-child(3n) { border-right:0; }
-  .grid-4 .field:nth-last-child(-n+4), .grid-3 .field:nth-last-child(-n+3) { border-bottom:0; }
-  label { display:block; font-size:8.5pt; font-weight:700; margin-bottom:1.2mm; }
-  input, textarea {
-    width:100%;
-    border:0;
-    outline:0;
-    font:inherit;
-    font-size:10.5pt;
-    resize:none;
-    background:transparent;
-  }
-  textarea { min-height:16mm; line-height:1.25; }
-  .checks { display:grid; grid-template-columns:repeat(4,1fr); gap:2mm; padding:3mm; }
-  .check { border:1px solid #999; padding:2mm; font-size:10pt; min-height:9mm; display:flex; gap:2mm; align-items:center; }
-  .box { width:4mm; height:4mm; border:1px solid #333; flex:0 0 auto; }
-  .notes { display:grid; grid-template-columns:1fr 1fr; }
-  .note-field { min-height:31mm; padding:2.5mm; border-right:1px solid #999; border-bottom:1px solid #999; }
-  .note-field:nth-child(2n) { border-right:0; }
-  .note-field:nth-last-child(-n+2) { border-bottom:0; }
-  .summary { display:grid; grid-template-columns:1fr 1fr 1.4fr; }
-  .small-note {
-    border-top:1px solid #999;
-    padding:2mm 2.5mm;
-    font-size:8.5pt;
-    color:#333;
-  }
-  .signatures {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8mm;
-    margin-top:7mm;
-    font-size:9.5pt;
-  }
-  .sig-line { border-top:1.5px solid #111; padding-top:2mm; text-align:center; min-height:13mm; }
-  .footer {
-    margin-top:4mm;
-    display:flex;
-    justify-content:space-between;
-    font-size:8.5pt;
-    color:#444;
-  }
-  @page { size:A4 portrait; margin: 0; }
-  @media print {
-    html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background:white; overflow: hidden; }
-    .toolbar { display:none !important; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tamir / İnceleme Servis Fişi</title>
+  <style>
+    :root {
+      --gold: #c89a42;
+      --dark: #1f2430;
+      --line: #d7dbe2;
+      --bg: #f5f6f8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--dark);
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #fff;
+      border-bottom: 1px solid #e7e7e7;
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .toolbar button, .toolbar label {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .primary { background: #128c7e; color: #fff; }
+    .secondary { background: var(--gold); color: #fff; }
+    .ghost { background: #eef1f4; color: var(--dark); }
+    .hint {
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: #6a7280;
+    }
+
+    .wrap {
+      padding: 18px;
+      display: flex;
+      justify-content: center;
+    }
     .sheet {
+      width: 794px;
+      min-height: 1123px;
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      border-radius: 10px;
+      padding: 22px 24px 18px;
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .photo-box {
+      border: 2px solid #e9d3a5;
+      border-radius: 12px;
+      height: 170px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #8c95a1;
+      overflow: hidden;
+      background: #fcfcfd;
+      text-align: center;
+      padding: 10px;
+    }
+    .photo-box img {
       width: 100%;
       height: 100%;
-      margin: 0;
-      padding: 8mm;
-      box-shadow: none;
-      page-break-inside: avoid;
-      page-break-after: avoid;
+      object-fit: cover;
+      display: none;
+      border-radius: 10px;
     }
-    input, textarea { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .photo input { display:none; }
-  }
-</style>
+    .photo-placeholder { font-size: 13px; line-height: 1.4; }
+
+    .title-area {
+      text-align: center;
+      padding-top: 2px;
+    }
+    .diamond { font-size: 28px; color: var(--gold); line-height: 1; }
+    .title {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      margin: 5px 0 4px;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    .subtitle {
+      color: var(--gold);
+      font-size: 15px;
+      font-style: italic;
+      margin-bottom: 14px;
+    }
+    .top-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .mini-card {
+      border: 1.5px solid #e5c88f;
+      border-radius: 10px;
+      padding: 10px 12px;
+      min-height: 65px;
+      text-align: left;
+    }
+    .mini-card .label { font-size: 12px; font-weight: 800; color: #3f4652; margin-bottom: 6px; }
+
+    .sec {
+      margin-top: 12px;
+    }
+    .sec-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0 7px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .sec-title::after {
+      content: "";
+      flex: 1;
+      border-top: 1px solid #ead7b0;
+      margin-left: 6px;
+    }
+
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: 1.35fr .7fr .7fr; }
+    .grid-4 { grid-template-columns: .6fr 1fr 1.5fr 1fr; }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #525a68;
+      font-weight: 700;
+    }
+    input[type="text"],
+    input[type="tel"],
+    input[type="date"],
+    textarea {
+      width: 100%;
+      border: none;
+      border-bottom: 1.6px solid #949ba8;
+      padding: 8px 2px 6px;
+      font-size: 14px;
+      background: transparent;
+      outline: none;
+      color: var(--dark);
+      border-radius: 0;
+    }
+    textarea {
+      border: 1px solid #d7dde7;
+      border-radius: 10px;
+      min-height: 68px;
+      padding: 10px 12px;
+      resize: none;
+      background: #fff;
+    }
+    .checks {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .check {
+      border: 1px solid #d7dde7;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      min-height: 42px;
+    }
+    .check input { width: 17px; height: 17px; }
+
+    .delivery {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: end;
+      margin-top: 10px;
+    }
+    .signs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 16px;
+      padding-top: 10px;
+      border-top: 1px solid #ead7b0;
+    }
+    .sign-line {
+      margin-top: 30px;
+      border-bottom: 1.5px solid #717887;
+      height: 24px;
+    }
+    .footer-note {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #ead7b0;
+      text-align: center;
+      color: #6c7380;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    .capture-mode .toolbar,
+    .capture-mode .no-capture { display: none !important; }
+
+    @media (max-width: 860px) {
+      .wrap { padding: 10px; }
+      .sheet { width: 100%; min-height: auto; padding: 16px; border-radius: 0; }
+      .header { grid-template-columns: 120px 1fr; gap: 12px; }
+      .photo-box { height: 145px; }
+      .title { font-size: 22px; }
+      .top-grid, .grid-2, .grid-3, .grid-4, .checks, .delivery, .signs {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="toolbar">
-    <button class="whatsapp" onclick="sharePdfToWhatsApp()">WhatsApp’a PDF Gönder</button>
-    <button onclick="window.print()">PDF / Yazdır</button>
-    <button class="secondary" onclick="location.reload()">Temizle</button>
+  <div class="toolbar no-capture">
+    <label class="secondary" for="photoInput">Ürün Fotoğrafı Ekle</label>
+    <input id="photoInput" type="file" accept="image/*" style="display:none" />
+    <button class="primary" id="shareBtn">Görüntü Olarak Paylaş</button>
+    <button class="ghost" id="downloadBtn">Görüntü İndir</button>
+    <button class="ghost" id="clearBtn">Temizle</button>
+    <div class="hint">Bu sürüm PDF kütüphanesi kullanmaz. Butona basınca fişin görüntüsünü PNG olarak paylaşır veya indirir.</div>
   </div>
-  <div id="statusMsg" class="status-msg"></div>
 
-  <main class="sheet">
-    <header class="top">
-      <div class="photo" id="photoBox">
-        <span>Ürün<br>Fotoğrafı</span>
-        <img id="preview" alt="Ürün fotoğrafı">
-        <input type="file" accept="image/*" onchange="loadPhoto(event)">
-      </div>
-
-      <div>
-        <h1>TAMİR / İNCELEME RAPORU</h1>
-        <div class="subtitle">Müşteri ürün kabul ve servis bilgilendirme fişi</div>
-        <div class="firm-row">
-          <div class="field" style="border:1px solid #999; min-height:13mm;"><label>Firma</label><input value="Firma adı"></div>
-          <div class="field" style="border:1px solid #999; min-height:13mm;"><label>Telefon</label><input value="0___ ___ __ __"></div>
+  <div class="wrap" id="captureRoot">
+    <div class="sheet" id="sheet">
+      <div class="header">
+        <div class="photo-box">
+          <img id="previewImg" alt="Ürün fotoğrafı" />
+          <div id="photoPlaceholder" class="photo-placeholder">📷<br>ÜRÜN FOTOĞRAFI</div>
+        </div>
+        <div class="title-area">
+          <div class="diamond">◈</div>
+          <div class="title">TAMİR / İNCELEME SERVİS FİŞİ</div>
+          <div class="subtitle">Müşteri Bilgilendirme Formu</div>
+          <div class="top-grid">
+            <div class="mini-card field">
+              <div class="label">RAPOR NO</div>
+              <input type="text" placeholder="TR-0001" />
+            </div>
+            <div class="mini-card field">
+              <div class="label">TARİH</div>
+              <input type="date" />
+            </div>
+            <div class="mini-card field">
+              <div class="label">DURUM</div>
+              <input type="text" placeholder="İncelemede" />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="mini-table">
-        <div class="mini-row"><div class="mini-label">Rapor No</div><div class="mini-cell"><input value="TR-0001"></div></div>
-        <div class="mini-row"><div class="mini-label">Tarih</div><div class="mini-cell"><input value="gg.aa.yyyy"></div></div>
-        <div class="mini-row"><div class="mini-label">Durum</div><div class="mini-cell"><input value="İncelemede"></div></div>
+      <div class="sec">
+        <div class="sec-title">1) MÜŞTERİ BİLGİLERİ</div>
+        <div class="grid-2">
+          <div class="field"><label>Ad Soyad</label><input type="text" /></div>
+          <div class="field"><label>Telefon</label><input type="tel" /></div>
+        </div>
       </div>
-    </header>
 
-    <section class="section">
-      <div class="section-title">Müşteri ve Ürün Bilgileri</div>
-      <div class="grid-4">
-        <div class="field"><label>Müşteri</label><input value="Ad soyad"></div>
-        <div class="field"><label>Telefon</label><input value="0___ ___ __ __"></div>
-        <div class="field"><label>Ürün</label><input value="Yüzük, bileklik..."></div>
-        <div class="field"><label>Adet</label><input value="1"></div>
-        <div class="field"><label>Ayar</label><input value="14K / 18K / 22K"></div>
-        <div class="field"><label>Gram</label><input value="0,00 gr"></div>
-        <div class="field"><label>Renk</label><input value="Sarı / Beyaz / Rose"></div>
-        <div class="field"><label>Taş / Model</label><input value="Varsa"></div>
+      <div class="sec">
+        <div class="sec-title">2) ÜRÜN BİLGİLERİ</div>
+        <div class="grid-3">
+          <div class="field"><label>Ürün</label><input type="text" placeholder="Yüzük, küpe, bileklik..." /></div>
+          <div class="field"><label>Ayar</label><input type="text" placeholder="14K / 18K / 22K" /></div>
+          <div class="field"><label>Gram</label><input type="text" placeholder="0,00 gr" /></div>
+        </div>
+        <div class="grid-4" style="margin-top:8px;">
+          <div class="field"><label>Adet</label><input type="text" value="1" /></div>
+          <div class="field"><label>Renk</label><input type="text" placeholder="Sarı / Beyaz / Rose" /></div>
+          <div class="field"><label>Taş / Model</label><input type="text" /></div>
+          <div class="field"><label>Not</label><input type="text" placeholder="Varsa" /></div>
+        </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="section-title">İşlem Türü</div>
-      <div class="checks">
-        <div class="check"><span class="box"></span> Ölçü</div>
-        <div class="check"><span class="box"></span> Kaynak</div>
-        <div class="check"><span class="box"></span> Taş</div>
-        <div class="check"><span class="box"></span> Cila</div>
-        <div class="check"><span class="box"></span> Kaplama</div>
-        <div class="check"><span class="box"></span> Kilit</div>
-        <div class="check"><span class="box"></span> Eksik parça</div>
-        <div class="check"><span class="box"></span> Diğer</div>
+      <div class="sec">
+        <div class="sec-title">3) İŞLEM TÜRÜ</div>
+        <div class="checks">
+          <label class="check"><input type="checkbox">Ölçü</label>
+          <label class="check"><input type="checkbox">Kaynak</label>
+          <label class="check"><input type="checkbox">Taş</label>
+          <label class="check"><input type="checkbox">Cila</label>
+          <label class="check"><input type="checkbox">Kaplama</label>
+          <label class="check"><input type="checkbox">Kilit</label>
+          <label class="check"><input type="checkbox">Eksik Parça</label>
+          <label class="check"><input type="checkbox">Diğer</label>
+        </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="section-title">Problem / Not / Teşhis</div>
-      <div class="notes">
-        <div class="note-field"><label>Müşterinin Bildirdiği Problem</label><textarea>Problem açıklaması...</textarea></div>
-        <div class="note-field"><label>Ürün Kabul Notu</label><textarea>Çizik, ezik, eksik taş, teslim durumu...</textarea></div>
-        <div class="note-field"><label>Teşhis</label><textarea>Usta inceleme sonucu...</textarea></div>
-        <div class="note-field"><label>Yapılacak İşlem</label><textarea>Uygulanacak işlem...</textarea></div>
+      <div class="sec">
+        <div class="sec-title">4) MÜŞTERİNİN BİLDİRDİĞİ PROBLEM</div>
+        <textarea></textarea>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="section-title">Teslim / Ücret Özeti</div>
-      <div class="summary">
-        <div class="field" style="border-bottom:0;"><label>Tahmini Teslim Tarihi</label><input value="gg.aa.yyyy"></div>
-        <div class="field" style="border-bottom:0;"><label>Tahmini Ücret</label><input value="₺"></div>
-        <div class="field" style="border-bottom:0; border-right:0;"><label>Not</label><input value="Müşteri aranacak vb."></div>
+      <div class="sec">
+        <div class="sec-title">5) ÜRÜN KABUL NOTU</div>
+        <textarea></textarea>
       </div>
-      <div class="small-note">Bu belge, ürünün teslim alındığı andaki kayıt ve ön inceleme bilgisidir. Nihai işlem ve ücret, detaylı inceleme sonrası müşteriye bildirilir.</div>
-    </section>
 
-    <div class="signatures">
-      <div class="sig-line">Müşteri Onayı / İmza</div>
-      <div class="sig-line">Teslim Alan Yetkili / İmza</div>
+      <div class="sec">
+        <div class="sec-title">6) TEŞHİS</div>
+        <textarea></textarea>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">7) YAPILACAK İŞLEM</div>
+        <textarea></textarea>
+      </div>
+
+      <div class="delivery">
+        <div class="field"><label>8) TAHMİNİ TESLİM TARİHİ</label><input type="date" /></div>
+        <div class="field"><label>TAHMİNİ ÜCRET</label><input type="text" placeholder="₺" /></div>
+      </div>
+
+      <div class="signs">
+        <div>
+          <div style="font-weight:800;">9) MÜŞTERİ ONAYI / İMZA</div>
+          <div class="sign-line"></div>
+        </div>
+        <div>
+          <div style="font-weight:800;">TESLİM ALAN YETKİLİ / İMZA</div>
+          <div class="sign-line"></div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Bu form ürün kabul ve ön inceleme fişidir. Nihai işlem ve ücret, detaylı inceleme sonrası müşteriye bildirilir.
+      </div>
     </div>
+  </div>
 
-    <div class="footer">
-      <div>WhatsApp / Tel: 0___ ___ __ __</div>
-      <div>Müşteri bilgilendirme raporudur.</div>
-    </div>
-  </main>
+  <script>
+    const photoInput = document.getElementById('photoInput');
+    const previewImg = document.getElementById('previewImg');
+    const photoPlaceholder = document.getElementById('photoPlaceholder');
+    const shareBtn = document.getElementById('shareBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const sheet = document.getElementById('sheet');
 
-<script>
-function loadPhoto(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = document.getElementById('preview');
-    img.src = e.target.result;
-    img.style.display = 'block';
-    document.querySelector('#photoBox span').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-}
+    photoInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        previewImg.src = reader.result;
+        previewImg.style.display = 'block';
+        photoPlaceholder.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
 
-function setStatus(message) {
-  const el = document.getElementById('statusMsg');
-  if (el) el.textContent = message || '';
-}
+    clearBtn.addEventListener('click', () => {
+      document.querySelectorAll('input[type="text"], input[type="tel"], input[type="date"], textarea').forEach(el => el.value = '');
+      document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+      previewImg.removeAttribute('src');
+      previewImg.style.display = 'none';
+      photoPlaceholder.style.display = 'block';
+      photoInput.value = '';
+    });
 
-function safeFileName(text) {
-  return (text || 'tamir-servis-fisi')
-    .toString()
-    .trim()
-    .replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '') || 'tamir-servis-fisi';
-}
-
-async function makePdfBlob() {
-  if (typeof html2pdf === 'undefined') {
-    throw new Error('PDF oluşturma kütüphanesi yüklenemedi. İnternet bağlantısını kontrol edin veya PDF / Yazdır butonunu kullanın.');
-  }
-
-  const sheet = document.querySelector('.sheet');
-  const raporNoInput = document.querySelector('.mini-cell input');
-  const raporNo = safeFileName(raporNoInput ? raporNoInput.value : 'tamir-servis-fisi');
-
-  const options = {
-    margin: 0,
-    filename: `${raporNo}-tamir-servis-fisi.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      scrollX: 0,
-      scrollY: 0
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-  };
-
-  return await html2pdf().set(options).from(sheet).output('blob');
-}
-
-async function sharePdfToWhatsApp() {
-  try {
-    setStatus('PDF hazırlanıyor...');
-    const blob = await makePdfBlob();
-    const raporNoInput = document.querySelector('.mini-cell input');
-    const raporNo = safeFileName(raporNoInput ? raporNoInput.value : 'tamir-servis-fisi');
-    const file = new File([blob], `${raporNo}-tamir-servis-fisi.pdf`, { type: 'application/pdf' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-      await navigator.share({
-        title: 'Tamir / İnceleme Raporu',
-        text: 'Ürününüzle ilgili tamir / inceleme raporu ektedir.',
-        files: [file]
+    function syncFormValues(root) {
+      root.querySelectorAll('input').forEach(input => {
+        if (input.type === 'checkbox') {
+          if (input.checked) input.setAttribute('checked', 'checked');
+          else input.removeAttribute('checked');
+        } else {
+          input.setAttribute('value', input.value);
+        }
       });
-      setStatus('Paylaşım ekranı açıldı. WhatsApp’ı seçip müşteriye gönderebilirsiniz.');
-      return;
+      root.querySelectorAll('textarea').forEach(t => {
+        t.textContent = t.value;
+      });
+      root.querySelectorAll('img').forEach(img => {
+        if (img.src) img.setAttribute('src', img.src);
+      });
     }
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setStatus('Bu cihaz direkt paylaşımı desteklemedi. PDF indirildi; WhatsApp’tan belge olarak seçip gönderebilirsiniz.');
-  } catch (error) {
-    console.error(error);
-    setStatus(error.message || 'PDF paylaşımı yapılamadı. PDF / Yazdır butonunu kullanın.');
-    alert(error.message || 'PDF paylaşımı yapılamadı. PDF / Yazdır butonunu kullanın.');
-  }
-}
-</script>
+    async function generatePngBlob() {
+      const clone = sheet.cloneNode(true);
+      syncFormValues(document);
+      syncFormValues(clone);
+
+      const width = sheet.offsetWidth;
+      const height = sheet.offsetHeight;
+      const css = Array.from(document.styleSheets)
+        .map(sheet => {
+          try {
+            return Array.from(sheet.cssRules).map(r => r.cssText).join('\n');
+          } catch (e) {
+            return '';
+          }
+        }).join('\n');
+
+      const serialized = new XMLSerializer().serializeToString(clone);
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+              <style>${css}</style>
+              ${serialized}
+            </div>
+          </foreignObject>
+        </svg>`;
+
+      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.decoding = 'sync';
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+
+      const canvas = document.createElement('canvas');
+      const scale = 2;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+
+      return await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1));
+    }
+
+    async function shareOrDownload(mode) {
+      try {
+        const blob = await generatePngBlob();
+        const file = new File([blob], 'tamir-servis-fisi.png', { type: 'image/png' });
+
+        if (mode === 'share' && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Tamir / İnceleme Servis Fişi',
+            text: 'Tamir / İnceleme Servis Fişi'
+          });
+          return;
+        }
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'tamir-servis-fisi.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+
+        if (mode === 'share') {
+          alert('Bu cihazda direkt paylaşım açılamadı. Görüntü indirildi; şimdi WhatsApp’tan belge/görsel olarak gönderebilirsin.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Görüntü oluşturulurken bir sorun oldu. Lütfen sayfayı yenileyip tekrar dene.');
+      }
+    }
+
+    shareBtn.addEventListener('click', () => shareOrDownload('share'));
+    downloadBtn.addEventListener('click', () => shareOrDownload('download'));
+  </script>
 </body>
 </html>
