@@ -1,28 +1,35 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Müşteri Tamir / İnceleme Raporu</title>
   <style>
     :root {
-      --border: #222;
-      --soft: #f3f4f6;
-      --muted: #666;
+      --bg: #f4f1eb;
+      --paper: #fffdf8;
+      --ink: #1f1f1f;
+      --muted: #6f6a61;
+      --line: #d8cdbb;
+      --soft: #f8f3e9;
+      --accent: #9b7a32;
+      --accent-dark: #6f531d;
+      --danger: #8a2d2d;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
+      background: var(--bg);
+      color: var(--ink);
       font-family: Arial, Helvetica, sans-serif;
-      background: #e5e7eb;
-      color: #111;
+      line-height: 1.35;
     }
 
     .toolbar {
-      max-width: 900px;
-      margin: 18px auto 10px;
+      max-width: 980px;
+      margin: 18px auto 0;
       display: flex;
       gap: 10px;
       justify-content: flex-end;
@@ -30,362 +37,431 @@
     }
 
     button {
-      border: 1px solid #111;
-      background: #111;
-      color: #fff;
-      border-radius: 8px;
-      padding: 10px 14px;
-      cursor: pointer;
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 14px;
       font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 4px 14px rgba(0,0,0,.12);
     }
 
-    button.secondary {
-      background: #fff;
-      color: #111;
-    }
+    button.secondary { background: #4d4a44; }
 
-    .page {
+    .sheet {
       width: 210mm;
       min-height: 297mm;
-      margin: 0 auto 24px;
-      background: #fff;
-      padding: 12mm;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      margin: 16px auto 28px;
+      padding: 15mm;
+      background: var(--paper);
+      box-shadow: 0 18px 50px rgba(0,0,0,.16);
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .top {
+    .sheet:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-top: 8px solid var(--accent);
+      pointer-events: none;
+    }
+
+    .header {
       display: grid;
-      grid-template-columns: 42mm 1fr 46mm;
-      gap: 8mm;
-      align-items: stretch;
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 6mm;
+      grid-template-columns: 42mm 1fr 48mm;
+      gap: 14px;
+      align-items: start;
+      padding-bottom: 13px;
+      border-bottom: 2px solid var(--accent);
     }
 
-    .photo-box {
-      border: 1.5px dashed #555;
+    .photoBox {
+      width: 42mm;
       height: 42mm;
+      border: 1.5px dashed var(--line);
+      background: #fff;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      position: relative;
+      color: var(--muted);
+      font-size: 12px;
       overflow: hidden;
-      background: #fafafa;
+      position: relative;
     }
 
-    .photo-box img {
+    .photoBox img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: none;
     }
 
-    .photo-box .hint {
-      padding: 8px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.3;
+    .photoBox input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
     }
 
-    .photo-input {
-      margin-top: 6px;
-      width: 100%;
-      font-size: 11px;
-    }
-
-    h1 {
+    .brand h1 {
       margin: 0;
-      text-align: center;
-      font-size: 24px;
-      letter-spacing: .5px;
+      font-size: 25px;
+      letter-spacing: .4px;
+      color: var(--accent-dark);
     }
 
-    .subtitle {
-      text-align: center;
+    .brand .sub {
+      margin-top: 4px;
       color: var(--muted);
-      margin-top: 6px;
       font-size: 13px;
     }
 
-    .company textarea {
-      width: 100%;
-      min-height: 26mm;
-      border: 1px solid #999;
-      resize: vertical;
-      padding: 7px;
-      font-size: 12px;
-      text-align: center;
-    }
-
-    .report-no {
-      border: 1px solid var(--border);
-      padding: 7px;
+    .brand .company {
+      margin-top: 14px;
       display: grid;
-      gap: 6px;
-      font-size: 12px;
-      align-content: start;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
 
-    .section-title {
+    .meta {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .meta .row {
+      display: grid;
+      grid-template-columns: 23mm 1fr;
+      border-bottom: 1px solid var(--line);
+      min-height: 30px;
+    }
+
+    .meta .row:last-child { border-bottom: none; }
+    .meta .label {
       background: var(--soft);
-      border: 1px solid var(--border);
-      border-bottom: none;
-      padding: 6px 8px;
-      font-size: 13px;
+      padding: 7px 8px;
+      font-size: 11px;
+      color: var(--muted);
       font-weight: 700;
-      margin-top: 8mm;
+    }
+    .meta input { border: 0; padding: 6px 8px; width: 100%; font-size: 12px; background: transparent; }
+
+    .section {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
     }
 
-    .grid {
-      border: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+    .sectionTitle {
+      background: var(--soft);
+      color: var(--accent-dark);
+      font-weight: 800;
+      padding: 8px 11px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
     }
 
-    .grid.two { grid-template-columns: repeat(2, 1fr); }
-    .grid.three { grid-template-columns: repeat(3, 1fr); }
+    .sectionBody { padding: 10px 11px; }
 
-    .field {
-      min-height: 15mm;
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 5px 6px;
-    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+    .grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 9px; }
 
-    .field:nth-child(4n) { border-right: none; }
-    .grid.two .field:nth-child(2n) { border-right: none; }
-    .grid.three .field:nth-child(3n) { border-right: none; }
-    .grid .field:nth-last-child(-n+4) { border-bottom: none; }
-    .grid.two .field:nth-last-child(-n+2) { border-bottom: none; }
-    .grid.three .field:nth-last-child(-n+3) { border-bottom: none; }
-
-    label {
+    .field label {
       display: block;
       font-size: 11px;
-      color: #333;
       font-weight: 700;
-      margin-bottom: 4px;
-      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3px;
     }
 
     input, textarea, select {
-      width: 100%;
-      border: none;
-      outline: none;
       font-family: inherit;
-      font-size: 14px;
-      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 8px 9px;
+      width: 100%;
+      font-size: 13px;
+      background: #fffefb;
+      color: var(--ink);
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 28mm;
-      line-height: 1.35;
-    }
+    textarea { resize: vertical; min-height: 54px; }
 
-    .big textarea { min-height: 38mm; }
-    .small-note textarea { min-height: 22mm; }
-
-    .check-row {
-      border: 1px solid var(--border);
-      padding: 8px;
+    .checks {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 6px 12px;
-      font-size: 13px;
+      gap: 7px;
+      margin-top: 2px;
     }
 
-    .check-row label {
+    .check {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 7px 8px;
+      font-size: 12px;
+      color: #3b3935;
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
-      font-weight: 400;
-      color: #111;
-      text-transform: none;
-      margin: 0;
+      background: #fffefb;
     }
 
-    .check-row input { width: auto; }
+    .check input { width: auto; }
 
-    .signatures {
+    .notice {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #fbf6ea;
+      border: 1px solid #e0d1ad;
+      color: #4d3f22;
+      font-size: 12px;
+    }
+
+    .totals {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10mm;
-      margin-top: 12mm;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .totalBox {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 9px;
+      background: #fffefb;
+    }
+
+    .totalBox label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 800;
+      display: block;
+      margin-bottom: 4px;
     }
 
     .signature {
-      border-top: 1.5px solid var(--border);
-      padding-top: 5px;
-      text-align: center;
-      font-size: 12px;
-      min-height: 20mm;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 15px;
     }
 
-    .fineprint {
-      margin-top: 8mm;
-      font-size: 10px;
-      line-height: 1.35;
-      color: #333;
-      border-top: 1px solid #aaa;
-      padding-top: 4mm;
+    .sigBox {
+      border-top: 1.5px solid var(--ink);
+      padding-top: 7px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 35px;
     }
+
+    .footer {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 10.5px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .small { font-size: 11px; color: var(--muted); }
 
     @media print {
       body { background: #fff; }
-      .toolbar, .photo-input { display: none !important; }
-      .page {
-        width: auto;
-        min-height: auto;
+      .toolbar { display: none; }
+      .sheet {
         margin: 0;
         box-shadow: none;
-        padding: 10mm;
+        border-radius: 0;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 12mm;
       }
-      input, textarea, select { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      @page { size: A4; margin: 8mm; }
+      input, textarea, select { border-color: #cfc7b8; }
+      .photoBox input { display: none; }
+      @page { size: A4; margin: 0; }
+    }
+
+    @media (max-width: 760px) {
+      .sheet { width: calc(100% - 20px); min-height: auto; padding: 18px; }
+      .header { grid-template-columns: 1fr; }
+      .photoBox { width: 100%; height: 180px; }
+      .brand .company, .grid2, .grid3, .grid4, .checks, .totals, .signature { grid-template-columns: 1fr; }
+      .toolbar { justify-content: center; flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
   <div class="toolbar">
+    <button onclick="window.print()">PDF / Yazdır</button>
     <button class="secondary" onclick="clearForm()">Formu Temizle</button>
-    <button onclick="window.print()">Yazdır / PDF Al</button>
   </div>
 
-  <main class="page">
-    <section class="top">
-      <div>
-        <div class="photo-box" id="photoBox">
-          <img id="preview" alt="Ürün fotoğrafı" />
-          <div class="hint" id="photoHint">Sol üst ürün fotoğrafı<br>Buradan görsel yükle</div>
-        </div>
-        <input class="photo-input" type="file" accept="image/*" onchange="loadPhoto(event)" />
+  <main class="sheet">
+    <section class="header">
+      <div class="photoBox" id="photoBox">
+        <span id="photoText">Ürün fotoğrafı<br>eklemek için tıklayın</span>
+        <img id="preview" alt="Ürün Fotoğrafı" />
+        <input type="file" accept="image/*" onchange="loadImage(event)" />
       </div>
 
-      <div class="company">
-        <h1>MÜŞTERİ TAMİR / İNCELEME RAPORU</h1>
-        <div class="subtitle">Ürün kabul, teşhis, tamir ve teslim formu</div>
-        <textarea placeholder="Firma adı / adres / telefon / sosyal medya bilgileri"></textarea>
-      </div>
-
-      <div class="report-no">
-        <div><label>Rapor No</label><input placeholder="TR-0001"></div>
-        <div><label>Tarih</label><input type="date"></div>
-        <div><label>Teslim Tarihi</label><input type="date"></div>
-        <div><label>Durum</label>
-          <select>
-            <option>Beklemede</option>
-            <option>İncelemede</option>
-            <option>Tamirde</option>
-            <option>Tamamlandı</option>
-            <option>Teslim Edildi</option>
-            <option>İade</option>
-          </select>
+      <div class="brand">
+        <h1 contenteditable="true">KUYUMCU TAMİR / İNCELEME RAPORU</h1>
+        <div class="sub" contenteditable="true">Müşteri bilgilendirme ve ürün kabul formu</div>
+        <div class="company">
+          <div class="field"><label>Firma / Mağaza</label><input placeholder="Firma adınız" /></div>
+          <div class="field"><label>Telefon</label><input placeholder="0___ ___ __ __" /></div>
+          <div class="field"><label>Adres / Şube</label><input placeholder="Şube veya adres" /></div>
+          <div class="field"><label>Yetkili</label><input placeholder="İlgili personel" /></div>
         </div>
       </div>
+
+      <div class="meta">
+        <div class="row"><div class="label">Rapor No</div><input placeholder="TR-0001" /></div>
+        <div class="row"><div class="label">Tarih</div><input type="date" /></div>
+        <div class="row"><div class="label">Durum</div><input placeholder="İncelemede / Tamirde" /></div>
+        <div class="row"><div class="label">Teslim</div><input type="date" /></div>
+      </div>
     </section>
 
-    <div class="section-title">Müşteri Bilgileri</div>
-    <section class="grid four">
-      <div class="field"><label>Ad Soyad</label><input></div>
-      <div class="field"><label>Telefon</label><input></div>
-      <div class="field"><label>E-posta</label><input></div>
-      <div class="field"><label>Adres / Not</label><input></div>
+    <section class="section">
+      <div class="sectionTitle">Müşteri Bilgileri <span class="small">Müşteri kopyası</span></div>
+      <div class="sectionBody grid3">
+        <div class="field"><label>Ad Soyad</label><input placeholder="Müşteri adı soyadı" /></div>
+        <div class="field"><label>Telefon</label><input placeholder="0___ ___ __ __" /></div>
+        <div class="field"><label>Referans / Sipariş No</label><input placeholder="Varsa" /></div>
+      </div>
     </section>
 
-    <div class="section-title">Ürün Bilgileri</div>
-    <section class="grid four">
-      <div class="field"><label>Ürün Cinsi</label><input placeholder="Yüzük, bileklik, kolye..."></div>
-      <div class="field"><label>Ayar</label><input placeholder="8 / 14 / 18 / 22 / 24"></div>
-      <div class="field"><label>Gram</label><input placeholder="0,00 gr"></div>
-      <div class="field"><label>Taş / Model</label><input></div>
-      <div class="field"><label>Renk</label><input placeholder="Sarı / Beyaz / Rose"></div>
-      <div class="field"><label>Adet</label><input></div>
-      <div class="field"><label>Ürün Kodu</label><input></div>
-      <div class="field"><label>Tahmini Değer</label><input></div>
+    <section class="section">
+      <div class="sectionTitle">Ürün Bilgileri</div>
+      <div class="sectionBody">
+        <div class="grid4">
+          <div class="field"><label>Ürün Cinsi</label><input placeholder="Yüzük, bileklik, kolye..." /></div>
+          <div class="field"><label>Ayar</label><input placeholder="14K / 18K / 22K" /></div>
+          <div class="field"><label>Gram</label><input placeholder="0,00 gr" /></div>
+          <div class="field"><label>Adet</label><input placeholder="1" /></div>
+        </div>
+        <div class="grid3" style="margin-top:9px;">
+          <div class="field"><label>Renk</label><input placeholder="Sarı / Beyaz / Rose" /></div>
+          <div class="field"><label>Taş / Model Detayı</label><input placeholder="Taşlı, taşsız, model adı..." /></div>
+          <div class="field"><label>Ürün Üzerindeki Belirgin İzler</label><input placeholder="Çizik, ezik, eksik taş vb." /></div>
+        </div>
+      </div>
     </section>
 
-    <div class="section-title">İşlem Türü</div>
-    <section class="check-row">
-      <label><input type="checkbox"> Tamir</label>
-      <label><input type="checkbox"> Bakım / Parlatma</label>
-      <label><input type="checkbox"> Ölçü</label>
-      <label><input type="checkbox"> Kaynak</label>
-      <label><input type="checkbox"> Taş Takma</label>
-      <label><input type="checkbox"> Taş Kontrol</label>
-      <label><input type="checkbox"> Kaplama</label>
-      <label><input type="checkbox"> Diğer</label>
+    <section class="section">
+      <div class="sectionTitle">İşlem Türü</div>
+      <div class="sectionBody">
+        <div class="checks">
+          <label class="check"><input type="checkbox" /> Ölçü değişimi</label>
+          <label class="check"><input type="checkbox" /> Kaynak / kopuk</label>
+          <label class="check"><input type="checkbox" /> Taş tamiri</label>
+          <label class="check"><input type="checkbox" /> Cila / bakım</label>
+          <label class="check"><input type="checkbox" /> Kaplama</label>
+          <label class="check"><input type="checkbox" /> Kilit / menteşe</label>
+          <label class="check"><input type="checkbox" /> Eksik parça</label>
+          <label class="check"><input type="checkbox" /> Diğer</label>
+        </div>
+      </div>
     </section>
 
-    <div class="section-title">Müşteri Şikayeti / Gelen Problem</div>
-    <section class="grid two">
-      <div class="field big"><label>Problem Açıklaması</label><textarea placeholder="Müşterinin belirttiği arıza, kırık, düşen taş, ölçü isteği vb."></textarea></div>
-      <div class="field big"><label>Ürün Kabul Notu</label><textarea placeholder="Teslim alınırken görülen çizik, ezik, eksik taş, deformasyon vb."></textarea></div>
+    <section class="section">
+      <div class="sectionTitle">Problem ve Ön İnceleme</div>
+      <div class="sectionBody grid2">
+        <div class="field">
+          <label>Müşterinin Bildirdiği Problem</label>
+          <textarea placeholder="Müşterinin üründe belirttiği problem..."></textarea>
+        </div>
+        <div class="field">
+          <label>Ürün Kabul Notu</label>
+          <textarea placeholder="Teslim alınırken görülen durum, çizik, taş eksikliği, gram/ayar notu..."></textarea>
+        </div>
+      </div>
     </section>
 
-    <div class="section-title">Teşhis / Usta İncelemesi</div>
-    <section class="grid two">
-      <div class="field big"><label>Teşhis</label><textarea placeholder="Ustanın tespit ettiği sorun ve teknik açıklama"></textarea></div>
-      <div class="field big"><label>Yapılacak İşlem</label><textarea placeholder="Uygulanacak tamir, değişim, kaynak, taş işlemi vb."></textarea></div>
+    <section class="section">
+      <div class="sectionTitle">Teşhis / Usta İncelemesi</div>
+      <div class="sectionBody grid2">
+        <div class="field">
+          <label>Teşhis</label>
+          <textarea placeholder="Ustanın tespit ettiği problem..."></textarea>
+        </div>
+        <div class="field">
+          <label>Yapılacak İşlem</label>
+          <textarea placeholder="Uygulanacak tamir, bakım veya işlem açıklaması..."></textarea>
+        </div>
+      </div>
     </section>
 
-    <div class="section-title">Ücret / Onay / Teslim</div>
-    <section class="grid three">
-      <div class="field"><label>Tahmini Ücret</label><input placeholder="₺"></div>
-      <div class="field"><label>Alınan Kapora</label><input placeholder="₺"></div>
-      <div class="field"><label>Kalan Tutar</label><input placeholder="₺"></div>
-      <div class="field"><label>Müşteri Onayı</label><select><option>Bekleniyor</option><option>Onaylandı</option><option>Onaylanmadı</option></select></div>
-      <div class="field"><label>Teslim Alan Personel</label><input></div>
-      <div class="field"><label>Teslim Eden Personel</label><input></div>
+    <section class="section">
+      <div class="sectionTitle">Ücret ve Teslim Bilgisi</div>
+      <div class="sectionBody">
+        <div class="totals">
+          <div class="totalBox"><label>Tahmini İşlem Ücreti</label><input placeholder="₺" /></div>
+          <div class="totalBox"><label>Kapora / Ön Ödeme</label><input placeholder="₺" /></div>
+          <div class="totalBox"><label>Kalan Tutar</label><input placeholder="₺" /></div>
+        </div>
+        <div class="notice">
+          Bu form, ürünün teslim alındığı andaki kayıt ve ön inceleme bilgisidir. Nihai işlem/ücret, detaylı usta incelemesinden sonra müşteriye bildirilir. Ürün tesliminde rapor numarası veya müşteri bilgileri ile işlem yapılır.
+        </div>
+      </div>
     </section>
 
-    <div class="section-title">Ek Notlar</div>
-    <section class="grid two">
-      <div class="field small-note"><label>Not</label><textarea placeholder="Ek açıklama, özel müşteri isteği, risk notu vb."></textarea></div>
-      <div class="field small-note"><label>Sonuç</label><textarea placeholder="Tamir tamamlandı / iade edildi / müşteri bilgilendirildi vb."></textarea></div>
-    </section>
+    <div class="signature">
+      <div class="sigBox">Müşteri Onayı / İmza</div>
+      <div class="sigBox">Teslim Alan Yetkili / İmza</div>
+    </div>
 
-    <section class="signatures">
-      <div class="signature">Müşteri İmza</div>
-      <div class="signature">Teslim Alan</div>
-      <div class="signature">Usta / Kontrol</div>
-    </section>
-
-    <p class="fineprint">
-      Not: Bu form ürün kabulü ve tamir/inceleme sürecinin takibi için düzenlenmiştir. Ürün teslim alınırken görülen mevcut hasarlar ve müşteri talepleri yukarıdaki alanlara yazılmalıdır. Tamir işlemi müşteri onayı alındıktan sonra başlatılır. Teslim sırasında müşteri imzası alınması önerilir.
-    </p>
+    <div class="footer">
+      <div contenteditable="true">WhatsApp / Tel: 0___ ___ __ __</div>
+      <div contenteditable="true">Bu rapor müşteri bilgilendirme amacıyla düzenlenmiştir.</div>
+    </div>
   </main>
 
   <script>
-    function loadPhoto(event) {
+    function loadImage(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = document.getElementById('preview');
-        const hint = document.getElementById('photoHint');
+        const text = document.getElementById('photoText');
         img.src = e.target.result;
         img.style.display = 'block';
-        hint.style.display = 'none';
+        text.style.display = 'none';
       };
       reader.readAsDataURL(file);
     }
 
     function clearForm() {
-      const inputs = document.querySelectorAll('input, textarea, select');
-      inputs.forEach(el => {
-        if (el.type === 'checkbox') el.checked = false;
-        else if (el.type === 'file') el.value = '';
-        else if (el.tagName === 'SELECT') el.selectedIndex = 0;
-        else el.value = '';
+      if (!confirm('Formdaki bilgileri temizlemek istiyor musunuz?')) return;
+      document.querySelectorAll('input').forEach(input => {
+        if (input.type === 'checkbox') input.checked = false;
+        else if (input.type !== 'file') input.value = '';
       });
+      document.querySelectorAll('textarea').forEach(t => t.value = '');
       const img = document.getElementById('preview');
-      const hint = document.getElementById('photoHint');
-      img.removeAttribute('src');
+      const text = document.getElementById('photoText');
+      img.src = '';
       img.style.display = 'none';
-      hint.style.display = 'block';
+      text.style.display = 'block';
     }
   </script>
 </body>
