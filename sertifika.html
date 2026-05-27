@@ -8,8 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -101,7 +99,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-4 my-auto z-10 items-center">
+        <div class="grid grid-cols-3 gap-6 my-auto z-10 items-center">
           
           <div class="col-span-2 space-y-2 pr-2 border-r border-neutral-800">
             <div class="grid grid-cols-2 gap-2">
@@ -134,21 +132,16 @@
             </div>
           </div>
 
-          <div class="col-span-1 flex flex-col items-center justify-center border-r border-neutral-800 pr-2">
-            <div style="background-color: #0a0a0a;" class="w-20 h-20 border border-amber-600/20 rounded flex items-center justify-center overflow-hidden p-1">
-              <img id="out-image" src="" class="w-full h-full object-cover hidden rounded-sm" />
-              <div id="img-placeholder" class="text-[8px] text-neutral-600 uppercase tracking-widest text-center leading-tight">Ürün<br>Görseli</div>
-            </div>
-          </div>
-
           <div class="col-span-1 flex flex-col items-center justify-center">
-            <div id="qrcode" class="p-1.5 bg-white rounded shadow-md"></div>
-            <span class="text-[7px] tracking-widest text-neutral-500 uppercase mt-1.5 text-center">Doğrulama</span>
+            <div style="background-color: #0a0a0a;" class="w-24 h-24 border border-amber-600/20 rounded flex items-center justify-center overflow-hidden p-1">
+              <img id="out-image" src="" class="w-full h-full object-cover hidden rounded-sm" />
+              <div id="img-placeholder" class="text-[10px] text-neutral-600 uppercase tracking-widest text-center leading-tight">Ürün<br>Görseli</div>
+            </div>
           </div>
 
         </div>
 
-        <div class="flex justify-between items-end border-t border-neutral-800 pt-2.5 text-[9px] text-neutral-500 z-10">
+        <div class="flex justify-between items-end border-t border-amber-600/20 pt-2.5 text-[9px] text-neutral-500 z-10">
           <div class="max-w-[440px] leading-relaxed space-y-0.5">
             <p>Bu sertifika, bilgileri girilen ürünün Bakırköy Kuyumcusu güvencesinde olduğunu garanti eder.</p>
             <p class="text-amber-600/90 font-medium tracking-wide">* İade edilemez, sadece 14 gün içinde kendi ayarıyla değişim yapılır.</p>
@@ -230,17 +223,6 @@
       return phoneStr || '-';
     }
 
-    // QR Kod Tanımı
-    const qrcodeContainer = document.getElementById("qrcode");
-    const qrcode = new QRCode(qrcodeContainer, {
-      text: `https://bakirkoyaltin.com/sertifika?no=${inCertNo.value}`,
-      width: 65,
-      height: 65,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.H
-    });
-
     // Canlı arayüz senkronizasyonu
     function updateCertificate() {
       outName.innerText = inName.value || '-';
@@ -251,9 +233,6 @@
       outGram.innerText = inGram.value || '-';
       outKarat.innerText = inKarat.value || '-';
       outStone.innerText = inStone.value || '-';
-
-      qrcode.clear();
-      qrcode.makeCode(`https://bakirkoyaltin.com/sertifika?no=${encodeURIComponent(inCertNo.value)}`);
     }
 
     // Resim yükleme kontrolü
@@ -285,8 +264,6 @@
       btnDownload.disabled = true;
 
       const certElement = document.getElementById('certificate');
-      
-      // html2canvas çekim yaparken anlık ölçeği sıfırlar, böylece mobilde de yüksek çözünürlük indirir
       const originalTransform = certElement.style.transform;
       certElement.style.transform = 'none';
 
@@ -295,7 +272,6 @@
         scale: 2,
         backgroundColor: '#171717'
       }).then(canvas => {
-        // Çekim bittikten sonra mobil ölçeği geri yükle
         certElement.style.transform = originalTransform;
 
         const link = document.createElement('a');
