@@ -73,12 +73,12 @@
       </div>
     </div>
 
-    <div class="mt-8 pt-4 border-t border-neutral-800 space-y-2">
-      <button onclick="shareAsImage()" id="btn-share" class="w-full bg-emerald-600 hover:bg-emerald-700 text-neutral-950 font-bold py-3 rounded transition text-sm tracking-wider uppercase flex items-center justify-center gap-2">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.454L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.863-9.736.001-2.599-1.01-5.043-2.848-6.882-1.839-1.838-4.285-2.85-6.887-2.851-5.441 0-9.864 4.371-9.867 9.739-.001 1.77.475 3.498 1.38 5.048l-.997 3.643 3.731-.964zm11.332-6.52c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.074-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.174.2-.298.3-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/></svg>
-        Sertifikayı Kopyala & WhatsApp Aç
+    <div class="mt-8 pt-4 border-t border-neutral-800">
+      <button onclick="downloadAsImage()" id="btn-download" class="w-full bg-amber-600 hover:bg-amber-700 text-neutral-950 font-bold py-3 rounded transition text-sm tracking-wider uppercase flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Sertifikayı Resim Olarak İndir
       </button>
-      <p class="text-[10px] text-neutral-400 text-center italic leading-tight">Buton resmi kopyalar ve sohbeti açar, açılan ekrana yapıştırmanız (Ctrl+V) yeterlidir.</p>
+      <p class="text-[10px] text-neutral-400 text-center italic leading-tight mt-2">Buton sertifikayı doğrudan bilgisayarınıza veya telefonunuza fotoğraf dosyası olarak kaydeder.</p>
     </div>
   </div>
 
@@ -182,9 +182,9 @@
     const outStone = document.getElementById('out-stone');
     const outImage = document.getElementById('out-image');
     const imgPlaceholder = document.getElementById('img-placeholder');
-    const btnShare = document.getElementById('btn-share');
+    const btnDownload = document.getElementById('btn-download');
 
-    // Varsayılan tarihi bugün yapma
+    // Varsayılan tarih
     const today = new Date().toISOString().split('T')[0];
     inDate.value = today;
 
@@ -202,7 +202,7 @@
       return phoneStr;
     }
 
-    // QR Kod oluşturma
+    // QR Kod Başlatma
     const qrcodeContainer = document.getElementById("qrcode");
     const qrcode = new QRCode(qrcodeContainer, {
       text: `https://bakirkoyaltin.com/sertifika?no=${inCertNo.value}`,
@@ -247,58 +247,33 @@
 
     updateCertificate();
 
-    // Görsel Olarak Yakalama ve WhatsApp Entegrasyonu
-    function shareAsImage() {
-      let phone = inPhone.value.replace(/\D/g, '');
-      if (!phone) {
-        alert("Lütfen geçerli bir müşteri cep telefonu girin.");
-        return;
-      }
-      
-      if (phone.startsWith('0')) {
-        phone = '90' + phone.substring(1);
-      } else if (!phone.startsWith('90') && phone.length === 10) {
-        phone = '90' + phone;
-      }
+    // Sadece Görsel Dosyası Olarak İndirme Fonksiyonu
+    function downloadAsImage() {
+      btnDownload.innerText = "Resim Hazırlanıyor...";
+      btnDownload.disabled = true;
 
-      btnShare.innerText = "Sertifika Hazırlanıyor...";
-      btnShare.disabled = true;
-
-      // Sertifika elementinin resmini yakala
       const certElement = document.getElementById('certificate');
       
       html2canvas(certElement, {
         useCORS: true,
-        scale: 2, // Çözünürlüğü artırmak için 2 kat büyük yakalar
+        scale: 2,
         backgroundColor: '#171717'
       }).then(canvas => {
-        canvas.toBlob(blob => {
-          // Resmi panoya kopyalama nesnesi oluştur
-          const item = new ClipboardItem({ "image/png": blob });
-          
-          navigator.clipboard.write([item]).then(() => {
-            btnShare.innerText = "Kopyalandı! WhatsApp Açılıyor...";
-            
-            // Kısa bir gecikme vererek WhatsApp'ı aç
-            setTimeout(() => {
-              const whatsappUrl = `https://wa.me/${phone}`;
-              window.open(whatsappUrl, '_blank');
-              
-              // Buton durumunu eski haline getir
-              btnShare.innerText = "Sertifikayı Kopyala & WhatsApp Aç";
-              btnShare.disabled = false;
-            }, 1000);
+        const link = document.createElement('a');
+        const fileName = `Sertifika_${inCertNo.value || 'No'}.png`;
+        
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/png');
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-          }).catch(err => {
-            console.error("Panoya kopyalama hatası: ", err);
-            alert("Resim otomatik kopyalanamadı. Lütfen tarayıcı izinlerinizi kontrol edin.");
-            btnShare.innerText = "Sertifikayı Kopyala & WhatsApp Aç";
-            btnShare.disabled = false;
-          });
-        }, 'image/png');
+        btnDownload.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Sertifikayı Resim Olarak İndir`;
+        btnDownload.disabled = false;
       }).catch(err => {
-        console.error("Resim oluşturma hatası: ", err);
-        btnShare.disabled = false;
+        console.error(err);
+        btnDownload.disabled = false;
       });
     }
   </script>
