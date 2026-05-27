@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bakırköy Altın - Dijital Sertifika Oluşturucu</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-serif { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-neutral-950 text-neutral-100 min-h-screen flex flex-col md:flex-row items-stretch">
+
+  <div class="w-full md:w-1/3 bg-neutral-900 p-6 border-r border-neutral-800 flex flex-col justify-between overflow-y-auto">
+    <div>
+      <h2 class="text-xl font-serif text-amber-500 mb-6 tracking-wide border-b border-neutral-800 pb-3">Sertifika Paneli</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Müşteri Adı Soyadı</label>
+          <input type="text" id="in-name" value="Fatih Yalçın" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+        </div>
+
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Müşteri Cep Telefonu</label>
+          <input type="tel" id="in-phone" value="05382436870" placeholder="05xxxxxxxxx" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Satın Alma Tarihi</label>
+            <input type="date" id="in-date" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Sertifika No</label>
+            <input type="text" id="in-certno" value="BK-2026-8841" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Ürün Tanımı / Model</label>
+          <input type="text" id="in-product" value="Baget Kesim Pırlanta Yüzük" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Gramaj (gr)</label>
+            <input type="text" id="in-gram" value="3.45 gr" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Ayar / Karat</label>
+            <input type="text" id="in-karat" value="14 Ayar / 0.25 ct" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Taş / Detay Bilgisi</label>
+          <input type="text" id="in-stone" value="G Color - VS1 Berraklık" class="w-full bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition" />
+        </div>
+
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Ürün Resmi Ekle</label>
+          <input type="file" id="in-image" accept="image/*" class="w-full bg-neutral-950 border border-neutral-800 rounded px-2 py-1.5 text-xs file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-amber-600 file:text-neutral-950 hover:file:bg-amber-700 file:cursor-pointer transition text-neutral-400" />
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-4 border-t border-neutral-800">
+      <button onclick="sendWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-neutral-950 font-semibold py-2.5 rounded transition text-sm tracking-wider uppercase flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.454L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.863-9.736.001-2.599-1.01-5.043-2.848-6.882-1.839-1.838-4.285-2.85-6.887-2.851-5.441 0-9.864 4.371-9.867 9.739-.001 1.77.475 3.498 1.38 5.048l-.997 3.643 3.731-.964zm11.332-6.52c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.074-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.174.2-.298.3-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/></svg>
+        WhatsApp ile Gönder
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 flex items-center justify-center p-4 bg-neutral-950 overflow-auto">
+    
+    <div id="certificate" class="w-[660px] h-[390px] bg-neutral-900 border border-amber-600/40 rounded-lg p-7 relative flex flex-col justify-between shadow-2xl overflow-hidden shadow-amber-950/10">
+      
+      <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none"></div>
+      
+      <div class="flex justify-between items-start border-b border-amber-600/20 pb-3 z-10">
+        <div>
+          <h1 class="font-serif text-2xl text-amber-500 tracking-widest uppercase">Bakırköy Altın</h1>
+          <p class="text-[10px] tracking-widest text-neutral-400 uppercase mt-0.5">Mücevherat & Garanti Sertifikası</p>
+        </div>
+        <div class="text-right">
+          <span class="text-[8px] uppercase tracking-widest text-neutral-500">Sertifika No / Tarih</span>
+          <p id="out-certno" class="text-xs font-mono text-amber-500/80 tracking-wider">BK-2026-8841</p>
+          <p id="out-date" class="text-[11px] font-mono text-neutral-400 mt-0.5">27.05.2026</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-4 my-auto z-10 items-center">
+        
+        <div class="col-span-2 space-y-2 pr-2 border-r border-neutral-800">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Müşteri</span>
+              <p id="out-name" class="font-serif text-xs text-neutral-200 truncate">Fatih Yalçın</p>
+            </div>
+            <div>
+              <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Telefon</span>
+              <p id="out-phone" class="text-[11px] text-neutral-300 font-mono">0538 243 68 70</p>
+            </div>
+          </div>
+          <div>
+            <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Ürün</span>
+            <p id="out-product" class="text-xs text-neutral-300 line-clamp-1">Baget Kesim Pırlanta Yüzük</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Ağırlık</span>
+              <p id="out-gram" class="text-xs text-neutral-300 font-mono">3.45 gr</p>
+            </div>
+            <div>
+              <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Ayar / Karat</span>
+              <p id="out-karat" class="text-xs text-neutral-300 font-mono">14 Ayar / 0.25 ct</p>
+            </div>
+          </div>
+          <div>
+            <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Özellik / Taş</span>
+            <p id="out-stone" class="text-[11px] text-neutral-400 italic truncate">G Color - VS1 Berraklık</p>
+          </div>
+        </div>
+
+        <div class="col-span-1 flex flex-col items-center justify-center border-r border-neutral-800 pr-2">
+          <div class="w-20 h-20 bg-neutral-950 border border-amber-600/20 rounded flex items-center justify-center overflow-hidden p-1">
+            <img id="out-image" src="" class="w-full h-full object-cover hidden rounded-sm" />
+            <div id="img-placeholder" class="text-[8px] text-neutral-600 uppercase tracking-widest text-center leading-tight">Ürün<br>Görseli</div>
+          </div>
+        </div>
+
+        <div class="col-span-1 flex flex-col items-center justify-center">
+          <div id="qrcode" class="p-1.5 bg-white rounded shadow-md"></div>
+          <span class="text-[7px] tracking-widest text-neutral-500 uppercase mt-1.5 text-center">Doğrulama</span>
+        </div>
+
+      </div>
+
+      <div class="flex justify-between items-end border-t border-neutral-800 pt-2.5 text-[9px] text-neutral-500 z-10">
+        <div class="max-w-[420px] leading-relaxed space-y-0.5">
+          <p>Bu sertifika, bilgileri girilen ürünün Bakırköy Altın güvencesinde olduğunu garanti eder.</p>
+          <p class="text-amber-600/90 font-medium tracking-wide">* İade edilemez, sadece 14 gün içinde kendi ayarıyla değişim yapılır.</p>
+        </div>
+        <div class="text-right whitespace-nowrap pl-2">
+          <p class="font-serif italic text-amber-500/70 text-xs">Bakırköy Altın</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const inName = document.getElementById('in-name');
+    const inPhone = document.getElementById('in-phone');
+    const inDate = document.getElementById('in-date');
+    const inCertNo = document.getElementById('in-certno');
+    const inProduct = document.getElementById('in-product');
+    const inGram = document.getElementById('in-gram');
+    const inKarat = document.getElementById('in-karat');
+    const inStone = document.getElementById('in-stone');
+    const inImage = document.getElementById('in-image');
+
+    const outName = document.getElementById('out-name');
+    const outPhone = document.getElementById('out-phone');
+    const outDate = document.getElementById('out-date');
+    const outCertNo = document.getElementById('out-certno');
+    const outProduct = document.getElementById('out-product');
+    const outGram = document.getElementById('out-gram');
+    const outKarat = document.getElementById('out-karat');
+    const outStone = document.getElementById('out-stone');
+    const outImage = document.getElementById('out-image');
+    const imgPlaceholder = document.getElementById('img-placeholder');
+
+    // Varsayılan tarihi bugün yapma
+    const today = new Date().toISOString().split('T')[0];
+    inDate.value = today;
+
+    // Tarih formatını DD.MM.YYYY haline getiren yardımcı fonksiyon
+    function formatDate(dateStr) {
+      if(!dateStr) return '-';
+      const parts = dateStr.split('-');
+      return `${parts[2]}.${parts[1]}.${parts[0]}`;
+    }
+
+    // Telefon numarasını arayüzde okunabilir formatlama
+    function formatPhoneDisplay(phoneStr) {
+      const cleaned = phoneStr.replace(/\D/g, '');
+      if(cleaned.length === 11 && cleaned.startsWith('0')) {
+        return `${cleaned.substring(0,4)} ${cleaned.substring(4,7)} ${cleaned.substring(7,9)} ${cleaned.substring(9,11)}`;
+      }
+      return phoneStr;
+    }
+
+    // QR Kod oluşturma
+    const qrcodeContainer = document.getElementById("qrcode");
+    const qrcode = new QRCode(qrcodeContainer, {
+      text: `https://bakirkoyaltin.com/sertifika?no=${inCertNo.value}`,
+      width: 65,
+      height: 65,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+
+    // Arayüz verilerini canlı güncelleme
+    function updateCertificate() {
+      outName.innerText = inName.value || '-';
+      outPhone.innerText = formatPhoneDisplay(inPhone.value) || '-';
+      outDate.innerText = formatDate(inDate.value);
+      outCertNo.innerText = inCertNo.value || '-';
+      outProduct.innerText = inProduct.value || '-';
+      outGram.innerText = inGram.value || '-';
+      outKarat.innerText = inKarat.value || '-';
+      outStone.innerText = inStone.value || '-';
+
+      qrcode.clear();
+      qrcode.makeCode(`https://bakirkoyaltin.com/sertifika?no=${encodeURIComponent(inCertNo.value)}`);
+    }
+
+    // Resim yükleme ve canlı önizleme mantığı
+    inImage.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          outImage.src = event.target.result;
+          outImage.classList.remove('hidden');
+          imgPlaceholder.classList.add('hidden');
+        }
+        reader.readAsDataURL(file);
+      } else {
+        outImage.src = '';
+        outImage.classList.add('hidden');
+        imgPlaceholder.classList.remove('hidden');
+      }
+    });
+
+    // Input dinleyicileri
+    [inName, inPhone, inDate, inCertNo, inProduct, inGram, inKarat, inStone].forEach(input => {
+      input.addEventListener('input', updateCertificate);
+    });
+
+    // İlk açılış yüklemesi
+    updateCertificate();
+
+    // WhatsApp Mesajı Gönderme
+    function sendWhatsApp() {
+      let phone = inPhone.value.replace(/\D/g, '');
+      if (!phone) {
+        alert("Lütfen geçerli bir müşteri cep telefonu girin.");
+        return;
+      }
+      
+      if (phone.startsWith('0')) {
+        phone = '90' + phone.substring(1);
+      } else if (!phone.startsWith('90') && phone.length === 10) {
+        phone = '90' + phone;
+      }
+
+      const formattedDate = formatDate(inDate.value);
+
+      const message = `✨ *BAKIRKÖY ALTIN* ✨\n*Dijital Garanti Sertifikası*\n\nSayın *${inName.value}*,\nMağazamızdan satın almış olduğunuz ürünün garanti sertifikası detayları aşağıda yer almaktadır:\n\n📜 *Sertifika No:* ${inCertNo.value}\n📅 *Tarih:* ${formattedDate}\n💎 *Ürün:* ${inProduct.value}\n⚖️ *Gramaj:* ${inGram.value}\n🌟 *Ayar / Karat:* ${inKarat.value}\n✨ *Özellik / Taş:* ${inStone.value}\n\n🔗 *Sertifika Doğrulama Bağlantısı:*\nhttps://bakirkoyaltin.com/sertifika?no=${encodeURIComponent(inCertNo.value)}\n\n⚠️ *Değişim & İade Şartı:* Satılan ürünler iade edilemez. Sadece 14 gün içinde kendi ayarıyla değişim yapılabilmektedir.\n\nBizi tercih ettiğiniz için teşekkür ederiz.`;
+
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  </script>
+
+</body>
+</html>
