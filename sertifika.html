@@ -105,7 +105,7 @@
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Müşteri</span>
-                <p id="out-name" class="font-serif text-xs text-neutral-200 break-words max-h-[34px] overflow-hidden leading-tight">-</p>
+                <p id="out-name" class="font-serif text-xs text-neutral-200 break-words leading-tight">-</p>
               </div>
               <div>
                 <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Telefon</span>
@@ -114,7 +114,7 @@
             </div>
             <div>
               <span class="text-[8px] uppercase tracking-wider text-neutral-500 block">Ürün</span>
-              <p id="out-product" class="text-xs text-neutral-300 break-words max-h-[34px] overflow-hidden leading-tight">-</p>
+              <p id="out-product" class="text-xs text-neutral-300 break-words leading-tight">-</p>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
@@ -258,56 +258,70 @@
     scaleCertificate();
     window.addEventListener('resize', scaleCertificate);
 
-    // Resim indirme ve form temizleme adımları
+    // Resim indirme ve DOM Reflow çözümü
     function downloadAsImage() {
       btnDownload.innerText = "Resim Hazırlanıyor...";
       btnDownload.disabled = true;
 
       const certElement = document.getElementById('certificate');
+      const wrapper = document.getElementById('cert-scale-wrapper');
+      
       const originalTransform = certElement.style.transform;
+      const origWrapperWidth = wrapper.style.width;
+      const origWrapperHeight = wrapper.style.height;
+
+      // Kırpılmayı önlemek için geçici olarak sabit boyutlara çekiyoruz
       certElement.style.transform = 'none';
+      wrapper.style.width = '660px';
+      wrapper.style.height = '390px';
 
-      html2canvas(certElement, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: '#171717'
-      }).then(canvas => {
-        certElement.style.transform = originalTransform;
+      // Tarayıcının yeni boyutları render etmesi için küçük bir gecikme ekliyoruz
+      setTimeout(() => {
+        html2canvas(certElement, {
+          useCORS: true,
+          scale: 3, // Çözünürlüğü ve keskinliği artırdık
+          backgroundColor: '#171717'
+        }).then(canvas => {
+          
+          // Boyutları eski haline geri getir
+          certElement.style.transform = originalTransform;
+          wrapper.style.width = origWrapperWidth;
+          wrapper.style.height = origWrapperHeight;
 
-        const link = document.createElement('a');
-        link.download = `Sertifika_${inCertNo.value}.png`;
-        link.href = canvas.toDataURL('image/png');
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+          const link = document.createElement('a');
+          link.download = `Sertifika_${inCertNo.value}.png`;
+          link.href = canvas.toDataURL('image/png');
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
 
-        // FORM ALANLARINI VE ÖNİZLEMEYİ SIFIRLAMA
-        inName.value = '';
-        inPhone.value = '';
-        inProduct.value = '';
-        inGram.value = '';
-        inKarat.value = '';
-        inStone.value = '';
-        inImage.value = '';
-        outImage.src = '';
-        outImage.classList.add('hidden');
-        imgPlaceholder.classList.remove('hidden');
-        
-        // Yeni bir sertifika numarası ata
-        inCertNo.value = generateCertNo();
-        inDate.value = new Date().toISOString().split('T')[0];
+          // FORM ALANLARINI VE ÖNİZLEMEYİ SIFIRLAMA
+          inName.value = '';
+          inPhone.value = '';
+          inProduct.value = '';
+          inGram.value = '';
+          inKarat.value = '';
+          inStone.value = '';
+          inImage.value = '';
+          outImage.src = '';
+          outImage.classList.add('hidden');
+          imgPlaceholder.classList.remove('hidden');
+          
+          inCertNo.value = generateCertNo();
+          inDate.value = new Date().toISOString().split('T')[0];
+          updateCertificate();
 
-        // Arayüzü tazele
-        updateCertificate();
-
-        btnDownload.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Sertifikayı Resim Olarak İndir`;
-        btnDownload.disabled = false;
-      }).catch(err => {
-        console.error(err);
-        certElement.style.transform = originalTransform;
-        btnDownload.disabled = false;
-      });
+          btnDownload.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Sertifikayı Resim Olarak İndir`;
+          btnDownload.disabled = false;
+        }).catch(err => {
+          console.error(err);
+          certElement.style.transform = originalTransform;
+          wrapper.style.width = origWrapperWidth;
+          wrapper.style.height = origWrapperHeight;
+          btnDownload.disabled = false;
+        });
+      }, 150); // DOM'un yenilenmesi için 150ms bekleme süresi
     }
   </script>
 
