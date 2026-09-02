@@ -1,0 +1,20 @@
+# Python geçici dosyaları
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Windows / OneDrive
+Thumbs.db
+desktop.ini
+*.lnk
+
+# macOS
+.DS_Store
+
+# Editör ayarları
+.vscode/
+.idea/
+
+# Ortam değişkenleri (şifre, API anahtarı vb. asla yüklenmesin)
+.env
