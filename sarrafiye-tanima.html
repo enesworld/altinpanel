@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Sarrafiye Tanıma - Bakırköy Kuyumcusu</title>
+<link rel="icon" href="bk.jpeg" type="image/jpeg" />
+<meta name="theme-color" content="#15100B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15100B;
+    --surface:#1F1811;
+    --surface-2:#2A2015;
+    --gold:#C6A34D;
+    --gold-bright:#E9C874;
+    --paper:#F3EBD8;
+    --muted:#9C8D71;
+    --line:rgba(198,163,77,0.22);
+    --good:#7C9A6B;
+    --amber:#D98A3D;
+    --low:#B5654A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .app{
+    max-width:440px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:28px 20px 60px;
+    display:flex;
+    flex-direction:column;
+  }
+  header{margin-bottom:22px;}
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:26px;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+    color:var(--gold-bright);
+  }
+  header p{
+    margin:0;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--muted);
+    max-width:34ch;
+  }
+  .badge-offline{
+    display:inline-block;
+    font-size:11px;
+    color:var(--good);
+    background:rgba(124,154,107,0.15);
+    padding:3px 8px;
+    border-radius:2px;
+    margin-top:10px;
+  }
+
+  .stage{
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:var(--surface);
+    padding:20px;
+    margin-bottom:16px;
+  }
+
+  .capture-zone{
+    aspect-ratio:1/1;
+    border-radius:50%;
+    border:1.5px dashed var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    margin:8px auto 20px;
+    max-width:260px;
+    position:relative;
+  }
+  .capture-zone.has-image{
+    border-style:solid;
+    padding:0;
+    overflow:hidden;
+  }
+  .capture-zone img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .capture-hint{
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.6;
+  }
+  .capture-hint .ring{
+    width:34px;height:34px;
+    border:1.5px solid var(--gold);
+    border-radius:50%;
+    margin:0 auto 12px;
+    opacity:0.7;
+  }
+
+  .btn-row{
+    display:flex;
+    gap:10px;
+  }
+  button{
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    border-radius:3px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--paper);
+    padding:12px 16px;
+    cursor:pointer;
+    flex:1;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  button:hover{border-color:var(--gold);}
+  button.primary{
+    background:var(--gold);
+    color:var(--ink);
+    border-color:var(--gold);
+    font-weight:600;
+  }
+  button.primary:hover{background:var(--gold-bright);border-color:var(--gold-bright);}
+  button:disabled{opacity:0.4;cursor:not-allowed;}
+  button.text-btn{
+    flex:none;
+    border:none;
+    padding:8px 0;
+    color:var(--muted);
+    text-decoration:underline;
+    text-decoration-color:var(--line);
+    font-weight:400;
+    font-size:13px;
+  }
+  button.text-btn:hover{color:var(--gold-bright);}
+
+  input[type=file]{display:none;}
+  input[type=number]{font-family:'Inter',sans-serif;font-size:14px;}
+
+  .marker-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:12px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .marker-row input{
+    width:56px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    color:var(--paper);
+    padding:6px 8px;
+    text-align:center;
+  }
+
+  .notice{
+    font-size:12.5px;
+    line-height:1.6;
+    color:var(--muted);
+    padding:12px 14px;
+    border-left:2px solid var(--gold);
+    background:var(--surface-2);
+    margin-top:16px;
+    border-radius:0 3px 3px 0;
+  }
+
+  .status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:20px 0;
+    font-size:14px;
+    color:var(--muted);
+  }
+  .spinner{
+    width:16px;height:16px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+    flex:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .error-box{
+    padding:14px;
+    background:var(--surface-2);
+    border-left:2px solid var(--low);
+    border-radius:0 3px 3px 0;
+    font-size:13.5px;
+    color:var(--paper);
+    line-height:1.5;
+    margin:12px 0;
+  }
+
+  #calibActiveBox{display:none;margin-top:14px;padding:12px 14px;background:var(--surface-2);border-left:2px solid var(--good);border-radius:0 3px 3px 0;}
+  #calibActiveText{font-size:12.5px;color:var(--good);line-height:1.5;margin:0 0 8px;}
+  #autoCalibStatus{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+  #calibPanel{margin-top:14px;}
+  .calib-frame{
+    border-radius:3px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    line-height:0;
+  }
+  .calib-frame canvas{width:100%;height:auto;display:block;cursor:crosshair;touch-action:manipulation;}
+  .calib-hint{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:10px 0;
+    line-height:1.5;
+  }
+
+  #annotatedBox{display:none;}
+  .annotated-frame{
+    border-radius:3px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    line-height:0;
+  }
+  .annotated-frame canvas{width:100%;height:auto;display:block;}
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-top:12px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{
+    width:9px;height:9px;
+    border-radius:50%;
+    display:inline-block;
+  }
+
+  .results{margin-top:8px;}
+  .ledger-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    padding:16px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .ledger-row:last-of-type{border-bottom:none;}
+  .ledger-left{flex:1;padding-right:12px;}
+  .type-name{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:500;
+    color:var(--paper);
+  }
+  .type-note{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:3px;
+    line-height:1.4;
+  }
+  .confidence{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 7px;
+    border-radius:2px;
+    margin-top:6px;
+  }
+  .confidence.yuksek{background:rgba(124,154,107,0.15);color:var(--good);}
+  .confidence.orta{background:rgba(198,163,77,0.15);color:var(--gold-bright);}
+  .confidence.dusuk{background:rgba(181,101,74,0.15);color:var(--low);}
+
+  .count-num{
+    font-family:'Fraunces',serif;
+    font-size:28px;
+    font-weight:500;
+    color:var(--gold-bright);
+    line-height:1;
+    font-variant-numeric:oldstyle-nums;
+  }
+
+  .summary-row{
+    display:flex;
+    justify-content:space-between;
+    padding-top:16px;
+    margin-top:6px;
+    border-top:1px solid var(--gold);
+    font-size:14px;
+  }
+  .summary-row .label{color:var(--muted);}
+  .summary-row .value{font-family:'Fraunces',serif;font-size:18px;color:var(--paper);}
+
+  .general-note{
+    margin-top:18px;
+    font-size:13px;
+    line-height:1.6;
+    color:var(--muted);
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+
+  .reset-row{
+    text-align:center;
+    margin-top:20px;
+  }
+
+  canvas#workCanvas{display:none;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:20px;margin-bottom:14px;">⬅️</a>
+    <h1>Sarrafiye tanıma</h1>
+    <p>Altınlarını düz bir zemine, üst üste binmeyecek şekilde yayıp fotoğrafla. Referans kareyi de kadraja koyarsan ölçüm otomatik kalibre olur.</p>
+    <span class="badge-offline">Tamamen cihazında çalışır, internet gerekmez</span>
+  </header>
+
+  <div class="stage" id="savedCalibBanner" style="display:none;">
+    <p class="calib-hint" id="savedCalibText" style="margin:0 0 10px;"></p>
+    <div class="btn-row">
+      <button class="primary" id="useSavedCalibBtn">Bu düzeneği kullan</button>
+      <button class="text-btn" id="deleteSavedCalibBtn">Sil</button>
+    </div>
+  </div>
+
+  <div class="stage" id="captureStage">
+    <div class="capture-zone" id="captureZone">
+      <div class="capture-hint" id="captureHint">
+        <div class="ring"></div>
+        Henüz fotoğraf yok
+      </div>
+      <img id="preview" style="display:none;">
+    </div>
+
+    <div class="btn-row" id="captureButtons">
+      <button id="cameraBtn">Fotoğraf çek</button>
+      <button id="galleryBtn">Galeriden seç</button>
+    </div>
+
+    <div class="marker-row">
+      <span>Referans kare boyutu:</span>
+      <input type="number" id="markerSizeInput" value="40">
+      <span>mm (0 = arama)</span>
+    </div>
+    <p id="autoCalibStatus" style="display:none;"></p>
+
+    <div id="calibActiveBox">
+      <p id="calibActiveText"></p>
+      <div class="btn-row">
+        <button class="text-btn" id="calibActiveSaveBtn">Kaydet (sabit düzenek)</button>
+        <button class="text-btn" id="calibActiveClearBtn">Temizle</button>
+      </div>
+    </div>
+
+    <div id="calibToggleRow" style="display:none;margin-top:12px;text-align:center;">
+      <button class="text-btn" id="calibToggleBtn">+ Elle referans nesneyle ölç</button>
+    </div>
+
+    <div id="calibPanel" style="display:none;">
+      <div class="calib-frame">
+        <canvas id="calibCanvas"></canvas>
+      </div>
+      <p class="calib-hint" id="calibHint">Fotoğrafta bildiğin uzunlukta bir nesnenin (1 TL, kart, cetvel...) iki ucuna dokun.</p>
+      <div class="btn-row" id="calibPresets" style="display:none;">
+        <button id="preset1TL">1 TL (26,15 mm)</button>
+        <button id="presetCard">Kart (85,60 mm)</button>
+      </div>
+      <div class="btn-row" id="calibManualRow" style="display:none;margin-top:8px;">
+        <input type="number" id="calibManualMm" placeholder="mm cinsinden uzunluk" style="flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:3px;color:var(--paper);padding:10px;">
+        <button class="primary" id="calibManualConfirm">Onayla</button>
+      </div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="text-btn" id="calibManualToggle">Elle mm gir</button>
+        <button class="text-btn" id="calibPointsClearBtn">Noktaları temizle</button>
+      </div>
+    </div>
+
+    <div class="btn-row" id="analyzeRow" style="display:none;margin-top:14px;">
+      <button class="primary" id="analyzeBtn">Analiz et</button>
+    </div>
+
+    <input type="file" id="cameraInput" accept="image/*" capture="environment">
+    <input type="file" id="galleryInput" accept="image/*">
+
+    <div class="notice">
+      Kalibrasyon yoksa sınıflandırma fotoğraftaki sikkelerin birbirine göre boyutuna dayanır. Referans kareyi kadraja koyarsan (veya kayıtlı/elle kalibrasyon kullanırsan) tek bir sikkelik fotoğrafta bile kesin tür belirlenebilir. Üst üste binen sikkeler mümkün olduğunca ayrıştırılmaya çalışılır, ama en güvenilir sonuç için sikkeleri birbirine değmeyecek şekilde yaymak yine de en iyisidir.
+    </div>
+  </div>
+
+  <div id="statusBox"></div>
+
+  <div class="stage" id="annotatedBox">
+    <div class="annotated-frame">
+      <canvas id="resultCanvas"></canvas>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div id="resultsBox"></div>
+
+  <canvas id="workCanvas"></canvas>
+</div>
+
+<script>
+const captureZone = document.getElementById('captureZone');
+const captureHint = document.getElementById('captureHint');
+const preview = document.getElementById('preview');
+const captureButtons = document.getElementById('captureButtons');
+const analyzeRow = document.getElementById('analyzeRow');
+const cameraInput = document.getElementById('cameraInput');
+const galleryInput = document.getElementById('galleryInput');
+const cameraBtn = document.getElementById('cameraBtn');
+const galleryBtn = document.getElementById('galleryBtn');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const statusBox = document.getElementById('statusBox');
+const resultsBox = document.getElementById('resultsBox');
+const annotatedBox = document.getElementById('annotatedBox');
+const resultCanvas = document.getElementById('resultCanvas');
+const legend = document.getElementById('legend');
+const workCanvas = document.getElementById('workCanvas');
+
+const markerSizeInput = document.getElementById('markerSizeInput');
+const autoCalibStatus = document.getElementById('autoCalibStatus');
+
+const calibActiveBox = document.getElementById('calibActiveBox');
+const calibActiveText = document.getElementById('calibActiveText');
+const calibActiveSaveBtn = document.getElementById('calibActiveSaveBtn');
+const calibActiveClearBtn = document.getElementById('calibActiveClearBtn');
+
+const calibToggleRow = document.getElementById('calibToggleRow');
+const calibToggleBtn = document.getElementById('calibToggleBtn');
+const calibPanel = document.getElementById('calibPanel');
+const calibCanvas = document.getElementById('calibCanvas');
+const calibHint = document.getElementById('calibHint');
+const calibPresets = document.getElementById('calibPresets');
+const preset1TL = document.getElementById('preset1TL');
+const presetCard = document.getElementById('presetCard');
+const calibManualRow = document.getElementById('calibManualRow');
+const calibManualMm = document.getElementById('calibManualMm');
+const calibManualConfirm = document.getElementById('calibManualConfirm');
+const calibManualToggle = document.getElementById('calibManualToggle');
+const calibPointsClearBtn = document.getElementById('calibPointsClearBtn');
+
+const savedCalibBanner = document.getElementById('savedCalibBanner');
+const savedCalibText = document.getElementById('savedCalibText');
+const useSavedCalibBtn = document.getElementById('useSavedCalibBtn');
+const deleteSavedCalibBtn = document.getElementById('deleteSavedCalibBtn');
+
+const TYPE_COLORS = {
+  'Çeyrek altın': '#7C9A6B',
+  'Yarım altın': '#E9C874',
+  'Tam altın': '#D98A3D',
+  'Belirsiz boy': '#9C8D71',
+  'Tanınamayan boy': '#9C8D71'
+};
+const TYPE_LETTERS = {
+  'Çeyrek altın': 'Ç',
+  'Yarım altın': 'Y',
+  'Tam altın': 'T',
+  'Belirsiz boy': '?',
+  'Tanınamayan boy': '?'
+};
+const IRREGULAR_COLOR = '#B5654A';
+
+// çeyrek ~18mm/1.75g, yarım ~22mm/3.50g, tam ~30mm/7.0g (Darphane standardı, kaynaklar arası küçük sapmalar olabilir)
+const REF_MM = { 'Çeyrek altın': 18, 'Yarım altın': 22, 'Tam altın': 30 };
+
+const MAX_DIM = 1100;
+const CLUSTER_SPLIT_THRESHOLD = 1.10;
+const MARKER_V_MAX = 0.28;
+const MARKER_S_MAX = 0.40;
+const MARKER_MIN_AREA_FRAC = 0.003;
+const MARKER_MAX_AREA_FRAC = 0.30;
+const MARKER_MAX_SIDE_DEV = 0.25;
+
+let calibPoints = [];
+let calibration = { pxPerMm: null, source: '' };
+let savedCalibration = null;
+
+/* ---------- unified calibration state ---------- */
+
+function applyCalibration(pxPerMm, sourceLabel){
+  calibration.pxPerMm = pxPerMm;
+  calibration.source = sourceLabel;
+  calibActiveText.textContent = 'Kalibrasyon aktif (' + sourceLabel + '): yaklaşık ' + pxPerMm.toFixed(2) + ' piksel/mm ✓';
+  calibActiveBox.style.display = 'block';
+  calibActiveSaveBtn.textContent = 'Kaydet (sabit düzenek)';
+}
+
+function clearActiveCalibration(){
+  calibration.pxPerMm = null;
+  calibration.source = '';
+  calibActiveBox.style.display = 'none';
+  calibPoints = [];
+  calibPresets.style.display = 'none';
+  calibManualRow.style.display = 'none';
+  if(calibCanvas.width) redrawCalib();
+}
+
+calibActiveClearBtn.addEventListener('click', clearActiveCalibration);
+
+calibActiveSaveBtn.addEventListener('click', () => {
+  if(!calibration.pxPerMm) return;
+  try{
+    const record = { pxPerMm: calibration.pxPerMm, savedAt: new Date().toISOString() };
+    localStorage.setItem('calibration', JSON.stringify(record));
+    savedCalibration = record;
+    calibActiveSaveBtn.textContent = 'Kaydedildi ✓';
+  }catch(e){
+    calibActiveSaveBtn.textContent = 'Kaydedilemedi, tekrar dene';
+  }
+});
+
+/* ---------- saved calibration reuse ---------- */
+
+function loadSavedCalibration(){
+  try{
+    const raw = localStorage.getItem('calibration');
+    if(raw){
+      const data = JSON.parse(raw);
+      if(data && data.pxPerMm){
+        savedCalibration = data;
+        showSavedCalibrationBanner();
+      }
+    }
+  }catch(e){ /* kayıtlı kalibrasyon yok, sorun değil */ }
+}
+
+function showSavedCalibrationBanner(){
+  if(!savedCalibration) return;
+  const d = new Date(savedCalibration.savedAt);
+  const dateStr = isNaN(d) ? '' : d.toLocaleDateString('tr-TR');
+  savedCalibText.textContent = 'Kayıtlı kalibrasyon: yaklaşık ' + savedCalibration.pxPerMm.toFixed(2) + ' piksel/mm (' + dateStr + '). Yalnızca aynı telefon, aynı yakınlaştırma ve aynı çekim mesafesiyle çektiğin fotoğraflarda geçerlidir.';
+  savedCalibBanner.style.display = 'block';
+}
+
+useSavedCalibBtn.addEventListener('click', () => {
+  if(!savedCalibration) return;
+  applyCalibration(savedCalibration.pxPerMm, 'kayıtlı düzenek');
+});
+
+deleteSavedCalibBtn.addEventListener('click', () => {
+  try{ localStorage.removeItem('calibration'); }catch(e){}
+  savedCalibration = null;
+  savedCalibBanner.style.display = 'none';
+});
+
+loadSavedCalibration();
+
+/* ---------- manual tap calibration ---------- */
+
+cameraBtn.addEventListener('click', () => cameraInput.click());
+galleryBtn.addEventListener('click', () => galleryInput.click());
+cameraInput.addEventListener('change', e => handleFile(e.target.files[0]));
+galleryInput.addEventListener('change', e => handleFile(e.target.files[0]));
+analyzeBtn.addEventListener('click', analyzeLocal);
+
+calibToggleBtn.addEventListener('click', () => {
+  const opening = calibPanel.style.display === 'none';
+  calibPanel.style.display = opening ? 'block' : 'none';
+  if(opening){
+    calibCanvas.width = workCanvas.width;
+    calibCanvas.height = workCanvas.height;
+    redrawCalib();
+  }
+});
+
+calibCanvas.addEventListener('click', function(evt){
+  const pt = getCanvasCoords(evt, calibCanvas);
+  if(calibPoints.length >= 2) calibPoints = [];
+  calibPoints.push(pt);
+  redrawCalib();
+  if(calibPoints.length === 2){
+    calibPresets.style.display = 'flex';
+    calibHint.textContent = 'Şimdi bu iki nokta arasındaki gerçek uzunluğu seç.';
+  } else {
+    calibPresets.style.display = 'none';
+    calibHint.textContent = 'İkinci noktaya dokun.';
+  }
+});
+
+preset1TL.addEventListener('click', () => confirmManualCalibration(26.15));
+presetCard.addEventListener('click', () => confirmManualCalibration(85.60));
+calibManualToggle.addEventListener('click', () => {
+  calibManualRow.style.display = calibManualRow.style.display === 'none' ? 'flex' : 'none';
+});
+calibManualConfirm.addEventListener('click', () => {
+  const v = parseFloat(calibManualMm.value);
+  if(v > 0) confirmManualCalibration(v);
+});
+calibPointsClearBtn.addEventListener('click', () => {
+  calibPoints = [];
+  calibPresets.style.display = 'none';
+  calibManualRow.style.display = 'none';
+  calibHint.textContent = 'Fotoğrafta bildiğin uzunlukta bir nesnenin (1 TL, kart, cetvel...) iki ucuna dokun.';
+  redrawCalib();
+});
+
+function getCanvasCoords(evt, canvas){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return { x: (evt.clientX - rect.left) * scaleX, y: (evt.clientY - rect.top) * scaleY };
+}
+
+function redrawCalib(){
+  const ctx = calibCanvas.getContext('2d');
+  ctx.drawImage(workCanvas, 0, 0);
+  const r = calibCanvas.width * 0.012;
+  ctx.fillStyle = '#E9C874';
+  calibPoints.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI*2);
+    ctx.fill();
+  });
+  if(calibPoints.length === 2){
+    ctx.strokeStyle = '#E9C874';
+    ctx.lineWidth = Math.max(2, calibCanvas.width*0.003);
+    ctx.beginPath();
+    ctx.moveTo(calibPoints[0].x, calibPoints[0].y);
+    ctx.lineTo(calibPoints[1].x, calibPoints[1].y);
+    ctx.stroke();
+  }
+}
+
+function confirmManualCalibration(mmValue){
+  if(calibPoints.length < 2 || !mmValue || mmValue <= 0) return;
+  const dx = calibPoints[1].x - calibPoints[0].x;
+  const dy = calibPoints[1].y - calibPoints[0].y;
+  const pxDist = Math.sqrt(dx*dx + dy*dy);
+  applyCalibration(pxDist / mmValue, 'elle işaretlenen referans');
+  calibPresets.style.display = 'none';
+  calibManualRow.style.display = 'none';
+}
+
+/* ---------- capture flow ---------- */
+
+function handleFile(file){
+  if(!file) return;
+  resultsBox.innerHTML = '';
+  statusBox.innerHTML = '';
+  annotatedBox.style.display = 'none';
+  autoCalibStatus.style.display = 'none';
+  clearActiveCalibration();
+  calibPanel.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+    captureHint.style.display = 'none';
+    captureZone.classList.add('has-image');
+    analyzeRow.style.display = 'flex';
+    calibToggleRow.style.display = 'block';
+
+    const img = new Image();
+    img.onload = function(){
+      let w = img.width, h = img.height;
+      if(w > h && w > MAX_DIM){ h = Math.round(h * (MAX_DIM/w)); w = MAX_DIM; }
+      else if(h >= w && h > MAX_DIM){ w = Math.round(w * (MAX_DIM/h)); h = MAX_DIM; }
+      workCanvas.width = w;
+      workCanvas.height = h;
+      const ctx = workCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      attemptAutoCalibration();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetAll(){
+  preview.style.display = 'none';
+  captureHint.style.display = 'block';
+  captureZone.classList.remove('has-image');
+  analyzeRow.style.display = 'none';
+  calibToggleRow.style.display = 'none';
+  calibPanel.style.display = 'none';
+  autoCalibStatus.style.display = 'none';
+  resultsBox.innerHTML = '';
+  statusBox.innerHTML = '';
+  annotatedBox.style.display = 'none';
+  cameraInput.value = '';
+  galleryInput.value = '';
+  clearActiveCalibration();
+}
+
+/* ---------- color segmentation ---------- */
+
+function rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  const d=max-min;
+  let h=0;
+  if(d!==0){
+    if(max===r) h=60*(((g-b)/d)%6);
+    else if(max===g) h=60*((b-r)/d+2);
+    else h=60*((r-g)/d+4);
+  }
+  if(h<0) h+=360;
+  const s = max===0?0:d/max;
+  const v = max;
+  return [h,s,v];
+}
+
+function buildGoldMask(imgData,w,h){
+  const mask = new Uint8Array(w*h);
+  const data = imgData.data;
+  for(let i=0;i<w*h;i++){
+    const r=data[i*4], g=data[i*4+1], b=data[i*4+2];
+    const hsv = rgbToHsv(r,g,b);
+    if(hsv[0]>=28 && hsv[0]<=64 && hsv[1]>0.22 && hsv[2]>0.22){
+      mask[i]=1;
+    }
+  }
+  return mask;
+}
+
+function erode(mask,w,h){
+  const out = new Uint8Array(w*h);
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      let keep=1;
+      for(let dy=-1;dy<=1 && keep;dy++){
+        for(let dx=-1;dx<=1 && keep;dx++){
+          const nx=x+dx, ny=y+dy;
+          if(nx<0||ny<0||nx>=w||ny>=h){ keep=0; break; }
+          if(mask[ny*w+nx]===0){ keep=0; }
+        }
+      }
+      out[y*w+x]=keep;
+    }
+  }
+  return out;
+}
+
+function dilate(mask,w,h){
+  const out = new Uint8Array(w*h);
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      let any=0;
+      for(let dy=-1;dy<=1 && !any;dy++){
+        for(let dx=-1;dx<=1 && !any;dx++){
+          const nx=x+dx, ny=y+dy;
+          if(nx<0||ny<0||nx>=w||ny>=h) continue;
+          if(mask[ny*w+nx]===1){ any=1; }
+        }
+      }
+      out[y*w+x]=any;
+    }
+  }
+  return out;
+}
+
+function applyMorphology(mask,w,h){
+  let m = erode(mask,w,h);
+  m = dilate(m,w,h);
+  m = dilate(m,w,h);
+  m = dilate(m,w,h);
+  m = erode(m,w,h);
+  m = erode(m,w,h);
+  return m;
+}
+
+/* ---------- connected components (gold coins) ---------- */
+
+function connectedComponents(mask,w,h){
+  const labels = new Int32Array(w*h).fill(-1);
+  const components = [];
+  const stack = new Int32Array(w*h);
+  for(let start=0; start<w*h; start++){
+    if(mask[start]!==1 || labels[start]!==-1) continue;
+    let sp=0;
+    const id = components.length;
+    stack[sp++]=start;
+    labels[start]=id;
+    let area=0,sumX=0,sumY=0,minX=w,maxX=0,minY=h,maxY=0;
+    while(sp>0){
+      const idx = stack[--sp];
+      const x = idx % w, y = (idx - x)/w;
+      area++; sumX+=x; sumY+=y;
+      if(x<minX)minX=x; if(x>maxX)maxX=x;
+      if(y<minY)minY=y; if(y>maxY)maxY=y;
+      const neigh = [idx-1,idx+1,idx-w,idx+w];
+      for(let k=0;k<4;k++){
+        const nIdx = neigh[k];
+        if(nIdx<0||nIdx>=w*h) continue;
+        const nx = nIdx % w;
+        if(Math.abs(nx-x) > 1) continue;
+        if(mask[nIdx]===1 && labels[nIdx]===-1){
+          labels[nIdx]=id;
+          stack[sp++]=nIdx;
+        }
+      }
+    }
+    components.push({id,area,minX,maxX,minY,maxY,cx:sumX/area,cy:sumY/area});
+  }
+  return {components, labels};
+}
+
+function bucketPixelsByLabel(labels, count){
+  const buckets = [];
+  for(let i=0;i<count;i++) buckets.push([]);
+  for(let i=0;i<labels.length;i++){
+    const id = labels[i];
+    if(id>=0) buckets[id].push(i);
+  }
+  return buckets;
+}
+
+function componentStats(c){
+  const bboxW = c.maxX-c.minX+1;
+  const bboxH = c.maxY-c.minY+1;
+  const extent = c.area/(bboxW*bboxH);
+  const aspect = bboxW/bboxH;
+  const diameter = 2*Math.sqrt(c.area/Math.PI);
+  return Object.assign({},c,{bboxW,bboxH,extent,aspect,diameter});
+}
+
+// Very loose junk filter only - rejects shapes nothing coin-like could produce
+// (a thin chain, a smear). Real single coins often have glare/highlights that
+// dent their extent, so this must NOT be used to decide single-vs-merged.
+function looksCoinLike(stats){
+  return stats.extent > 0.35 && stats.aspect > 0.4 && stats.aspect < 2.5;
+}
+
+/* ---------- square reference-marker detection ---------- */
+
+function findComponentsWithCorners(mask,w,h){
+  const labels = new Int32Array(w*h).fill(-1);
+  const comps = [];
+  const stack = new Int32Array(w*h);
+  for(let start=0; start<w*h; start++){
+    if(mask[start]!==1 || labels[start]!==-1) continue;
+    let sp=0;
+    const id = comps.length;
+    stack[sp++]=start; labels[start]=id;
+    let area=0,minX=w,maxX=0,minY=h,maxY=0;
+    let minSum=Infinity,maxSum=-Infinity,minDiff=Infinity,maxDiff=-Infinity;
+    let pMinSum=null,pMaxSum=null,pMinDiff=null,pMaxDiff=null;
+    while(sp>0){
+      const idx = stack[--sp];
+      const x = idx % w, y = (idx-x)/w;
+      area++;
+      if(x<minX)minX=x; if(x>maxX)maxX=x;
+      if(y<minY)minY=y; if(y>maxY)maxY=y;
+      const s = x+y, df = x-y;
+      if(s<minSum){minSum=s; pMinSum={x,y};}
+      if(s>maxSum){maxSum=s; pMaxSum={x,y};}
+      if(df<minDiff){minDiff=df; pMinDiff={x,y};}
+      if(df>maxDiff){maxDiff=df; pMaxDiff={x,y};}
+      const neigh=[idx-1,idx+1,idx-w,idx+w];
+      for(let k=0;k<4;k++){
+        const nIdx=neigh[k];
+        if(nIdx<0||nIdx>=w*h) continue;
+        const nx=nIdx%w;
+        if(Math.abs(nx-x)>1) continue;
+        if(mask[nIdx]===1 && labels[nIdx]===-1){ labels[nIdx]=id; stack[sp++]=nIdx; }
+      }
+    }
+    comps.push({area,minX,maxX,minY,maxY,corners:[pMinSum,pMaxDiff,pMaxSum,pMinDiff]});
+  }
+  return comps;
+}
+
+function cornerSideLengths(corners){
+  const sides=[];
+  for(let i=0;i<4;i++){
+    const a=corners[i], b=corners[(i+1)%4];
+    const dx=b.x-a.x, dy=b.y-a.y;
+    sides.push(Math.sqrt(dx*dx+dy*dy));
+  }
+  return sides;
+}
+
+function findSquareMarker(imgData,w,h){
+  const mask = new Uint8Array(w*h);
+  const data = imgData.data;
+  for(let i=0;i<w*h;i++){
+    const r=data[i*4], g=data[i*4+1], b=data[i*4+2];
+    const hsv = rgbToHsv(r,g,b);
+    if(hsv[2] < MARKER_V_MAX && hsv[1] < MARKER_S_MAX) mask[i]=1;
+  }
+  let m = erode(mask,w,h);
+  m = dilate(m,w,h);
+  m = dilate(m,w,h);
+  m = erode(m,w,h);
+
+  const comps = findComponentsWithCorners(m,w,h);
+  const minArea = w*h*MARKER_MIN_AREA_FRAC;
+  const maxArea = w*h*MARKER_MAX_AREA_FRAC;
+
+  const candidates = [];
+  comps.forEach(c=>{
+    if(c.area<minArea || c.area>maxArea) return;
+    if(!c.corners.every(p=>p)) return;
+    const sides = cornerSideLengths(c.corners);
+    const avgSide = sides.reduce((a,b)=>a+b,0)/4;
+    if(avgSide<=0) return;
+    const maxDev = Math.max(...sides.map(s=>Math.abs(s-avgSide)/avgSide));
+    if(maxDev > MARKER_MAX_SIDE_DEV) return;
+    candidates.push({avgSide, maxDev});
+  });
+
+  if(candidates.length === 0) return null;
+  candidates.sort((a,b)=>a.maxDev-b.maxDev);
+  return candidates[0];
+}
+
+function attemptAutoCalibration(){
+  const mmSize = parseFloat(markerSizeInput.value);
+  autoCalibStatus.style.display = 'none';
+  if(!mmSize || mmSize<=0) return;
+
+  const w = workCanvas.width, h = workCanvas.height;
+  const ctx = workCanvas.getContext('2d');
+  const imgData = ctx.getImageData(0,0,w,h);
+  const marker = findSquareMarker(imgData,w,h);
+
+  if(marker){
+    const pxPerMm = marker.avgSide / mmSize;
+    applyCalibration(pxPerMm, 'otomatik referans kare');
+    autoCalibStatus.style.display = 'block';
+    autoCalibStatus.style.color = 'var(--good)';
+    autoCalibStatus.textContent = 'Referans kare otomatik bulundu' + (marker.maxDev>0.12 ? ' (biraz eğik görünüyor, sonuç yaklaşık olabilir).' : '.');
+  } else {
+    autoCalibStatus.style.display = 'block';
+    autoCalibStatus.style.color = 'var(--muted)';
+    autoCalibStatus.textContent = 'Otomatik referans kare bulunamadı. Kayıtlı düzeneği kullanabilir veya elle kalibre edebilirsin.';
+  }
+}
+
+/* ---------- overlap separation (distance transform + seed split) ---------- */
+
+function chamferDistanceTransform(mask,w,h){
+  const INF = 1e6;
+  const dist = new Float32Array(w*h);
+  for(let i=0;i<w*h;i++) dist[i] = mask[i] ? INF : 0;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const idx=y*w+x;
+      if(!mask[idx]) continue;
+      let d = dist[idx];
+      if(x>0) d=Math.min(d, dist[idx-1]+1);
+      if(y>0) d=Math.min(d, dist[idx-w]+1);
+      if(x>0&&y>0) d=Math.min(d, dist[idx-w-1]+1.4142);
+      if(x<w-1&&y>0) d=Math.min(d, dist[idx-w+1]+1.4142);
+      dist[idx]=d;
+    }
+  }
+  for(let y=h-1;y>=0;y--){
+    for(let x=w-1;x>=0;x--){
+      const idx=y*w+x;
+      if(!mask[idx]) continue;
+      let d = dist[idx];
+      if(x<w-1) d=Math.min(d, dist[idx+1]+1);
+      if(y<h-1) d=Math.min(d, dist[idx+w]+1);
+      if(x<w-1&&y<h-1) d=Math.min(d, dist[idx+w+1]+1.4142);
+      if(x>0&&y<h-1) d=Math.min(d, dist[idx+w-1]+1.4142);
+      dist[idx]=d;
+    }
+  }
+  return dist;
+}
+
+function findSeeds(pixelIndices, distMap, w, minSeedDist){
+  const candidates = [];
+  pixelIndices.forEach(idx=>{
+    const x = idx % w, y = (idx-x)/w;
+    const d = distMap[idx];
+    let isMax = true;
+    for(let dy=-1;dy<=1 && isMax;dy++){
+      for(let dx=-1;dx<=1 && isMax;dx++){
+        if(dx===0&&dy===0) continue;
+        const nIdx = idx + dy*w + dx;
+        if(nIdx<0||nIdx>=distMap.length) continue;
+        if(distMap[nIdx] > d) isMax=false;
+      }
+    }
+    if(isMax) candidates.push({idx,x,y,d});
+  });
+  candidates.sort((a,b)=>b.d-a.d);
+  const seeds = [];
+  candidates.forEach(c=>{
+    const tooClose = seeds.some(s=>{
+      const dx=s.x-c.x, dy=s.y-c.y;
+      return Math.sqrt(dx*dx+dy*dy) < minSeedDist;
+    });
+    if(!tooClose) seeds.push(c);
+  });
+  return seeds;
+}
+
+function partitionByNearestSeed(pixelIndices, seeds, w){
+  const groups = seeds.map(()=>({sumX:0,sumY:0,area:0,minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity}));
+  pixelIndices.forEach(idx=>{
+    const x = idx % w, y = (idx-x)/w;
+    let best=0, bestD=Infinity;
+    seeds.forEach((s,si)=>{
+      const dx=s.x-x, dy=s.y-y;
+      const d=dx*dx+dy*dy;
+      if(d<bestD){ bestD=d; best=si; }
+    });
+    const g = groups[best];
+    g.area++; g.sumX+=x; g.sumY+=y;
+    if(x<g.minX)g.minX=x; if(x>g.maxX)g.maxX=x;
+    if(y<g.minY)g.minY=y; if(y>g.maxY)g.maxY=y;
+  });
+  return groups.filter(g=>g.area>0).map(g=>({
+    area:g.area, cx:g.sumX/g.area, cy:g.sumY/g.area,
+    minX:g.minX, maxX:g.maxX, minY:g.minY, maxY:g.maxY
+  }));
+}
+
+function minAreaFor(w,h){
+  const minDim = Math.min(w,h);
+  const minDiameterPx = Math.max(10, minDim*0.012);
+  return Math.PI*Math.pow(minDiameterPx/2,2);
+}
+
+// Rough first-pass size estimate, used only to size the seed-separation
+// distance when there's no calibration yet. Doesn't need to be precise -
+// just needs a ballpark "how big is roughly one coin" figure.
+function estimateExpectedMinDiameterPx(components, w, h, pxPerMm){
+  if(pxPerMm) return REF_MM['Çeyrek altın'] * pxPerMm;
+  const minArea = minAreaFor(w,h);
+  let best = null;
+  components.forEach(c=>{
+    if(c.area < minArea) return;
+    const stats = componentStats(c);
+    if(!looksCoinLike(stats)) return;
+    if(best===null || stats.diameter<best) best = stats.diameter;
+  });
+  return best;
+}
+
+// Single source of truth for single-vs-merged: count local peaks in the
+// distance transform. One peak -> one coin (accept it, however imperfect
+// its silhouette looks from glare). Two+ peaks -> likely touching coins,
+// split them. Only reject a shape outright if it isn't coin-like at all.
+function processComponents(components, labelBuckets, distMap, w, h, expectedMinDiameterPx){
+  const minArea = minAreaFor(w,h);
+  const valid = [];
+  const stillIrregular = [];
+  let splitCount = 0;
+
+  components.forEach(comp=>{
+    if(comp.area < minArea) return;
+    const stats = componentStats(comp);
+    if(!looksCoinLike(stats)){ stillIrregular.push(stats); return; }
+
+    let seeds = [];
+    if(expectedMinDiameterPx){
+      seeds = findSeeds(labelBuckets[comp.id], distMap, w, expectedMinDiameterPx*0.55);
+    }
+
+    if(seeds.length >= 2){
+      const groups = partitionByNearestSeed(labelBuckets[comp.id], seeds, w);
+      const minSplitArea = Math.PI*Math.pow(expectedMinDiameterPx/2,2)*0.3;
+      let recovered = 0;
+      groups.forEach(g=>{
+        if(g.area < minSplitArea) return;
+        const diameter = 2*Math.sqrt(g.area/Math.PI);
+        valid.push({area:g.area,cx:g.cx,cy:g.cy,minX:g.minX,maxX:g.maxX,minY:g.minY,maxY:g.maxY,diameter,fromSplit:true});
+        recovered++;
+      });
+      if(recovered>0){ splitCount += recovered; }
+      else { valid.push(stats); }
+    } else {
+      valid.push(stats);
+    }
+  });
+
+  return { valid, stillIrregular, splitCount };
+}
+
+/* ---------- grouping: relative (no calibration) ---------- */
+
+function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+
+function clusterBySize(valid){
+  if(valid.length===0) return [];
+  let clusters = [ valid.slice().sort((a,b)=>a.diameter-b.diameter) ];
+  while(clusters.length<3){
+    let bestClusterIdx=-1, bestSplitIdx=-1, bestRatio=0;
+    clusters.forEach((cluster,ci)=>{
+      if(cluster.length<2) return;
+      for(let i=1;i<cluster.length;i++){
+        const ratio = cluster[i].diameter/cluster[i-1].diameter;
+        if(ratio>bestRatio){ bestRatio=ratio; bestClusterIdx=ci; bestSplitIdx=i; }
+      }
+    });
+    if(bestRatio < CLUSTER_SPLIT_THRESHOLD || bestClusterIdx===-1) break;
+    const cluster = clusters[bestClusterIdx];
+    const left = cluster.slice(0,bestSplitIdx);
+    const right = cluster.slice(bestSplitIdx);
+    clusters.splice(bestClusterIdx,1,left,right);
+  }
+  return clusters;
+}
+
+function guessPairNames(clusters){
+  const meanA = mean(clusters[0].map(c=>c.diameter));
+  const meanB = mean(clusters[1].map(c=>c.diameter));
+  const ratio = meanB/meanA;
+  if(ratio < 1.29) return ['Çeyrek altın','Yarım altın'];
+  if(ratio < 1.51) return ['Yarım altın','Tam altın'];
+  return ['Çeyrek altın','Tam altın'];
+}
+
+function assignTypesRelative(clusters){
+  let names;
+  if(clusters.length===0) names=[];
+  else if(clusters.length===1) names=['Belirsiz boy'];
+  else if(clusters.length===2) names=guessPairNames(clusters);
+  else names=['Çeyrek altın','Yarım altın','Tam altın'];
+  return clusters.map((cluster,i)=>({ type:names[i], coins:cluster, count:cluster.length, calibrated:false }));
+}
+
+/* ---------- grouping: absolute (calibrated) ---------- */
+
+function classifyByMm(mm){
+  let best=null, bestDiff=Infinity;
+  Object.keys(REF_MM).forEach(type=>{
+    const ref = REF_MM[type];
+    const diff = Math.abs(mm-ref)/ref;
+    if(diff<bestDiff){ bestDiff=diff; best=type; }
+  });
+  let confidence = bestDiff<0.08 ? 'yüksek' : bestDiff<0.16 ? 'orta' : 'düşük';
+  if(bestDiff>=0.30){ best='Tanınamayan boy'; confidence='düşük'; }
+  return { type:best, confidence, mm };
+}
+
+function assignTypesAbsolute(allValid, pxPerMm){
+  const buckets = {};
+  allValid.forEach(c=>{
+    const mm = c.diameter/pxPerMm;
+    const cls = classifyByMm(mm);
+    if(!buckets[cls.type]) buckets[cls.type]=[];
+    buckets[cls.type].push(Object.assign({},c,{mm,confidence:cls.confidence}));
+  });
+  const order = ['Çeyrek altın','Yarım altın','Tam altın','Tanınamayan boy'];
+  return order.filter(k=>buckets[k]).map(k=>({ type:k, coins:buckets[k], count:buckets[k].length, calibrated:true }));
+}
+
+function confidenceForGroup(group, totalGroups){
+  if(group.calibrated){
+    if(group.type==='Tanınamayan boy') return 'düşük';
+    const confs = group.coins.map(c=>c.confidence);
+    if(confs.every(c=>c==='yüksek')) return 'yüksek';
+    if(confs.some(c=>c==='düşük')) return 'düşük';
+    return 'orta';
+  }
+  if(group.type==='Belirsiz boy') return 'düşük';
+  if(totalGroups===2) return 'orta';
+  return 'yüksek';
+}
+
+function noteForGroup(group, totalGroups){
+  if(group.calibrated){
+    if(group.type==='Tanınamayan boy') return 'Ölçülen çap bilinen altın türleriyle eşleşmedi; farklı bir nesne ya da özel bir basım olabilir.';
+    if(group.type==='Yarım altın') return 'Yarım altın ile Cumhuriyet/Ata altını aynı çapta (~22 mm) olabilir; fotoğraf kalınlığı ölçemediği için üstten çekilen bir fotoğrafla ikisi ayırt edilemez.';
+    return '';
+  }
+  if(group.type==='Belirsiz boy') return 'Fotoğrafta tek boy grubu var, karşılaştırma yapılamadığı için tür kesinleştirilemedi.';
+  if(totalGroups===2) return 'İki boy grubu tespit edildi, hangi ikili olduğu yaklaşık çap oranına göre tahmin edildi.';
+  return '';
+}
+
+/* ---------- pipeline ---------- */
+
+function analyzeLocal(){
+  resultsBox.innerHTML = '';
+  annotatedBox.style.display = 'none';
+  statusBox.innerHTML = '<div class="status"><div class="spinner"></div>Fotoğraf inceleniyor...</div>';
+  analyzeBtn.disabled = true;
+  captureButtons.querySelectorAll('button').forEach(b => b.disabled = true);
+
+  setTimeout(() => {
+    try{
+      const w = workCanvas.width, h = workCanvas.height;
+      const ctx = workCanvas.getContext('2d');
+      const imgData = ctx.getImageData(0,0,w,h);
+
+      let mask = buildGoldMask(imgData,w,h);
+      mask = applyMorphology(mask,w,h);
+      const { components, labels } = connectedComponents(mask,w,h);
+      const distMap = chamferDistanceTransform(mask,w,h);
+      const labelBuckets = bucketPixelsByLabel(labels, components.length);
+      const expectedMinDiameterPx = estimateExpectedMinDiameterPx(components, w, h, calibration.pxPerMm);
+      const { valid, stillIrregular, splitCount } = processComponents(components, labelBuckets, distMap, w, h, expectedMinDiameterPx);
+
+      const assigned = calibration.pxPerMm
+        ? assignTypesAbsolute(valid, calibration.pxPerMm)
+        : assignTypesRelative(clusterBySize(valid));
+
+      renderAnnotated(w,h,assigned,stillIrregular);
+      renderResultsLocal(assigned, stillIrregular, splitCount, valid.length);
+    }catch(err){
+      resultsBox.innerHTML = '<div class="error-box">Analiz sırasında bir hata oluştu. Farklı bir fotoğrafla tekrar dene.</div>';
+    }finally{
+      statusBox.innerHTML = '';
+      analyzeBtn.disabled = false;
+      captureButtons.querySelectorAll('button').forEach(b => b.disabled = false);
+    }
+  }, 30);
+}
+
+function renderAnnotated(w,h,assigned,irregular){
+  resultCanvas.width = w;
+  resultCanvas.height = h;
+  const ctx = resultCanvas.getContext('2d');
+  ctx.drawImage(workCanvas,0,0);
+
+  ctx.font = Math.round(w*0.03)+'px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = Math.max(2, w*0.004);
+
+  assigned.forEach(group=>{
+    const color = TYPE_COLORS[group.type] || '#9C8D71';
+    const letter = TYPE_LETTERS[group.type] || '?';
+    group.coins.forEach(c=>{
+      const r = c.diameter/2;
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.arc(c.cx,c.cy,r,0,Math.PI*2);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(c.cx,c.cy-r*0.75,w*0.018,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#15100B';
+      ctx.fillText(letter, c.cx, c.cy-r*0.75+1);
+    });
+  });
+
+  irregular.forEach(c=>{
+    const r = Math.max(c.bboxW,c.bboxH)/2;
+    ctx.strokeStyle = IRREGULAR_COLOR;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath();
+    ctx.arc(c.cx,c.cy,r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = IRREGULAR_COLOR;
+    ctx.beginPath();
+    ctx.arc(c.cx,c.cy-r*0.75,w*0.018,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#15100B';
+    ctx.fillText('!', c.cx, c.cy-r*0.75+1);
+  });
+
+  let legendHtml = '';
+  assigned.forEach(group=>{
+    legendHtml += `<span><i style="background:${TYPE_COLORS[group.type]}"></i>${escapeHtml(group.type)}</span>`;
+  });
+  if(irregular.length>0){
+    legendHtml += `<span><i style="background:${IRREGULAR_COLOR}"></i>Düzensiz / ayrıştırılamayan</span>`;
+  }
+  legend.innerHTML = legendHtml;
+  annotatedBox.style.display = 'block';
+}
+
+function renderResultsLocal(assigned, irregular, splitCount, validCount){
+  if(validCount===0 && irregular.length===0){
+    resultsBox.innerHTML = `<div class="error-box">Fotoğrafta altın rengi bir nesne tespit edemedim. Zemin kontrastının düşük olması veya ışığın yetersiz olması buna yol açabilir; koyu renkli düz bir zeminde, iyi ışıkta tekrar dene.</div>`;
+    return;
+  }
+
+  const totalGroups = assigned.length;
+  let rows = assigned.map(group=>{
+    const conf = confidenceForGroup(group, totalGroups);
+    const label = conf==='yüksek' ? 'Yüksek güven' : conf==='düşük' ? 'Düşük güven' : 'Orta güven';
+    const note = noteForGroup(group, totalGroups);
+    return `
+      <div class="ledger-row">
+        <div class="ledger-left">
+          <div class="type-name">${escapeHtml(group.type)}</div>
+          ${note ? `<div class="type-note">${escapeHtml(note)}</div>` : ''}
+          <span class="confidence ${conf==='yüksek'?'yuksek':conf==='düşük'?'dusuk':'orta'}">${label}</span>
+        </div>
+        <div class="count-num">${group.count}</div>
+      </div>`;
+  }).join('');
+
+  const toplam = assigned.reduce((s,g)=>s+g.count,0);
+
+  let summary = `
+    <div class="summary-row">
+      <span class="label">Toplam</span>
+      <span class="value">${toplam} adet</span>
+    </div>`;
+  if(irregular.length>0){
+    summary += `
+    <div class="summary-row" style="border-top:none;padding-top:6px;">
+      <span class="label">Sayılamayan (düzensiz/örtüşen)</span>
+      <span class="value">${irregular.length} adet</span>
+    </div>`;
+  }
+
+  let generalNote = calibration.pxPerMm
+    ? 'Ölçüm, ' + calibration.source + ' ile kalibre edilen piksel/mm oranıyla hesaplandı.'
+    : 'Sınıflandırma yalnızca fotoğraftaki sikkelerin birbirine göre boyutuna dayanır; kalibrasyon yapılmadığı için mutlak ölçü kullanılmadı.';
+  generalNote += ' Tasarım kontrolü yapılmadığı için reşat, gremse gibi farklı basımlar da boyutuna göre bir gruba dahil edilmiş olabilir.';
+  if(splitCount>0){
+    generalNote += ' ' + splitCount + ' sikke, üst üste binen bir yığından ayrıştırılarak sayıldı; bu sikkelerin sınırları kesin değil, sonuç yaklaşık.';
+  }
+  if(irregular.length>0){
+    generalNote += ' ' + irregular.length + ' nesne düzensiz/örtüşen şekli nedeniyle ayrıştırılamadı, sayıma dahil edilmedi.';
+  }
+
+  resultsBox.innerHTML = `
+    <div class="stage results">
+      ${rows}
+      ${summary}
+      <div class="general-note">${escapeHtml(generalNote)}</div>
+    </div>
+    <div class="reset-row"><button class="text-btn" id="resetBtn">Yeniden başlat</button></div>
+  `;
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
